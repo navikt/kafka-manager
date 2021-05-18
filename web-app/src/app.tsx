@@ -3,10 +3,12 @@ import { ToastContainer } from 'react-toastify';
 import './app.less';
 import 'react-toastify/dist/ReactToastify.css';
 import { KafkaAdmin } from './view/kafka-admin/kafka-admin';
+import { Header } from './component/header/header';
 
 function App() {
 	return (
 		<div className="app kafka-manager">
+			<Header />
 			<main>
 				<KafkaAdmin/>
 			</main>

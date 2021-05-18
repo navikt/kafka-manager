@@ -2,6 +2,8 @@ import { RequestHandlersList } from 'msw/lib/types/setupWorker/glossary';
 import { rest } from 'msw';
 import { KafkaRecord, LastRecordOffsetResponse, TopicPartitionOffset } from '../api';
 
+const availableTopics = ['test-topic-a', 'test-topic-b', 'test-topic-c'];
+
 const kafkaRecords: KafkaRecord[] = [];
 
 for (let i = 0; i < 25; i++) {
@@ -41,6 +43,9 @@ const topicPartitionOffsets: TopicPartitionOffset[] = [
 ];
 
 export const handlers: RequestHandlersList = [
+	rest.get('/api/kafka/available-topics', (req, res, ctx) => {
+		return res(ctx.delay(500), ctx.json(availableTopics));
+	}),
 	rest.post('/api/kafka/read-topic', (req, res, ctx) => {
 		return res(ctx.delay(500), ctx.json(kafkaRecords));
 	}),

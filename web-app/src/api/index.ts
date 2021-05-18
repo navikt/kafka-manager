@@ -15,8 +15,6 @@ export function me(): AxiosPromise<User> {
 }
 
 export interface ReadFromTopicRequest {
-	username: string;
-	password: string;
 	topicName: string;
 	topicPartition: number;
 	maxRecords: number;
@@ -24,22 +22,16 @@ export interface ReadFromTopicRequest {
 }
 
 export interface GetConsumerOffsetsRequest {
-	username: string;
-	password: string;
 	groupId: string;
 	topicName: string;
 }
 
 export interface GetLastRecordOffsetRequest {
-	username: string;
-	password: string;
 	topicName: string;
 	topicPartition: number;
 }
 
 export interface SetConsumerOffsetRequest {
-	username: string;
-	password: string;
 	topicName: string;
 	topicPartition: number;
 	offset: number;
@@ -64,12 +56,12 @@ export interface LastRecordOffsetResponse {
 	latestRecordOffset: number;
 }
 
+export function getAvailableTopics(): AxiosPromise<string[]> {
+	return axiosInstance.get(`/api/kafka/available-topics`);
+}
+
 export function readFromTopic(request: ReadFromTopicRequest): AxiosPromise<KafkaRecord[]> {
 	return axiosInstance.post(`/api/kafka/read-topic`, {
-		credentials: {
-			username: request.username,
-			password: request.password
-		},
 		topicName: request.topicName,
 		topicPartition: request.topicPartition,
 		maxRecords: request.maxRecords,
@@ -79,10 +71,6 @@ export function readFromTopic(request: ReadFromTopicRequest): AxiosPromise<Kafka
 
 export function getConsumerOffsets(request: GetConsumerOffsetsRequest): AxiosPromise<TopicPartitionOffset[]> {
 	return axiosInstance.post('/api/kafka/get-consumer-offsets', {
-		credentials: {
-			username: request.username,
-			password: request.password
-		},
 		topicName: request.topicName,
 		groupId: request.groupId
 	});
@@ -90,10 +78,6 @@ export function getConsumerOffsets(request: GetConsumerOffsetsRequest): AxiosPro
 
 export function getLastRecordOffset(request: GetLastRecordOffsetRequest): AxiosPromise<LastRecordOffsetResponse> {
 	return axiosInstance.post('/api/kafka/get-last-record-offset', {
-		credentials: {
-			username: request.username,
-			password: request.password
-		},
 		topicName: request.topicName,
 		topicPartition: request.topicPartition
 	});
@@ -101,10 +85,6 @@ export function getLastRecordOffset(request: GetLastRecordOffsetRequest): AxiosP
 
 export function setConsumerOffset(request: SetConsumerOffsetRequest): AxiosPromise {
 	return axiosInstance.post('/api/kafka/set-consumer-offset', {
-		credentials: {
-			username: request.username,
-			password: request.password
-		},
 		topicName: request.topicName,
 		topicPartition: request.topicPartition,
 		offset: request.offset,

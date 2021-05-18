@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { ChangeEvent, useEffect, useState } from 'react';
 import { errorToast, successToast, warningToast } from '../../utils/toast-utils';
 import { Card } from '../../component/card/card';
 import { Flatknapp } from 'nav-frontend-knapper';
 import {
+	getAvailableTopics,
 	getConsumerOffsets,
 	GetConsumerOffsetsRequest,
 	getLastRecordOffset,
@@ -16,71 +17,77 @@ import {
 } from '../../api';
 import { Input, Select } from 'nav-frontend-skjema';
 import { Normaltekst } from 'nav-frontend-typografi';
-import constate from 'constate';
 import Modal from 'nav-frontend-modal';
 import './kafka-admin.less';
 import { KafkaRecordModalContent } from './kafka-record-modal-content';
-
-const [CredentialsStoreProvider, useCredentialsStore] = constate(() => {
-	const [username, setUsername] = useState('');
-	const [password, setPassword] = useState('');
-	return { username, setUsername, password, setPassword };
-});
+import { PageSpinner } from '../../component/page-spinner/page-spinner';
 
 export function KafkaAdmin() {
+	const [availableTopics, setAvailableTopics] = useState<string[] | null>(null);
+
+	useEffect(() => {
+		getAvailableTopics()
+			.then(res => {
+				setAvailableTopics(res.data);
+			})
+			.catch(() => {
+				errorToast('Unable to load available topics');
+				setAvailableTopics([]);
+			});
+
+	}, [])
+
+	if (availableTopics == null) {
+		return <PageSpinner />;
+	}
+
 	return (
 		<div className="view kafka-admin">
-			<CredentialsStoreProvider>
-				<div>
-					<div className="card-row-4-col blokk-m">
-						<CredentialsCard />
-						<ConsumerOffsetsCard />
-						<LastRecordOffsetCard />
-						<SetConsumerOffsetCard />
-					</div>
-					<ReadFromTopicCard />
-				</div>
-			</CredentialsStoreProvider>
+			<div className="card-row-3-col blokk-m">
+				<ConsumerOffsetsCard availableTopics={availableTopics} />
+				<LastRecordOffsetCard availableTopics={availableTopics} />
+				<SetConsumerOffsetCard availableTopics={availableTopics} />
+			</div>
+			<ReadFromTopicCard />
 		</div>
 	);
 }
 
-function CredentialsCard() {
-	const { username, setUsername, password, setPassword } = useCredentialsStore();
+function TopicSelect(props: { availableTopics: string[], onTopicChanged: (topic: string | null) => void }) {
+	const NO_TOPIC = 'NO_TOPIC';
+	const [selectedTopic, setSelectedTopic] = useState(NO_TOPIC);
+
+	function handleTopicChanged(e: ChangeEvent<HTMLSelectElement>) {
+		const selectedTopic = e.target.value;
+		setSelectedTopic(selectedTopic);
+
+		const changedTopic = selectedTopic === NO_TOPIC ? null : selectedTopic;
+		props.onTopicChanged(changedTopic);
+	}
 
 	return (
-		<Card title="Credentials" innholdClassName="card__content">
-			<Normaltekst className="blokk-s">
-				Alle funksjoner på denne siden krever at credentials fra en systembruker er utfylt
-			</Normaltekst>
-
-			<Input label="Username" value={username} onChange={e => setUsername(e.target.value)} />
-			{/* Set "one-time-code" for å prøve å forhindre at browseren lagrer passordet */}
-			<Input
-				label="Password"
-				type="password"
-				autoComplete="one-time-code"
-				value={password}
-				onChange={e => setPassword(e.target.value)}
-			/>
-		</Card>
+		<Select label="Topic name" value={selectedTopic} onChange={handleTopicChanged}>
+			<option value={NO_TOPIC}>Choose a topic</option>
+			{props.availableTopics.map((topic, idx) => {
+				return <option key={idx} value={topic}>{topic}</option>;
+			})}
+		</Select>
 	);
 }
 
-function ConsumerOffsetsCard() {
-	const { username, password } = useCredentialsStore();
-	const [groupId, setGroupId] = useState('');
-	const [topicName, setTopicName] = useState('');
+function ConsumerOffsetsCard(props: { availableTopics: string[] }) {
+	const [groupIdField, setGroupIdField] = useState('');
+	const [topicNameField, setTopicNameField] = useState<string | null>(null);
 
 	const [topicPartitionOffsets, setTopicPartitionOffsets] = useState<TopicPartitionOffset[]>([]);
 
 	function handleHentConsumerOffsets() {
-		const request: GetConsumerOffsetsRequest = {
-			username,
-			password,
-			groupId,
-			topicName
-		};
+		if (topicNameField == null) {
+			errorToast("Topic is missing");
+			return;
+		}
+
+		const request: GetConsumerOffsetsRequest = {groupId: groupIdField, topicName: topicNameField};
 
 		getConsumerOffsets(request)
 			.then(res => {
@@ -99,8 +106,8 @@ function ConsumerOffsetsCard() {
 				Henter siste commitet offset for alle partisjoner tilhørende en consumer gruppe for en gitt topic
 			</Normaltekst>
 
-			<Input label="Consumer group id" value={groupId} onChange={e => setGroupId(e.target.value)} />
-			<Input label="Topic name" value={topicName} onChange={e => setTopicName(e.target.value)} />
+			<Input label="Consumer group id" value={groupIdField} onChange={e => setGroupIdField(e.target.value)} />
+			<TopicSelect availableTopics={props.availableTopics} onTopicChanged={setTopicNameField} />
 
 			<Flatknapp onClick={handleHentConsumerOffsets}>Fetch</Flatknapp>
 
@@ -117,20 +124,19 @@ function ConsumerOffsetsCard() {
 	);
 }
 
-function LastRecordOffsetCard() {
-	const { username, password } = useCredentialsStore();
-	const [topicName, setTopicName] = useState('');
+function LastRecordOffsetCard(props: { availableTopics: string[] }) {
+	const [topicNameField, setTopicNameField] = useState<string | null>(null);
 	const [topicPartition, setTopicPartition] = useState('0');
 
 	const [lastRecordOffset, setLastRecordOffset] = useState<number | null>(null);
 
 	function handleHentLastRecordOffset() {
-		const request: GetLastRecordOffsetRequest = {
-			username,
-			password,
-			topicName,
-			topicPartition: parseInt(topicPartition, 10)
-		};
+		if (topicNameField == null) {
+			errorToast("Topic is missing");
+			return;
+		}
+
+		const request: GetLastRecordOffsetRequest = {topicName: topicNameField, topicPartition: parseInt(topicPartition, 10)};
 
 		getLastRecordOffset(request)
 			.then(res => {
@@ -145,7 +151,7 @@ function LastRecordOffsetCard() {
 				Henter offset til siste record(melding på kafka) som ligger på en topic+partisjon
 			</Normaltekst>
 
-			<Input label="Topic name" value={topicName} onChange={e => setTopicName(e.target.value)} />
+			<TopicSelect availableTopics={props.availableTopics} onTopicChanged={setTopicNameField} />
 			<Input
 				label="Topic partition (first partition starts at 0)"
 				type="number"
@@ -164,17 +170,19 @@ function LastRecordOffsetCard() {
 	);
 }
 
-function SetConsumerOffsetCard() {
-	const { username, password } = useCredentialsStore();
-	const [topicNameField, setTopicNameField] = useState('');
+function SetConsumerOffsetCard(props: { availableTopics: string[] }) {
+	const [topicNameField, setTopicNameField] = useState<string | null>(null);
 	const [groupIdField, setGroupIdField] = useState('');
 	const [topicPartitionField, setTopicPartitionField] = useState('0');
 	const [offsetField, setOffsetField] = useState('0');
 
 	function handleSetConsumerOffset() {
+		if (topicNameField == null) {
+			errorToast("Topic is missing");
+			return;
+		}
+
 		const request: SetConsumerOffsetRequest = {
-			username,
-			password,
 			topicName: topicNameField,
 			topicPartition: parseInt(topicPartitionField, 10),
 			offset: parseInt(offsetField, 10),
@@ -187,7 +195,7 @@ function SetConsumerOffsetCard() {
 	}
 
 	return (
-		<Card title="Set consumer offset" className="mini-card" innholdClassName="card__content">
+		<Card title="Set consumer offset" innholdClassName="card__content">
 			<Normaltekst className="blokk-s">
 				Setter offset til en consumer for en topic+partisjon. Det er viktig å vite at selv om offsetet blir
 				endret, så vil ikke consumere plukke opp endringen i offset før de er startet på nytt. Hvis en consumer
@@ -195,7 +203,8 @@ function SetConsumerOffsetCard() {
 				overskrive offsetet fra pto-admin.
 			</Normaltekst>
 
-			<Input label="Topic name" value={topicNameField} onChange={e => setTopicNameField(e.target.value)} />
+			<TopicSelect availableTopics={props.availableTopics} onTopicChanged={setTopicNameField} />
+
 			<Input
 				label="Topic partition (first partition starts at 0)"
 				type="number"
@@ -217,7 +226,6 @@ enum FetchFrom {
 }
 
 function ReadFromTopicCard() {
-	const { username, password } = useCredentialsStore();
 	const [topicNameField, setTopicNameField] = useState('');
 	const [topicPartitionField, setTopicPartitionField] = useState('0');
 	const [fetchFromField, setFetchFromField] = useState<FetchFrom>(FetchFrom.END);
@@ -238,12 +246,7 @@ function ReadFromTopicCard() {
 		} else if (fetchFromField === FetchFrom.END) {
 			try {
 				const lastRecordOffset = (
-					await getLastRecordOffset({
-						username,
-						password,
-						topicName: topicNameField,
-						topicPartition
-					})
+					await getLastRecordOffset({topicName: topicNameField, topicPartition})
 				).data.latestRecordOffset;
 
 				fetchFromOffset = lastRecordOffset - maxRecords;
@@ -256,8 +259,6 @@ function ReadFromTopicCard() {
 		}
 
 		const request: ReadFromTopicRequest = {
-			username,
-			password,
 			topicName: topicNameField,
 			topicPartition,
 			fromOffset: fetchFromOffset,
