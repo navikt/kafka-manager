@@ -1,44 +1,53 @@
 package no.nav.kafkamanager.service
 
 import no.nav.common.kafka.util.KafkaPropertiesBuilder
+import no.nav.common.utils.Credentials
 import no.nav.kafkamanager.config.EnvironmentProperties
 import no.nav.kafkamanager.controller.KafkaAdminController
+import no.nav.kafkamanager.controller.KafkaAdminController.Companion.MAX_KAFKA_RECORDS
+import no.nav.kafkamanager.domain.AppConfig
 import no.nav.kafkamanager.domain.KafkaRecord
+import no.nav.kafkamanager.domain.TopicConfig
+import no.nav.kafkamanager.domain.TopicLocation
+import no.nav.kafkamanager.utils.KafkaRecordDeserializer.deserializeRecord
 import no.nav.kafkamanager.utils.Mappers.toKafkaRecordHeader
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.consumer.OffsetAndMetadata
 import org.apache.kafka.common.TopicPartition
 import org.apache.kafka.common.serialization.ByteArrayDeserializer
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import org.springframework.web.server.ResponseStatusException
 import java.time.Duration
 import java.util.*
 import java.util.Collections.singleton
+import java.util.function.Supplier
 import kotlin.collections.ArrayList
 import kotlin.math.max
 import kotlin.math.min
 
-
 @Service
 class KafkaAdminService(
-    private val environmentProperties: EnvironmentProperties
+    private val environmentProperties: EnvironmentProperties,
+    private val appConfig: AppConfig,
+    private val systemUserCredentialsSupplier: Supplier<Credentials>
 ) {
 
+    fun getAvailableTopics(): List<String> {
+        return appConfig.topics.map { it.name }
+    }
+
     fun readTopic(request: KafkaAdminController.ReadTopicRequest): List<KafkaRecord> {
-        val topicName = request.topicName
-        val partition = request.topicPartition
-        val fromOffset = max(0, request.fromOffset)
-        val maxRecords = request.maxRecords
-
-        val properties = createConsumerProperties(null, request.credentials)
-        properties[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = maxRecords
-
-        val kafkaConsumer = KafkaConsumer<ByteArray, ByteArray>(properties)
+        val topicConfig = findTopicConfigOrThrow(request.topicName)
+        val kafkaConsumer = createKafkaConsumerForTopic(null, request.topicName)
 
         val kafkaRecords = ArrayList<KafkaRecord>()
 
         kafkaConsumer.use { consumer ->
-            val topicPartition = TopicPartition(topicName, partition)
+            val topicPartition = TopicPartition(request.topicName, request.topicPartition)
+            val fromOffset = max(0, request.fromOffset)
+            val maxRecords = request.maxRecords
 
             consumer.assign(singleton(topicPartition))
             consumer.seek(topicPartition, fromOffset)
@@ -51,7 +60,12 @@ class KafkaAdminService(
                     break
                 }
 
-                kafkaRecords.addAll(consumerRecords.records(topicPartition).map { toKafkaRecordHeader(it) })
+                val kafkaRecordsBatch = consumerRecords.records(topicPartition).map {
+                    val stringRecord = deserializeRecord(it, topicConfig.keyDeserializerType, topicConfig.valueDeserializerType)
+                    toKafkaRecordHeader(stringRecord)
+                }
+
+                kafkaRecords.addAll(kafkaRecordsBatch)
             }
 
             // Shrink to fit maxRecords
@@ -63,12 +77,9 @@ class KafkaAdminService(
         }
     }
 
-    fun getLastRecordOffset(offsetRequest: KafkaAdminController.GetLastRecordOffsetRequest): Long {
-        val topicName = offsetRequest.topicName
-        val partition = offsetRequest.topicPartition
-        val topicPartition = TopicPartition(topicName, partition)
-
-        val kafkaConsumer = createConsumer(null, offsetRequest.credentials)
+    fun getLastRecordOffset(request: KafkaAdminController.GetLastRecordOffsetRequest): Long {
+        val topicPartition = TopicPartition(request.topicName, request.topicPartition)
+        val kafkaConsumer = createKafkaConsumerForTopic(null, request.topicName)
 
         kafkaConsumer.use { consumer ->
             consumer.assign(singleton(topicPartition))
@@ -79,11 +90,10 @@ class KafkaAdminService(
     }
 
     fun getConsumerOffsets(request: KafkaAdminController.GetConsumerOffsetsRequest): Map<TopicPartition, OffsetAndMetadata> {
-        val topicName = request.topicName
-        val kafkaConsumer = createConsumer(request.groupId, request.credentials)
+        val kafkaConsumer = createKafkaConsumerForTopic(request.groupId, request.topicName)
 
         kafkaConsumer.use { consumer ->
-            val topicPartitions = consumer.partitionsFor(topicName)
+            val topicPartitions = consumer.partitionsFor(request.topicName)
                 .map { TopicPartition(it.topic(), it.partition()) }
                 .toSet()
 
@@ -97,7 +107,7 @@ class KafkaAdminService(
 
     fun setConsumerOffset(request: KafkaAdminController.SetConsumerOffsetRequest) {
         val topicPartition = TopicPartition(request.topicName, request.topicPartition)
-        val kafkaConsumer = createConsumer(request.groupId, request.credentials)
+        val kafkaConsumer = createKafkaConsumerForTopic(request.groupId, request.topicName)
 
         kafkaConsumer.use { consumer ->
             consumer.assign(listOf(topicPartition))
@@ -106,23 +116,54 @@ class KafkaAdminService(
         }
     }
 
-    private fun createConsumerProperties(consumerGroupId: String?, credentials: KafkaAdminController.Credentials): Properties {
-        val builder = KafkaPropertiesBuilder.consumerBuilder()
-            .withBaseProperties()
+    private fun createKafkaConsumerForTopic(
+        consumerGroupId: String?,
+        topicName: String
+    ): KafkaConsumer<ByteArray, ByteArray> {
+        val topicConfig = findTopicConfigOrThrow(topicName)
+        val properties = createPropertiesForTopic(consumerGroupId, topicConfig)
 
-        if (consumerGroupId != null) {
-            builder.withConsumerGroupId(consumerGroupId)
+        return KafkaConsumer(properties)
+    }
+
+    private fun findTopicConfigOrThrow(topicName: String): TopicConfig {
+        return appConfig.topics.find { it.name == topicName }
+            ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Could not find config for topic")
+    }
+
+    private fun createPropertiesForTopic(consumerGroupId: String?, topicConfig: TopicConfig): Properties {
+        val properties = when (topicConfig.location) {
+            TopicLocation.ON_PREM -> createOnPremConsumerProperties(systemUserCredentialsSupplier)
+            TopicLocation.AIVEN -> createAivenConsumerProperties()
         }
 
-        return builder
+        if (consumerGroupId != null) {
+            properties[ConsumerConfig.GROUP_ID_CONFIG] = consumerGroupId
+        }
+
+        return properties
+    }
+
+    private fun createOnPremConsumerProperties(credentialsSupplier: Supplier<Credentials>): Properties {
+        val credentials = credentialsSupplier.get()
+
+        return KafkaPropertiesBuilder.consumerBuilder()
+            .withBaseProperties()
+            .withProp(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, MAX_KAFKA_RECORDS)
             .withBrokerUrl(environmentProperties.onPremKafkaBrokersUrl)
             .withOnPremAuth(credentials.username, credentials.password)
             .withDeserializers(ByteArrayDeserializer::class.java, ByteArrayDeserializer::class.java)
             .build()
     }
 
-    private fun createConsumer(consumerGroupId: String?, credentials: KafkaAdminController.Credentials): KafkaConsumer<ByteArray, ByteArray> {
-        return KafkaConsumer(createConsumerProperties(consumerGroupId, credentials))
+    private fun createAivenConsumerProperties(): Properties {
+        return KafkaPropertiesBuilder.consumerBuilder()
+            .withBaseProperties()
+            .withProp(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, MAX_KAFKA_RECORDS)
+            .withAivenBrokerUrl()
+            .withAivenAuth()
+            .withDeserializers(ByteArrayDeserializer::class.java, ByteArrayDeserializer::class.java)
+            .build()
     }
 
 }

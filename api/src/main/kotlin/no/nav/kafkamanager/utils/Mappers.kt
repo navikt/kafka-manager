@@ -18,10 +18,10 @@ object Mappers {
         )
     }
 
-    fun toKafkaRecordHeader(consumerRecord: ConsumerRecord<ByteArray, ByteArray>): KafkaRecord {
+    fun toKafkaRecordHeader(consumerRecord: ConsumerRecord<String?, String?>): KafkaRecord {
         return KafkaRecord(
-            key = String(consumerRecord.key()),
-            value = String(consumerRecord.value()),
+            key = consumerRecord.key(),
+            value = consumerRecord.value(),
             timestamp = consumerRecord.timestamp(),
             headers = consumerRecord.headers().map { toRecordHeader(it) },
             offset = consumerRecord.offset()

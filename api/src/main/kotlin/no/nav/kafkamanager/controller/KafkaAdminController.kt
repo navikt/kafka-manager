@@ -4,10 +4,7 @@ import no.nav.kafkamanager.domain.KafkaRecord
 import no.nav.kafkamanager.service.KafkaAdminService
 import no.nav.kafkamanager.utils.Mappers.toTopicWithOffset
 import org.springframework.http.HttpStatus
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 import org.springframework.web.server.ResponseStatusException
 
 @RestController
@@ -15,6 +12,11 @@ import org.springframework.web.server.ResponseStatusException
 class KafkaAdminController(
     val kafkaAdminService: KafkaAdminService,
 ) {
+
+    @GetMapping("/available-topics")
+    fun availableTopics(): List<String> {
+        return kafkaAdminService.getAvailableTopics()
+    }
 
     @PostMapping("/read-topic")
     fun readTopic(@RequestBody request: ReadTopicRequest): List<KafkaRecord> {
@@ -42,15 +44,16 @@ class KafkaAdminController(
     }
 
     private fun validateReadTopicRequestDTO(readTopicRequest: ReadTopicRequest) {
-        if (readTopicRequest.maxRecords < 0 || readTopicRequest.maxRecords > 100) {
+        if (readTopicRequest.maxRecords < 0 || readTopicRequest.maxRecords > MAX_KAFKA_RECORDS) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "maxRecords must be between 0 and 100")
         }
     }
 
-    data class Credentials(val username: String, val password: String)
+    companion object {
+        const val MAX_KAFKA_RECORDS = 100
+    }
 
     data class ReadTopicRequest(
-        val credentials: Credentials,
         val topicName: String,
         val topicPartition: Int,
         val maxRecords: Int,
@@ -58,7 +61,6 @@ class KafkaAdminController(
     )
 
     data class GetLastRecordOffsetRequest(
-        val credentials: Credentials,
         val topicName: String,
         val topicPartition: Int
     )
@@ -68,13 +70,11 @@ class KafkaAdminController(
     )
 
     data class GetConsumerOffsetsRequest(
-        val credentials: Credentials,
         val groupId: String,
         val topicName: String
     )
 
     data class SetConsumerOffsetRequest(
-        val credentials: Credentials,
         val groupId: String,
         val topicName: String,
         val topicPartition: Int,
