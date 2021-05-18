@@ -1,0 +1,6 @@
+.idea/*
+!.idea/runConfigurations/
+*.iml
+
+target/
+bash.exe.stackdump
