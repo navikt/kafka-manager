@@ -1,6 +1,6 @@
 package no.nav.kafkamanager.config
 
-import no.nav.common.json.JsonUtils
+import com.fasterxml.jackson.databind.ObjectMapper
 import no.nav.common.utils.Credentials
 import no.nav.common.utils.NaisUtils
 import no.nav.kafkamanager.domain.AppConfig
@@ -13,9 +13,13 @@ import java.util.function.Supplier
 @EnableConfigurationProperties(EnvironmentProperties::class)
 class ApplicationConfig {
 
+    companion object {
+        const val DEFAULT_APPLICATION_NAME = "kafka-manager"
+    }
+
     @Bean
-    fun appConfig(properties: EnvironmentProperties): AppConfig {
-        return JsonUtils.fromJson(properties.appConfigJson, AppConfig::class.java)
+    fun appConfig(properties: EnvironmentProperties, objectMapper: ObjectMapper): AppConfig {
+        return objectMapper.readValue(properties.appConfigJson, AppConfig::class.java)
     }
 
     @Bean
