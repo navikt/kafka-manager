@@ -1,0 +1,73 @@
+name: Build, push and deploy
+on: push
+env:
+  IMAGE: docker.pkg.github.com/${{ github.repository }}/kafka-manager
+
+jobs:
+  test:
+    name: Run tests
+    runs-on: ubuntu-latest
+    if: github.ref != 'refs/heads/main'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+
+      - name: Set up cache
+        uses: actions/cache@v1
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-maven-
+
+      - name: Run maven tests
+        run: mvn -B verify
+
+  test-build-and-push:
+    name: Test, build and push
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+
+      - name: Setup node
+        uses: actions/setup-node@v1
+        with:
+          node-version: '12.x'
+
+      - name: Set up cache
+        uses: actions/cache@v1
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-maven-
+
+      - name: Build maven artifacts
+        run: mvn -f ./api/pom.xml -B package
+
+      - name: Install dependencies
+        run: npm ci --prefix web-app
+
+      - name: Build frontend assets
+        run: npm run build --prefix web-app
+
+      - name: Create image tag
+        run: echo "IMAGE_TAG=2.$(TZ=\"Europe/Oslo\" date +%Y.%m.%d_%H.%M)-$(git rev-parse --short=12 HEAD)" >> $GITHUB_ENV
+
+      - name: Build and push Docker image
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo ${GITHUB_TOKEN} | docker login docker.pkg.github.com -u ${GITHUB_REPOSITORY} --password-stdin
+          docker build -t ${IMAGE}:${IMAGE_TAG} .
+          docker push ${IMAGE}:${IMAGE_TAG}
