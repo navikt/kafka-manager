@@ -10,10 +10,13 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 class WebSecurityConfig : WebSecurityConfigurerAdapter() {
 
     override fun configure(http: HttpSecurity) {
-        http
-            .authorizeRequests()
+        http.authorizeRequests()
+            .antMatchers("/internal/**", "/oauth2/**").permitAll()
             .anyRequest().authenticated()
-            .and().oauth2Login()
+            .and()
+            .oauth2Login()
+            .redirectionEndpoint { it.baseUri("/oauth2/callback") }
+            .defaultSuccessUrl("/index.html")
     }
 
 }
