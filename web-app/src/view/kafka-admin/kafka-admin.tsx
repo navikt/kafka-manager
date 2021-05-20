@@ -48,7 +48,7 @@ export function KafkaAdmin() {
 				<LastRecordOffsetCard availableTopics={availableTopics} />
 				<SetConsumerOffsetCard availableTopics={availableTopics} />
 			</div>
-			<ReadFromTopicCard />
+			<ReadFromTopicCard availableTopics={availableTopics} />
 		</div>
 	);
 }
@@ -225,8 +225,8 @@ enum FetchFrom {
 	OFFSET = 'OFFSET'
 }
 
-function ReadFromTopicCard() {
-	const [topicNameField, setTopicNameField] = useState('');
+function ReadFromTopicCard(props: { availableTopics: string[] }) {
+	const [topicNameField, setTopicNameField] = useState<string | null>(null);
 	const [topicPartitionField, setTopicPartitionField] = useState('0');
 	const [fetchFromField, setFetchFromField] = useState<FetchFrom>(FetchFrom.END);
 	const [fromOffsetField, setFromOffsetField] = useState('0');
@@ -236,6 +236,11 @@ function ReadFromTopicCard() {
 	const [recordsFromTopic, setRecordsFromTopic] = useState<KafkaRecord[]>([]);
 
 	async function handleReadFromTopic() {
+		if (topicNameField == null) {
+			errorToast("Topic is missing");
+			return;
+		}
+
 		const topicPartition = parseInt(topicPartitionField, 10);
 		const maxRecords = parseInt(maxRecordsField, 10);
 
@@ -286,7 +291,8 @@ function ReadFromTopicCard() {
 				Leser meldinger fra en topic+partisjon. Trykk på en av meldingene for å se mer detaljert informasjon
 			</Normaltekst>
 
-			<Input label="Topic name" value={topicNameField} onChange={e => setTopicNameField(e.target.value)} />
+			<TopicSelect availableTopics={props.availableTopics} onTopicChanged={setTopicNameField} />
+
 			<Input
 				label="Topic partition (first partition starts at 0)"
 				type="number"
