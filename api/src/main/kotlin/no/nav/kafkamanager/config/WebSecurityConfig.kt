@@ -5,6 +5,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter
 
+
 @Configuration
 @EnableWebSecurity
 class WebSecurityConfig : WebSecurityConfigurerAdapter() {
@@ -14,6 +15,7 @@ class WebSecurityConfig : WebSecurityConfigurerAdapter() {
             .antMatchers("/internal/**", "/oauth2/**").permitAll()
             .anyRequest().authenticated()
             .and()
+            .csrf().disable() // Use SameSite=lax instead
             .oauth2Login()
             .redirectionEndpoint { it.baseUri("/oauth2/callback") }
             .defaultSuccessUrl("/index.html")
