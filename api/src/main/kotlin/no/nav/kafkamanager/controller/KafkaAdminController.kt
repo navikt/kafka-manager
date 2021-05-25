@@ -2,7 +2,7 @@ package no.nav.kafkamanager.controller
 
 import no.nav.kafkamanager.domain.KafkaRecord
 import no.nav.kafkamanager.service.KafkaAdminService
-import no.nav.kafkamanager.utils.Mappers.toTopicWithOffset
+import no.nav.kafkamanager.utils.DTOMappers.toTopicWithOffset
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.server.ResponseStatusException
@@ -33,9 +33,7 @@ class KafkaAdminController(
 
     @PostMapping("/get-last-record-offset")
     fun getLastRecordOffset(@RequestBody request: GetLastRecordOffsetRequest): GetLastRecordOffsetResponse {
-        return GetLastRecordOffsetResponse(
-            latestRecordOffset = kafkaAdminService.getLastRecordOffset(request)
-        )
+        return GetLastRecordOffsetResponse(kafkaAdminService.getLastRecordOffset(request))
     }
 
     @PostMapping("/set-consumer-offset")

@@ -8,7 +8,7 @@ import org.apache.kafka.clients.consumer.OffsetAndMetadata
 import org.apache.kafka.common.TopicPartition
 import org.apache.kafka.common.header.Header
 
-object Mappers {
+object DTOMappers {
 
     fun toTopicWithOffset(topicPartition: TopicPartition, offsetAndMetadata: OffsetAndMetadata): KafkaAdminController.TopicWithOffset {
         return KafkaAdminController.TopicWithOffset(
@@ -18,7 +18,7 @@ object Mappers {
         )
     }
 
-    fun toKafkaRecordHeader(consumerRecord: ConsumerRecord<String?, String?>): KafkaRecord {
+    fun toKafkaRecordHeader(consumerRecord: ConsumerRecord<String, String>): KafkaRecord {
         return KafkaRecord(
             key = consumerRecord.key(),
             value = consumerRecord.value(),
@@ -34,5 +34,6 @@ object Mappers {
             value = String(header.value())
         )
     }
+
 
 }

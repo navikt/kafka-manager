@@ -1,21 +1,20 @@
 package no.nav.kafkamanager.service
 
-import no.nav.common.kafka.util.KafkaPropertiesBuilder
 import no.nav.common.utils.Credentials
 import no.nav.kafkamanager.config.EnvironmentProperties
 import no.nav.kafkamanager.controller.KafkaAdminController
-import no.nav.kafkamanager.controller.KafkaAdminController.Companion.MAX_KAFKA_RECORDS
 import no.nav.kafkamanager.domain.AppConfig
 import no.nav.kafkamanager.domain.KafkaRecord
 import no.nav.kafkamanager.domain.TopicConfig
 import no.nav.kafkamanager.domain.TopicLocation
-import no.nav.kafkamanager.utils.KafkaRecordDeserializer.deserializeRecord
-import no.nav.kafkamanager.utils.Mappers.toKafkaRecordHeader
+import no.nav.kafkamanager.utils.ConsumerRecordMapper
+import no.nav.kafkamanager.utils.DTOMappers.toKafkaRecordHeader
+import no.nav.kafkamanager.utils.KafkaPropertiesFactory.createAivenConsumerProperties
+import no.nav.kafkamanager.utils.KafkaPropertiesFactory.createOnPremConsumerProperties
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.consumer.OffsetAndMetadata
 import org.apache.kafka.common.TopicPartition
-import org.apache.kafka.common.serialization.ByteArrayDeserializer
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
@@ -39,9 +38,7 @@ class KafkaAdminService(
     }
 
     fun readTopic(request: KafkaAdminController.ReadTopicRequest): List<KafkaRecord> {
-        val topicConfig = findTopicConfigOrThrow(request.topicName)
         val kafkaConsumer = createKafkaConsumerForTopic(null, request.topicName)
-
         val kafkaRecords = ArrayList<KafkaRecord>()
 
         kafkaConsumer.use { consumer ->
@@ -61,7 +58,7 @@ class KafkaAdminService(
                 }
 
                 val kafkaRecordsBatch = consumerRecords.records(topicPartition).map {
-                    val stringRecord = deserializeRecord(it, topicConfig.keyDeserializerType, topicConfig.valueDeserializerType)
+                    val stringRecord = ConsumerRecordMapper.mapConsumerRecord(it)
                     toKafkaRecordHeader(stringRecord)
                 }
 
@@ -119,7 +116,7 @@ class KafkaAdminService(
     private fun createKafkaConsumerForTopic(
         consumerGroupId: String?,
         topicName: String
-    ): KafkaConsumer<ByteArray, ByteArray> {
+    ): KafkaConsumer<Any?, Any?> {
         val topicConfig = findTopicConfigOrThrow(topicName)
         val properties = createPropertiesForTopic(consumerGroupId, topicConfig)
 
@@ -132,9 +129,18 @@ class KafkaAdminService(
     }
 
     private fun createPropertiesForTopic(consumerGroupId: String?, topicConfig: TopicConfig): Properties {
+        val keyDesType = topicConfig.keyDeserializerType
+        val valueDesType = topicConfig.valueDeserializerType
+
         val properties = when (topicConfig.location) {
-            TopicLocation.ON_PREM -> createOnPremConsumerProperties(systemUserCredentialsSupplier)
-            TopicLocation.AIVEN -> createAivenConsumerProperties()
+            TopicLocation.ON_PREM -> createOnPremConsumerProperties(
+                environmentProperties.onPremKafkaBrokersUrl,
+                systemUserCredentialsSupplier.get(),
+                environmentProperties.onPremSchemaRegistryUrl,
+                keyDesType,
+                valueDesType
+            )
+            TopicLocation.AIVEN -> createAivenConsumerProperties(keyDesType, valueDesType)
         }
 
         if (consumerGroupId != null) {
@@ -144,26 +150,5 @@ class KafkaAdminService(
         return properties
     }
 
-    private fun createOnPremConsumerProperties(credentialsSupplier: Supplier<Credentials>): Properties {
-        val credentials = credentialsSupplier.get()
-
-        return KafkaPropertiesBuilder.consumerBuilder()
-            .withBaseProperties()
-            .withProp(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, MAX_KAFKA_RECORDS)
-            .withBrokerUrl(environmentProperties.onPremKafkaBrokersUrl)
-            .withOnPremAuth(credentials.username, credentials.password)
-            .withDeserializers(ByteArrayDeserializer::class.java, ByteArrayDeserializer::class.java)
-            .build()
-    }
-
-    private fun createAivenConsumerProperties(): Properties {
-        return KafkaPropertiesBuilder.consumerBuilder()
-            .withBaseProperties()
-            .withProp(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, MAX_KAFKA_RECORDS)
-            .withAivenBrokerUrl()
-            .withAivenAuth()
-            .withDeserializers(ByteArrayDeserializer::class.java, ByteArrayDeserializer::class.java)
-            .build()
-    }
 
 }
