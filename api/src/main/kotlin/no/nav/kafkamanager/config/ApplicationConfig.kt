@@ -23,9 +23,15 @@ class ApplicationConfig {
     }
 
     @Bean
-    fun systemUserCredentialsSupplier(): Supplier<Credentials> {
-        // Expects to find credentials mounted at /var/run/secrets/nais.io/service_user
-        return Supplier { NaisUtils.getCredentials("service_user")  }
+    fun systemUserCredentialsSupplier(properties: EnvironmentProperties): Supplier<Credentials> {
+        // Expects to find credentials from SERVICE_USER_NAME & SERVICE_USER_PASSWORD or mounted at /var/run/secrets/nais.io/service_user
+        return Supplier {
+            if (properties.serviceUserName.isNotBlank() && properties.serviceUserPassword.isNotBlank()) {
+                Credentials(properties.serviceUserName, properties.serviceUserPassword)
+            } else {
+                NaisUtils.getCredentials("service_user")
+            }
+        }
     }
 
 }
