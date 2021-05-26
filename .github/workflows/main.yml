@@ -25,7 +25,7 @@ jobs:
           restore-keys: ${{ runner.os }}-maven-
 
       - name: Run maven tests
-        run: mvn -B verify
+        run: mvn -f ./api/pom.xml -B verify
 
   test-build-and-push:
     name: Test, build and push
