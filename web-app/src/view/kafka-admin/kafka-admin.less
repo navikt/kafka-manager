@@ -1,6 +1,17 @@
 @import "~nav-frontend-tabell-style/src/index";
 @import "~nav-frontend-core/less/_variabler";
 
+.kafka-admin {
+  display: grid;
+  grid-column-gap: 2rem;
+  grid-template-rows: 1fr;
+  grid-template-columns: 600px 1fr;
+}
+
+.kafka-admin__col > *:not(:last-child) {
+  margin-bottom: 2rem;
+}
+
 .kafka-admin__spinner {
   margin: 2rem auto auto;
 }
@@ -10,22 +21,4 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.kafka-record-row {
-  cursor: pointer;
-  transition: transform .1s;
-
-  &:hover {
-    transform: scale(1.02);
-    background: rgba(0, 0, 0, 0.12);
-  }
-}
-
-.card-row-3-col{
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  grid-column-gap: 2rem;
-  grid-row-gap: 2rem;
-  grid-template-rows: min-content;
 }

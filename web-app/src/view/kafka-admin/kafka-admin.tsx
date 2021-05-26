@@ -43,12 +43,14 @@ export function KafkaAdmin() {
 
 	return (
 		<div className="view kafka-admin">
-			<div className="card-row-3-col blokk-m">
+			<div className="kafka-admin__col">
 				<ConsumerOffsetsCard availableTopics={availableTopics} />
 				<LastRecordOffsetCard availableTopics={availableTopics} />
 				<SetConsumerOffsetCard availableTopics={availableTopics} />
 			</div>
-			<ReadFromTopicCard availableTopics={availableTopics} />
+			<div>
+				<ReadFromTopicCard availableTopics={availableTopics} />
+			</div>
 		</div>
 	);
 }
@@ -101,7 +103,7 @@ function ConsumerOffsetsCard(props: { availableTopics: string[] }) {
 	}
 
 	return (
-		<Card title="Get consumer offsets" innholdClassName="card__content">
+		<Card title="Get consumer offsets" className="consumer-offset-card" innholdClassName="card__content">
 			<Normaltekst className="blokk-s">
 				Henter siste commitet offset for alle partisjoner tilhørende en consumer gruppe for en gitt topic
 			</Normaltekst>
@@ -146,7 +148,7 @@ function LastRecordOffsetCard(props: { availableTopics: string[] }) {
 	}
 
 	return (
-		<Card title="Last record offset" innholdClassName="card__content">
+		<Card title="Last record offset" className="last-record-offset-card" innholdClassName="card__content">
 			<Normaltekst className="blokk-s">
 				Henter offset til siste record(melding på kafka) som ligger på en topic+partisjon
 			</Normaltekst>
@@ -195,7 +197,7 @@ function SetConsumerOffsetCard(props: { availableTopics: string[] }) {
 	}
 
 	return (
-		<Card title="Set consumer offset" innholdClassName="card__content">
+		<Card title="Set consumer offset" className="set-consumer-offset-card" innholdClassName="card__content">
 			<Normaltekst className="blokk-s">
 				Setter offset til en consumer for en topic+partisjon. Det er viktig å vite at selv om offsetet blir
 				endret, så vil ikke consumere plukke opp endringen i offset før de er startet på nytt. Hvis en consumer
@@ -284,7 +286,7 @@ function ReadFromTopicCard(props: { availableTopics: string[] }) {
 	return (
 		<Card
 			title="Read records from topic"
-			className="very-large-card center-horizontal"
+			className="read-from-topic-card very-large-card center-horizontal"
 			innholdClassName="card__content"
 		>
 			<Normaltekst className="blokk-s">
