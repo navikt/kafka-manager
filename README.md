@@ -17,7 +17,7 @@ Appen støtter både on-prem og Aiven Kafka og visning av de aller fleste typer 
 Hvert team som ønsker å bruke Kafka Manager må deploye sin egen instanse i eget team namespace.
 
 Dette kan f.eks gjøres ved å bruke `kubectl apply -f <team>-kafka-manager.yaml`.
-YAML-filen burde fulge malen nedenfor.
+YAML-filen burde følge malen nedenfor.
 
 ```yaml
 kind: Application
@@ -53,30 +53,26 @@ spec:
     requests:
       cpu: 250m
       memory: 512Mi
-  # Optional. Vault section is required for on-prem (the env variables SERVICE_USER_NAME, SERVICE_USER_PASSWORD can also be used)
-  vault:
+  vault:   # Optional. Required for on-prem (the env variables SERVICE_USER_NAME, SERVICE_USER_PASSWORD can also be used)
     enabled: true
     paths:
       - kvPath: /serviceuser/data/<dev|prod>/srv<team>-kafka-manager
         mountPath: /var/run/secrets/nais.io/service_user
-  azure:
+  azure: # Required
     application:
       enabled: true
       tenant: nav.no
       claims:
         groups:
-          - id: <Azure AD group>
-  kafka:
+          - id: <Azure AD group> # Required for authorization
+  kafka: # Optional. Required for Aiven
     pool: nav-<dev|prod>
   env:
-    # Optional. Required for on-prem
-    - name: ON_PREM_KAFKA_BROKERS_URL
+    - name: ON_PREM_KAFKA_BROKERS_URL # Optional. Required for on-prem
       value: <BROKER URL>
-    # Optional. Required for on-prem topics that uses Avro
-    - name: ON_PREM_SCHEMA_REGISTRY_URL
+    - name: ON_PREM_SCHEMA_REGISTRY_URL # Optional. Required for on-prem topics that uses Avro
       value: <SCHEMA REGISTRY URL>
-    # Required
-    - name: APP_CONFIG_JSON
+    - name: APP_CONFIG_JSON # Required
       value: >
           {
             "topics": [
@@ -112,14 +108,14 @@ Se: https://doc.nais.io/security/auth/azure-ad/#groups
 
 Følgende typer verdier er støttet i `keyDeserializerType` og `valueDeserializerType`:
 ```
-    STRING,
-    DOUBLE,
-    FLOAT,
-    INTEGER,
-    LONG,
-    SHORT,
-    UUID,
-    AVRO
+STRING,
+DOUBLE,
+FLOAT,
+INTEGER,
+LONG,
+SHORT,
+UUID,
+AVRO
 ```
 
 ### Tilgang til topics
