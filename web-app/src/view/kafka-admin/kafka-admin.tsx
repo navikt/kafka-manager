@@ -58,6 +58,7 @@ export function KafkaAdmin() {
 function TopicSelect(props: { availableTopics: string[], onTopicChanged: (topic: string | null) => void }) {
 	const NO_TOPIC = 'NO_TOPIC';
 	const [selectedTopic, setSelectedTopic] = useState(NO_TOPIC);
+	const sortedTopics = props.availableTopics.sort();
 
 	function handleTopicChanged(e: ChangeEvent<HTMLSelectElement>) {
 		const selectedTopic = e.target.value;
@@ -70,7 +71,7 @@ function TopicSelect(props: { availableTopics: string[], onTopicChanged: (topic:
 	return (
 		<Select label="Topic name" value={selectedTopic} onChange={handleTopicChanged}>
 			<option value={NO_TOPIC}>Choose a topic</option>
-			{props.availableTopics.map((topic, idx) => {
+			{sortedTopics.map((topic, idx) => {
 				return <option key={idx} value={topic}>{topic}</option>;
 			})}
 		</Select>

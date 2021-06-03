@@ -2,7 +2,7 @@ import { RequestHandlersList } from 'msw/lib/types/setupWorker/glossary';
 import { rest } from 'msw';
 import { KafkaRecord, LastRecordOffsetResponse, TopicPartitionOffset } from '../api';
 
-const availableTopics = ['test-topic-a', 'test-topic-b', 'test-topic-c'];
+const availableTopics = ['test-topic-b', 'test-topic-a', 'test-topic-c'];
 
 const kafkaRecords: KafkaRecord[] = [];
 
