@@ -47,7 +47,7 @@ export const handlers: RequestHandlersList = [
 		return res(ctx.delay(500), ctx.json(availableTopics));
 	}),
 	rest.post('/api/kafka/read-topic', (req, res, ctx) => {
-		return res(ctx.delay(500), ctx.json(kafkaRecords));
+		return res(ctx.delay(1000), ctx.json(kafkaRecords));
 	}),
 	rest.post('/api/kafka/get-consumer-offsets', (req, res, ctx) => {
 		return res(ctx.delay(500), ctx.json(topicPartitionOffsets));

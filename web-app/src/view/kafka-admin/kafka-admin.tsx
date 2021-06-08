@@ -1,4 +1,4 @@
-import React, { ChangeEvent, useEffect, useState } from 'react';
+import React, { ChangeEvent, useEffect, useRef, useState } from 'react';
 import { errorToast, successToast, warningToast } from '../../utils/toast-utils';
 import { Card } from '../../component/card/card';
 import { Flatknapp } from 'nav-frontend-knapper';
@@ -22,6 +22,7 @@ import './kafka-admin.less';
 import { KafkaRecordModalContent } from './kafka-record-modal-content';
 import { PageSpinner } from '../../component/page-spinner/page-spinner';
 import NavFrontendSpinner from 'nav-frontend-spinner';
+import { toTimerStr } from '../../utils/date-utils';
 
 export function KafkaAdmin() {
 	const [availableTopics, setAvailableTopics] = useState<string[] | null>(null);
@@ -240,6 +241,10 @@ function ReadFromTopicCard(props: { availableTopics: string[] }) {
 	const [clickedRecord, setClickedRecord] = useState<KafkaRecord | null>(null);
 	const [recordsFromTopic, setRecordsFromTopic] = useState<KafkaRecord[]>([]);
 
+	const [startTimeMs, setStartTimeMs] = useState<number | null>(null);
+	const [timeTakenMs, setTimeTakenMs] = useState<number>(0);
+	const timerRef = useRef<number | null>();
+
 	async function handleReadFromTopic() {
 		if (topicNameField == null) {
 			errorToast("Topic is missing");
@@ -249,6 +254,8 @@ function ReadFromTopicCard(props: { availableTopics: string[] }) {
 		const topicPartition = parseInt(topicPartitionField, 10);
 		const maxRecords = parseInt(maxRecordsField, 10);
 
+		setRecordsFromTopic([]);
+		setStartTimeMs(Date.now());
 		setIsLoading(true);
 
 		let fetchFromOffset;
@@ -263,6 +270,7 @@ function ReadFromTopicCard(props: { availableTopics: string[] }) {
 
 				fetchFromOffset = lastRecordOffset - maxRecords;
 			} catch (e) {
+				setStartTimeMs(null);
 				setIsLoading(false);
 				errorToast('Klarte ikke å hente siste record offset');
 				return;
@@ -287,8 +295,24 @@ function ReadFromTopicCard(props: { availableTopics: string[] }) {
 				}
 			})
 			.catch(() => errorToast('Klarte ikke å hente siste record offset'))
-			.finally(() => setIsLoading(false));
+			.finally(() => {
+				setStartTimeMs(null);
+				setIsLoading(false);
+			});
 	}
+
+	useEffect(() => {
+		if (startTimeMs != null) {
+			timerRef.current =
+				setInterval(() => setTimeTakenMs(Date.now() - startTimeMs), 100) as unknown as number;
+		}
+
+		if (startTimeMs == null && timerRef.current != null) {
+			clearInterval(timerRef.current);
+			timerRef.current = null;
+			setTimeTakenMs(0);
+		}
+	}, [startTimeMs]);
 
 	return (
 		<Card
@@ -338,7 +362,10 @@ function ReadFromTopicCard(props: { availableTopics: string[] }) {
 			<Flatknapp onClick={handleReadFromTopic}>Fetch</Flatknapp>
 
 			{isLoading && recordsFromTopic.length === 0 ? (
-				<NavFrontendSpinner className="read-from-topic-spinner" type="XL"/>
+				<div className="read-from-topic-card__loader">
+					<NavFrontendSpinner type="XL" className="blokk-xxs" />
+					<Normaltekst className="read-from-topic-card__loader-timer">{toTimerStr(timeTakenMs)}</Normaltekst>
+				</div>
 			) : null}
 
 			{recordsFromTopic.length > 0 ? (
