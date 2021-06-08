@@ -11,9 +11,7 @@ import no.nav.kafkamanager.utils.ConsumerRecordMapper
 import no.nav.kafkamanager.utils.DTOMappers.toKafkaRecordHeader
 import no.nav.kafkamanager.utils.KafkaPropertiesFactory.createAivenConsumerProperties
 import no.nav.kafkamanager.utils.KafkaPropertiesFactory.createOnPremConsumerProperties
-import org.apache.kafka.clients.consumer.ConsumerConfig
-import org.apache.kafka.clients.consumer.KafkaConsumer
-import org.apache.kafka.clients.consumer.OffsetAndMetadata
+import org.apache.kafka.clients.consumer.*
 import org.apache.kafka.common.TopicPartition
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -62,7 +60,9 @@ class KafkaAdminService(
                     toKafkaRecordHeader(stringRecord)
                 }
 
-                kafkaRecords.addAll(kafkaRecordsBatch)
+                val filteredRecords = filterRecords(request.filter, kafkaRecordsBatch)
+
+                kafkaRecords.addAll(filteredRecords)
             }
 
             // Shrink to fit maxRecords
@@ -150,5 +150,29 @@ class KafkaAdminService(
         return properties
     }
 
+    companion object {
+
+        fun filterRecords(
+            filter: KafkaAdminController.RecordFilter?,
+            records: List<KafkaRecord>
+        ): List<KafkaRecord>  {
+            if (filter == null) {
+                return records
+            }
+
+            return records.filter {
+                if (filter.keyContains != null) {
+                    return@filter it.key != null && it.key.contains(filter.keyContains)
+                }
+
+                if (filter.valueContains != null) {
+                    return@filter it.value != null && it.value.contains(filter.valueContains)
+                }
+
+                true
+            }
+        }
+
+    }
 
 }

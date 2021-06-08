@@ -56,6 +56,12 @@ class KafkaAdminController(
         val topicPartition: Int,
         val maxRecords: Int,
         val fromOffset: Long,
+        val filter: RecordFilter?
+    )
+
+    data class RecordFilter(
+        val keyContains: String?,
+        val valueContains: String?
     )
 
     data class GetLastRecordOffsetRequest(
