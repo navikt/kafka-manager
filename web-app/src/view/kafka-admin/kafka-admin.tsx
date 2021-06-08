@@ -237,6 +237,7 @@ function ReadFromTopicCard(props: { availableTopics: string[] }) {
 	const [fetchFromField, setFetchFromField] = useState<FetchFrom>(FetchFrom.END);
 	const [fromOffsetField, setFromOffsetField] = useState('0');
 	const [maxRecordsField, setMaxRecordsField] = useState('50');
+	const [keyValueFilterField, setKeyValueFilterField] = useState('');
 
 	const [clickedRecord, setClickedRecord] = useState<KafkaRecord | null>(null);
 	const [recordsFromTopic, setRecordsFromTopic] = useState<KafkaRecord[]>([]);
@@ -283,7 +284,9 @@ function ReadFromTopicCard(props: { availableTopics: string[] }) {
 			topicName: topicNameField,
 			topicPartition,
 			fromOffset: fetchFromOffset,
-			maxRecords
+			maxRecords,
+			keyContains: keyValueFilterField,
+			valueContains: keyValueFilterField,
 		};
 
 		readFromTopic(request)
@@ -353,10 +356,16 @@ function ReadFromTopicCard(props: { availableTopics: string[] }) {
 			) : null}
 
 			<Input
-				label="Max records (max=100)"
+				label="Max records (maximum of records that will be returned, max=100)"
 				type="number"
 				value={maxRecordsField}
 				onChange={e => setMaxRecordsField(e.target.value)}
+			/>
+
+			<Input
+				label="Key/value filter (tip: max=1 can be used to reduce waiting)"
+				value={keyValueFilterField}
+				onChange={e => setKeyValueFilterField(e.target.value)}
 			/>
 
 			<Flatknapp onClick={handleReadFromTopic}>Fetch</Flatknapp>

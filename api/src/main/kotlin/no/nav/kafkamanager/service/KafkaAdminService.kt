@@ -156,7 +156,7 @@ class KafkaAdminService(
             filter: KafkaAdminController.RecordFilter?,
             records: List<KafkaRecord>
         ): List<KafkaRecord>  {
-            if (filter == null) {
+            if (filter == null || filter.keyContains == "" || filter.valueContains == "") {
                 return records
             }
 

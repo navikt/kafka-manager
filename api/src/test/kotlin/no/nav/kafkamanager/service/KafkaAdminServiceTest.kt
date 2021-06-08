@@ -48,8 +48,21 @@ class KafkaAdminServiceTest {
     )
 
     @Test
-    fun `filterRecords should not filter with no filter`() {
+    fun `filterRecords should not filter with null filter`() {
         assertEquals(records, filterRecords(null, records))
+    }
+
+    @Test
+    fun `filterRecords should not filter with empty filter`() {
+        assertEquals(records, filterRecords(KafkaAdminController.RecordFilter(
+            keyContains = "",
+            valueContains = null
+        ), records))
+
+        assertEquals(records, filterRecords(KafkaAdminController.RecordFilter(
+            keyContains = null,
+            valueContains = ""
+        ), records))
     }
     
     @Test
