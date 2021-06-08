@@ -21,6 +21,7 @@ import Modal from 'nav-frontend-modal';
 import './kafka-admin.less';
 import { KafkaRecordModalContent } from './kafka-record-modal-content';
 import { PageSpinner } from '../../component/page-spinner/page-spinner';
+import NavFrontendSpinner from 'nav-frontend-spinner';
 
 export function KafkaAdmin() {
 	const [availableTopics, setAvailableTopics] = useState<string[] | null>(null);
@@ -229,6 +230,7 @@ enum FetchFrom {
 }
 
 function ReadFromTopicCard(props: { availableTopics: string[] }) {
+	const [isLoading, setIsLoading] = useState<boolean>(false);
 	const [topicNameField, setTopicNameField] = useState<string | null>(null);
 	const [topicPartitionField, setTopicPartitionField] = useState('0');
 	const [fetchFromField, setFetchFromField] = useState<FetchFrom>(FetchFrom.END);
@@ -247,6 +249,8 @@ function ReadFromTopicCard(props: { availableTopics: string[] }) {
 		const topicPartition = parseInt(topicPartitionField, 10);
 		const maxRecords = parseInt(maxRecordsField, 10);
 
+		setIsLoading(true);
+
 		let fetchFromOffset;
 
 		if (fetchFromField === FetchFrom.BEGINNING) {
@@ -259,6 +263,7 @@ function ReadFromTopicCard(props: { availableTopics: string[] }) {
 
 				fetchFromOffset = lastRecordOffset - maxRecords;
 			} catch (e) {
+				setIsLoading(false);
 				errorToast('Klarte ikke å hente siste record offset');
 				return;
 			}
@@ -281,7 +286,8 @@ function ReadFromTopicCard(props: { availableTopics: string[] }) {
 					setRecordsFromTopic(res.data);
 				}
 			})
-			.catch(() => errorToast('Klarte ikke å hente siste record offset'));
+			.catch(() => errorToast('Klarte ikke å hente siste record offset'))
+			.finally(() => setIsLoading(false));
 	}
 
 	return (
@@ -330,6 +336,10 @@ function ReadFromTopicCard(props: { availableTopics: string[] }) {
 			/>
 
 			<Flatknapp onClick={handleReadFromTopic}>Fetch</Flatknapp>
+
+			{isLoading && recordsFromTopic.length === 0 ? (
+				<NavFrontendSpinner className="read-from-topic-spinner" type="XL"/>
+			) : null}
 
 			{recordsFromTopic.length > 0 ? (
 				<table className="tabell tabell--stripet">
