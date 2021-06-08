@@ -32,6 +32,16 @@
   margin: 2rem auto;
 }
 
+.kafka-record-row {
+  cursor: pointer;
+  transition: transform .1s;
+
+  &:hover {
+    transform: scale(1.02);
+    background: rgba(0, 0, 0, 0.12);
+  }
+}
+
 .read-from-topic-card__loader-timer {
   color: @navMorkGra;
 }
