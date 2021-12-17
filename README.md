@@ -151,4 +151,3 @@ Det er viktig at teamet selv gjør en avklaring på hvilke topics som er greit �
 
 Denne appen ble utviklet som en POC så det er mye som potensielt kan forbedres, både i kode og funksjonelt.
 Bruk på eget ansvar ;)
-
