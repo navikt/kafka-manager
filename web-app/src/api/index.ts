@@ -19,8 +19,7 @@ export interface ReadFromTopicRequest {
 	topicPartition: number;
 	maxRecords: number;
 	fromOffset: number;
-	keyContains?: string;
-	valueContains?: string;
+	filterText?: string;
 }
 
 export interface GetConsumerOffsetsRequest {
@@ -69,8 +68,7 @@ export function readFromTopic(request: ReadFromTopicRequest): AxiosPromise<Kafka
 		maxRecords: request.maxRecords,
 		fromOffset: request.fromOffset,
 		filter: {
-			keyContains: request.keyContains,
-			valueContains: request.valueContains
+			text: request.filterText,
 		}
 	});
 }

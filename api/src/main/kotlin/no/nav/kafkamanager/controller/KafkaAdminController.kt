@@ -60,8 +60,7 @@ class KafkaAdminController(
     )
 
     data class RecordFilter(
-        val keyContains: String?,
-        val valueContains: String?
+        val text: String?
     )
 
     data class GetLastRecordOffsetRequest(

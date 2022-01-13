@@ -285,8 +285,7 @@ function ReadFromTopicCard(props: { availableTopics: string[] }) {
 			topicPartition,
 			fromOffset: fetchFromOffset,
 			maxRecords,
-			keyContains: keyValueFilterField,
-			valueContains: keyValueFilterField,
+			filterText: keyValueFilterField,
 		};
 
 		readFromTopic(request)

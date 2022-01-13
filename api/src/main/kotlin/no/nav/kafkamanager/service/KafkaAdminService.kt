@@ -156,20 +156,15 @@ class KafkaAdminService(
             filter: KafkaAdminController.RecordFilter?,
             records: List<KafkaRecord>
         ): List<KafkaRecord>  {
-            if (filter == null || filter.keyContains == "" || filter.valueContains == "") {
+            if (filter == null || filter.text.isNullOrBlank()) {
                 return records
             }
 
             return records.filter {
-                if (filter.keyContains != null) {
-                    return@filter it.key != null && it.key.contains(filter.keyContains)
-                }
+                val keyMatches = it.key != null && it.key.contains(filter.text)
+                val valueMatches = it.value != null && it.value.contains(filter.text)
 
-                if (filter.valueContains != null) {
-                    return@filter it.value != null && it.value.contains(filter.valueContains)
-                }
-
-                true
+                return@filter keyMatches || valueMatches
             }
         }
 

@@ -54,23 +54,13 @@ class KafkaAdminServiceTest {
 
     @Test
     fun `filterRecords should not filter with empty filter`() {
-        assertEquals(records, filterRecords(KafkaAdminController.RecordFilter(
-            keyContains = "",
-            valueContains = null
-        ), records))
-
-        assertEquals(records, filterRecords(KafkaAdminController.RecordFilter(
-            keyContains = null,
-            valueContains = ""
-        ), records))
+        assertEquals(records, filterRecords(KafkaAdminController.RecordFilter(text = ""), records))
+        assertEquals(records, filterRecords(KafkaAdminController.RecordFilter(text = null), records))
     }
     
     @Test
     fun `filterRecords should filter records with key`() {
-        val filter = KafkaAdminController.RecordFilter(
-            keyContains = "123",
-            valueContains = null
-        )
+        val filter = KafkaAdminController.RecordFilter(text = "123")
 
         val filteredRecords = filterRecords(filter, records)
         assertEquals(2, filteredRecords.size)
@@ -82,10 +72,7 @@ class KafkaAdminServiceTest {
 
     @Test
     fun `filterRecords should filter records with value`() {
-        val filter = KafkaAdminController.RecordFilter(
-            keyContains = null,
-            valueContains = "123"
-        )
+        val filter = KafkaAdminController.RecordFilter(text = "123")
 
         val filteredRecords = filterRecords(filter, records)
         assertEquals(2, filteredRecords.size)
@@ -94,6 +81,5 @@ class KafkaAdminServiceTest {
             assertTrue(it.value!!.contains("123"))
         }
     }
-
 
 }
