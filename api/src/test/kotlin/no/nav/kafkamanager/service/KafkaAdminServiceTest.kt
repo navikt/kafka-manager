@@ -82,4 +82,20 @@ class KafkaAdminServiceTest {
         }
     }
 
+    @Test
+    fun `filterRecords should filter records with text with whitespace`() {
+        val filter = KafkaAdminController.RecordFilter(text = "key 123")
+
+        val filteredRecords = filterRecords(filter, records)
+        assertEquals(2, filteredRecords.size)
+    }
+
+    @Test
+    fun `filterRecords should filter records with text with different letter case`() {
+        val filter = KafkaAdminController.RecordFilter(text = "KeY123")
+
+        val filteredRecords = filterRecords(filter, records)
+        assertEquals(2, filteredRecords.size)
+    }
+
 }

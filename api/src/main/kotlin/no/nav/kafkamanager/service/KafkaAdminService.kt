@@ -161,11 +161,18 @@ class KafkaAdminService(
             }
 
             return records.filter {
-                val keyMatches = it.key != null && it.key.contains(filter.text)
-                val valueMatches = it.value != null && it.value.contains(filter.text)
+                val filterText = insensitiveText(filter.text)
+                val keyMatches = it.key != null && insensitiveText(it.key).contains(filterText)
+                val valueMatches = it.value != null && insensitiveText(it.value).contains(filterText)
 
                 return@filter keyMatches || valueMatches
             }
+        }
+
+        private fun insensitiveText(str: String): String {
+            return str.toLowerCase()
+                .replace(" ","")
+                .replace("\n", "")
         }
 
     }
