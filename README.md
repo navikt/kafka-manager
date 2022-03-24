@@ -99,8 +99,8 @@ spec:
 ```
 
 ### Autorisering
-Pr nå så er autoriseringen gjort ved bruke av `spec.azure.application.claims.groups`.
-Dvs at det viktig å spesifisere IDen til en gruppe i Azure AD på hvilke brukere som skal få tilgang til appen.
+Pr nå så er autoriseringen gjort ved bruk av `spec.azure.application.claims.groups`.
+Dvs at det viktig å spesifisere IDen til en gruppe i Azure AD som kun inneholder brukere som skal få tilgang til appen.
 
 Se: https://doc.nais.io/security/auth/azure-ad/#groups
 
@@ -138,7 +138,7 @@ For Aiven så kan man legge til en ny applikasjon med Topic-ressursen, f.eks:
 ```yaml
 spec:
   acl:
-    - team: pto
+    - team: <team>
       application: <team>-kafka-manager
       access: read
 ```
