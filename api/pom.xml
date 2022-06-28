@@ -16,8 +16,8 @@
     <description>API for managing kafka topics</description>
 
     <properties>
-        <java.version>11</java.version>
-        <kotlin.version>1.4.21</kotlin.version>
+        <java.version>17</java.version>
+        <kotlin.version>1.6.20</kotlin.version>
         <common.version>2.2022.04.01_08.27-cbfeb0be0ee0</common.version>
     </properties>
 
