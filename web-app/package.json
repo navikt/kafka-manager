@@ -8,7 +8,7 @@
     "lint": "tslint ./src/**/*.ts*",
     "lint:fix": "tslint ./src/**/**/**/**/*.ts* --fix",
     "test": "jest",
-    "prettier": "prettier --write \"src/**/*.{ts,tsx}\""
+    "prettier": "prettier --write \"src/**/*.{ts,tsx,less,css,js,jsx}\""
   },
   "eslintConfig": {
     "extends": "react-app"

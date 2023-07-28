@@ -36,8 +36,7 @@ export function KafkaAdmin() {
 				errorToast('Unable to load available topics');
 				setAvailableTopics([]);
 			});
-
-	}, [])
+	}, []);
 
 	if (availableTopics == null) {
 		return <PageSpinner />;
@@ -57,7 +56,7 @@ export function KafkaAdmin() {
 	);
 }
 
-function TopicSelect(props: { availableTopics: string[], onTopicChanged: (topic: string | null) => void }) {
+function TopicSelect(props: { availableTopics: string[]; onTopicChanged: (topic: string | null) => void }) {
 	const NO_TOPIC = 'NO_TOPIC';
 	const [selectedTopic, setSelectedTopic] = useState(NO_TOPIC);
 	const sortedTopics = props.availableTopics.sort();
@@ -74,7 +73,11 @@ function TopicSelect(props: { availableTopics: string[], onTopicChanged: (topic:
 		<Select label="Topic name" value={selectedTopic} onChange={handleTopicChanged}>
 			<option value={NO_TOPIC}>Choose a topic</option>
 			{sortedTopics.map((topic, idx) => {
-				return <option key={idx} value={topic}>{topic}</option>;
+				return (
+					<option key={idx} value={topic}>
+						{topic}
+					</option>
+				);
 			})}
 		</Select>
 	);
@@ -88,11 +91,11 @@ function ConsumerOffsetsCard(props: { availableTopics: string[] }) {
 
 	function handleHentConsumerOffsets() {
 		if (topicNameField == null) {
-			errorToast("Topic is missing");
+			errorToast('Topic is missing');
 			return;
 		}
 
-		const request: GetConsumerOffsetsRequest = {groupId: groupIdField, topicName: topicNameField};
+		const request: GetConsumerOffsetsRequest = { groupId: groupIdField, topicName: topicNameField };
 
 		getConsumerOffsets(request)
 			.then(res => {
@@ -137,11 +140,14 @@ function LastRecordOffsetCard(props: { availableTopics: string[] }) {
 
 	function handleHentLastRecordOffset() {
 		if (topicNameField == null) {
-			errorToast("Topic is missing");
+			errorToast('Topic is missing');
 			return;
 		}
 
-		const request: GetLastRecordOffsetRequest = {topicName: topicNameField, topicPartition: parseInt(topicPartition, 10)};
+		const request: GetLastRecordOffsetRequest = {
+			topicName: topicNameField,
+			topicPartition: parseInt(topicPartition, 10)
+		};
 
 		getLastRecordOffset(request)
 			.then(res => {
@@ -183,7 +189,7 @@ function SetConsumerOffsetCard(props: { availableTopics: string[] }) {
 
 	function handleSetConsumerOffset() {
 		if (topicNameField == null) {
-			errorToast("Topic is missing");
+			errorToast('Topic is missing');
 			return;
 		}
 
@@ -248,7 +254,7 @@ function ReadFromTopicCard(props: { availableTopics: string[] }) {
 
 	async function handleReadFromTopic() {
 		if (topicNameField == null) {
-			errorToast("Topic is missing");
+			errorToast('Topic is missing');
 			return;
 		}
 
@@ -265,9 +271,8 @@ function ReadFromTopicCard(props: { availableTopics: string[] }) {
 			fetchFromOffset = 0;
 		} else if (fetchFromField === FetchFrom.END) {
 			try {
-				const lastRecordOffset = (
-					await getLastRecordOffset({topicName: topicNameField, topicPartition})
-				).data.latestRecordOffset;
+				const lastRecordOffset = (await getLastRecordOffset({ topicName: topicNameField, topicPartition })).data
+					.latestRecordOffset;
 
 				fetchFromOffset = lastRecordOffset - maxRecords;
 			} catch (e) {
@@ -285,7 +290,7 @@ function ReadFromTopicCard(props: { availableTopics: string[] }) {
 			topicPartition,
 			fromOffset: fetchFromOffset,
 			maxRecords,
-			filterText: keyValueFilterField,
+			filterText: keyValueFilterField
 		};
 
 		readFromTopic(request)
@@ -305,8 +310,7 @@ function ReadFromTopicCard(props: { availableTopics: string[] }) {
 
 	useEffect(() => {
 		if (startTimeMs != null) {
-			timerRef.current =
-				setInterval(() => setTimeTakenMs(Date.now() - startTimeMs), 100) as unknown as number;
+			timerRef.current = (setInterval(() => setTimeTakenMs(Date.now() - startTimeMs), 100) as unknown) as number;
 		}
 
 		if (startTimeMs == null && timerRef.current != null) {

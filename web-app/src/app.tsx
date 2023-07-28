@@ -10,9 +10,9 @@ function App() {
 		<div className="app kafka-manager">
 			<Header />
 			<main>
-				<KafkaAdmin/>
+				<KafkaAdmin />
 			</main>
-			<ToastContainer/>
+			<ToastContainer />
 		</div>
 	);
 }
