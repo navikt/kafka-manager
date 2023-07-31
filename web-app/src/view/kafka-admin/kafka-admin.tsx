@@ -1,7 +1,7 @@
 import React, { ChangeEvent, useEffect, useRef, useState } from 'react';
 import { errorToast, successToast, warningToast } from '../../utils/toast-utils';
 import { Card } from '../../component/card/card';
-import { Flatknapp } from 'nav-frontend-knapper';
+import { BodyLong, BodyShort, Button, Select, TextField } from '@navikt/ds-react';
 import {
 	getAvailableTopics,
 	getConsumerOffsets,
@@ -15,8 +15,6 @@ import {
 	SetConsumerOffsetRequest,
 	TopicPartitionOffset
 } from '../../api';
-import { Input, Select } from 'nav-frontend-skjema';
-import { Normaltekst } from 'nav-frontend-typografi';
 import Modal from 'nav-frontend-modal';
 import './kafka-admin.less';
 import { KafkaRecordModalContent } from './kafka-record-modal-content';
@@ -110,14 +108,16 @@ function ConsumerOffsetsCard(props: { availableTopics: string[] }) {
 
 	return (
 		<Card title="Get consumer offsets" className="consumer-offset-card" innholdClassName="card__content">
-			<Normaltekst className="blokk-s">
+			<BodyShort className="blokk-s">
 				Henter siste commitet offset for alle partisjoner tilhørende en consumer gruppe for en gitt topic
-			</Normaltekst>
+			</BodyShort>
 
-			<Input label="Consumer group id" value={groupIdField} onChange={e => setGroupIdField(e.target.value)} />
+			<TextField label="Consumer group id" value={groupIdField} onChange={e => setGroupIdField(e.target.value)} />
 			<TopicSelect availableTopics={props.availableTopics} onTopicChanged={setTopicNameField} />
 
-			<Flatknapp onClick={handleHentConsumerOffsets}>Fetch</Flatknapp>
+			<Button onClick={handleHentConsumerOffsets} variant="tertiary">
+				Fetch
+			</Button>
 
 			<ul>
 				{topicPartitionOffsets.map((tpo, idx) => {
@@ -158,24 +158,26 @@ function LastRecordOffsetCard(props: { availableTopics: string[] }) {
 
 	return (
 		<Card title="Last record offset" className="last-record-offset-card" innholdClassName="card__content">
-			<Normaltekst className="blokk-s">
+			<BodyShort className="blokk-s">
 				Henter offset til siste record(melding på kafka) som ligger på en topic+partisjon
-			</Normaltekst>
+			</BodyShort>
 
 			<TopicSelect availableTopics={props.availableTopics} onTopicChanged={setTopicNameField} />
-			<Input
+			<TextField
 				label="Topic partition (first partition starts at 0)"
 				type="number"
 				value={topicPartition}
 				onChange={e => setTopicPartition(e.target.value)}
 			/>
 
-			<Flatknapp onClick={handleHentLastRecordOffset}>Fetch</Flatknapp>
+			<Button onClick={handleHentLastRecordOffset} variant="tertiary">
+				Fetch
+			</Button>
 
 			{lastRecordOffset != null ? (
-				<Normaltekst style={{ marginTop: '2rem' }}>
+				<BodyShort style={{ marginTop: '2rem' }}>
 					Offset til siste record: <strong>{lastRecordOffset}</strong>
-				</Normaltekst>
+				</BodyShort>
 			) : null}
 		</Card>
 	);
@@ -207,25 +209,32 @@ function SetConsumerOffsetCard(props: { availableTopics: string[] }) {
 
 	return (
 		<Card title="Set consumer offset" className="set-consumer-offset-card" innholdClassName="card__content">
-			<Normaltekst className="blokk-s">
+			<BodyLong className="blokk-s">
 				Setter offset til en consumer for en topic+partisjon. Det er viktig å vite at selv om offsetet blir
 				endret, så vil ikke consumere plukke opp endringen i offset før de er startet på nytt. Hvis en consumer
 				committer et nytt offset før den har blitt startet på nytt og fått hentet inn endringen, så vil den
 				overskrive offsetet fra kafka-manager.
-			</Normaltekst>
+			</BodyLong>
 
 			<TopicSelect availableTopics={props.availableTopics} onTopicChanged={setTopicNameField} />
 
-			<Input
+			<TextField
 				label="Topic partition (first partition starts at 0)"
 				type="number"
 				value={topicPartitionField}
 				onChange={e => setTopicPartitionField(e.target.value)}
 			/>
-			<Input label="Consumer group id" value={groupIdField} onChange={e => setGroupIdField(e.target.value)} />
-			<Input label="Offset" type="number" value={offsetField} onChange={e => setOffsetField(e.target.value)} />
+			<TextField label="Consumer group id" value={groupIdField} onChange={e => setGroupIdField(e.target.value)} />
+			<TextField
+				label="Offset"
+				type="number"
+				value={offsetField}
+				onChange={e => setOffsetField(e.target.value)}
+			/>
 
-			<Flatknapp onClick={handleSetConsumerOffset}>Set offset</Flatknapp>
+			<Button onClick={handleSetConsumerOffset} variant="tertiary">
+				Set offset
+			</Button>
 		</Card>
 	);
 }
@@ -326,13 +335,13 @@ function ReadFromTopicCard(props: { availableTopics: string[] }) {
 			className="read-from-topic-card very-large-card center-horizontal"
 			innholdClassName="card__content"
 		>
-			<Normaltekst className="blokk-s">
+			<BodyShort className="blokk-s">
 				Leser meldinger fra en topic+partisjon. Trykk på en av meldingene for å se mer detaljert informasjon
-			</Normaltekst>
+			</BodyShort>
 
 			<TopicSelect availableTopics={props.availableTopics} onTopicChanged={setTopicNameField} />
 
-			<Input
+			<TextField
 				label="Topic partition (first partition starts at 0)"
 				type="number"
 				value={topicPartitionField}
@@ -350,7 +359,7 @@ function ReadFromTopicCard(props: { availableTopics: string[] }) {
 			</Select>
 
 			{fetchFromField === FetchFrom.OFFSET ? (
-				<Input
+				<TextField
 					label="From offset"
 					type="number"
 					value={fromOffsetField}
@@ -358,25 +367,27 @@ function ReadFromTopicCard(props: { availableTopics: string[] }) {
 				/>
 			) : null}
 
-			<Input
+			<TextField
 				label="Max records (maximum of records that will be returned, max=100)"
 				type="number"
 				value={maxRecordsField}
 				onChange={e => setMaxRecordsField(e.target.value)}
 			/>
 
-			<Input
+			<TextField
 				label="Key/value filter (tip: max=1 can be used to reduce waiting)"
 				value={keyValueFilterField}
 				onChange={e => setKeyValueFilterField(e.target.value)}
 			/>
 
-			<Flatknapp onClick={handleReadFromTopic}>Fetch</Flatknapp>
+			<Button onClick={handleReadFromTopic} variant="tertiary">
+				Fetch
+			</Button>
 
 			{isLoading && recordsFromTopic.length === 0 ? (
 				<div className="read-from-topic-card__loader">
 					<NavFrontendSpinner type="XL" className="blokk-xxs" />
-					<Normaltekst className="read-from-topic-card__loader-timer">{toTimerStr(timeTakenMs)}</Normaltekst>
+					<BodyShort className="read-from-topic-card__loader-timer">{toTimerStr(timeTakenMs)}</BodyShort>
 				</div>
 			) : null}
 
