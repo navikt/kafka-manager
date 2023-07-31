@@ -1,7 +1,7 @@
 import React, { ChangeEvent, useEffect, useRef, useState } from 'react';
 import { errorToast, successToast, warningToast } from '../../utils/toast-utils';
 import { Card } from '../../component/card/card';
-import { BodyLong, BodyShort, Button, Modal, Select, TextField } from '@navikt/ds-react';
+import { BodyLong, BodyShort, Button, Loader, Modal, Select, TextField } from '@navikt/ds-react';
 import {
 	getAvailableTopics,
 	getConsumerOffsets,
@@ -18,7 +18,6 @@ import {
 import './kafka-admin.less';
 import { KafkaRecordModalContent } from './kafka-record-modal-content';
 import { PageSpinner } from '../../component/page-spinner/page-spinner';
-import NavFrontendSpinner from 'nav-frontend-spinner';
 import { toTimerStr } from '../../utils/date-utils';
 
 export function KafkaAdmin() {
@@ -385,7 +384,7 @@ function ReadFromTopicCard(props: { availableTopics: string[] }) {
 
 			{isLoading && recordsFromTopic.length === 0 ? (
 				<div className="read-from-topic-card__loader">
-					<NavFrontendSpinner type="XL" className="blokk-xxs" />
+					<Loader size="2xlarge" />
 					<BodyShort className="read-from-topic-card__loader-timer">{toTimerStr(timeTakenMs)}</BodyShort>
 				</div>
 			) : null}
