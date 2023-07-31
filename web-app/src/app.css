@@ -27,5 +27,5 @@ body * {
 	flex-direction: column;
 }
 .card__content .navds-form-field {
-	margin-bottom: 1.5rem;
+	margin-bottom: var(--a-spacing-6);
 }

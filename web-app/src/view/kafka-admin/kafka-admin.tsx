@@ -1,7 +1,7 @@
 import React, { ChangeEvent, useEffect, useRef, useState } from 'react';
 import { errorToast, successToast, warningToast } from '../../utils/toast-utils';
 import { Card } from '../../component/card/card';
-import { BodyLong, BodyShort, Button, Loader, Modal, Select, TextField } from '@navikt/ds-react';
+import { BodyShort, Button, Loader, Modal, Select, TextField } from '@navikt/ds-react';
 import {
 	getAvailableTopics,
 	getConsumerOffsets,
@@ -106,7 +106,7 @@ function ConsumerOffsetsCard(props: { availableTopics: string[] }) {
 
 	return (
 		<Card title="Get consumer offsets" className="consumer-offset-card" innholdClassName="card__content">
-			<BodyShort className="blokk-s">
+			<BodyShort spacing>
 				Henter siste commitet offset for alle partisjoner tilhørende en consumer gruppe for en gitt topic
 			</BodyShort>
 
@@ -117,15 +117,17 @@ function ConsumerOffsetsCard(props: { availableTopics: string[] }) {
 				Fetch
 			</Button>
 
-			<ul>
-				{topicPartitionOffsets.map((tpo, idx) => {
-					return (
-						<li key={idx}>
-							Partition={tpo.topicPartition} Offset={tpo.offset}
-						</li>
-					);
-				})}
-			</ul>
+			{topicPartitionOffsets.length > 0 && (
+				<ul>
+					{topicPartitionOffsets.map((tpo, idx) => {
+						return (
+							<li key={idx}>
+								Partition={tpo.topicPartition} Offset={tpo.offset}
+							</li>
+						);
+					})}
+				</ul>
+			)}
 		</Card>
 	);
 }
@@ -156,7 +158,7 @@ function LastRecordOffsetCard(props: { availableTopics: string[] }) {
 
 	return (
 		<Card title="Last record offset" className="last-record-offset-card" innholdClassName="card__content">
-			<BodyShort className="blokk-s">
+			<BodyShort spacing>
 				Henter offset til siste record(melding på kafka) som ligger på en topic+partisjon
 			</BodyShort>
 
@@ -207,12 +209,12 @@ function SetConsumerOffsetCard(props: { availableTopics: string[] }) {
 
 	return (
 		<Card title="Set consumer offset" className="set-consumer-offset-card" innholdClassName="card__content">
-			<BodyLong className="blokk-s">
+			<BodyShort spacing>
 				Setter offset til en consumer for en topic+partisjon. Det er viktig å vite at selv om offsetet blir
 				endret, så vil ikke consumere plukke opp endringen i offset før de er startet på nytt. Hvis en consumer
 				committer et nytt offset før den har blitt startet på nytt og fått hentet inn endringen, så vil den
 				overskrive offsetet fra kafka-manager.
-			</BodyLong>
+			</BodyShort>
 
 			<TopicSelect availableTopics={props.availableTopics} onTopicChanged={setTopicNameField} />
 
@@ -333,7 +335,7 @@ function ReadFromTopicCard(props: { availableTopics: string[] }) {
 			className="read-from-topic-card very-large-card center-horizontal"
 			innholdClassName="card__content"
 		>
-			<BodyShort className="blokk-s">
+			<BodyShort spacing>
 				Leser meldinger fra en topic+partisjon. Trykk på en av meldingene for å se mer detaljert informasjon
 			</BodyShort>
 
