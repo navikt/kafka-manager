@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "start": "cross-env REACT_APP_DEV=true craco start",
-    "build": "craco build",
+    "start": "cross-env REACT_APP_DEV=true react-scripts start",
+    "build": "react-scripts build",
     "lint": "tslint ./src/**/*.ts*",
     "lint:fix": "tslint ./src/**/**/**/**/*.ts* --fix",
     "test": "jest",
@@ -48,7 +48,6 @@
     "react-toastify": "^7.0.3"
   },
   "devDependencies": {
-    "@craco/craco": "^7.1.0",
     "@types/classnames": "^2.2.11",
     "@types/jest": "^26.0.14",
     "@types/react": "^16.9.49",
