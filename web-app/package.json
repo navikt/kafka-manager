@@ -45,10 +45,6 @@
     "nav-frontend-js-utils": "^1.0.17",
     "nav-frontend-lenker": "^1.0.60",
     "nav-frontend-lenker-style": "^1.0.2",
-    "nav-frontend-lukknapp": "^1.1.1",
-    "nav-frontend-lukknapp-style": "^1.1.1",
-    "nav-frontend-modal": "^1.1.2",
-    "nav-frontend-modal-style": "^1.1.1",
     "nav-frontend-paneler-style": "^1.1.1",
     "nav-frontend-spinner": "^2.0.16",
     "nav-frontend-spinner-style": "^1.0.2",
@@ -56,7 +52,6 @@
     "react": "^16.14.0",
     "react-dom": "^16.13.1",
     "react-json-view": "^1.21.3",
-    "react-modal": "^3.13.1",
     "react-toastify": "^7.0.3"
   },
   "devDependencies": {

@@ -1,7 +1,7 @@
 import React, { ChangeEvent, useEffect, useRef, useState } from 'react';
 import { errorToast, successToast, warningToast } from '../../utils/toast-utils';
 import { Card } from '../../component/card/card';
-import { BodyLong, BodyShort, Button, Select, TextField } from '@navikt/ds-react';
+import { BodyLong, BodyShort, Button, Modal, Select, TextField } from '@navikt/ds-react';
 import {
 	getAvailableTopics,
 	getConsumerOffsets,
@@ -15,7 +15,6 @@ import {
 	SetConsumerOffsetRequest,
 	TopicPartitionOffset
 } from '../../api';
-import Modal from 'nav-frontend-modal';
 import './kafka-admin.less';
 import { KafkaRecordModalContent } from './kafka-record-modal-content';
 import { PageSpinner } from '../../component/page-spinner/page-spinner';
@@ -419,13 +418,10 @@ function ReadFromTopicCard(props: { availableTopics: string[] }) {
 					</tbody>
 				</table>
 			) : null}
-			<Modal
-				isOpen={clickedRecord != null}
-				onRequestClose={() => setClickedRecord(null)}
-				closeButton={true}
-				contentLabel="View kafka record"
-			>
-				<KafkaRecordModalContent record={clickedRecord} />
+			<Modal open={clickedRecord !== null} onClose={() => setClickedRecord(null)}>
+				<Modal.Content>
+					<KafkaRecordModalContent record={clickedRecord} />
+				</Modal.Content>
 			</Modal>
 		</Card>
 	);
