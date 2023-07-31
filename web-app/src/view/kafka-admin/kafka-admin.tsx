@@ -28,7 +28,7 @@ export function KafkaAdmin() {
 			.then(res => {
 				setAvailableTopics(res.data);
 			})
-			.catch(() => {
+			.catch(e => {
 				errorToast('Unable to load available topics');
 				setAvailableTopics([]);
 			});
