@@ -1,6 +1,6 @@
 import React from 'react';
 import cls from 'classnames';
-import './card.less';
+import './card.css';
 import { Heading } from '@navikt/ds-react';
 
 interface CardProps {

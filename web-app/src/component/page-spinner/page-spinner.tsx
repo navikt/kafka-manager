@@ -1,5 +1,5 @@
 import React from 'react';
-import './page-spinner.less';
+import './page-spinner.css';
 import { Loader } from '@navikt/ds-react';
 
 export function PageSpinner() {

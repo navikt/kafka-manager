@@ -15,7 +15,7 @@ import {
 	SetConsumerOffsetRequest,
 	TopicPartitionOffset
 } from '../../api';
-import './kafka-admin.less';
+import './kafka-admin.css';
 import { KafkaRecordModalContent } from './kafka-record-modal-content';
 import { PageSpinner } from '../../component/page-spinner/page-spinner';
 import { toTimerStr } from '../../utils/date-utils';

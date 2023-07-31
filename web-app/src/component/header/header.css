@@ -1,0 +1,11 @@
+.header {
+  display: flex;
+  align-items: center;
+  padding: 0 2rem;
+  background-color: white;
+  box-shadow: 0 3px 3px 0 rgba(183, 177, 169, 0.5);
+}
+.header__title {
+  padding: 1rem;
+  margin: 0 auto;
+}

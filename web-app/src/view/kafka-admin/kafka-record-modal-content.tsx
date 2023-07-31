@@ -1,5 +1,5 @@
 import React from 'react';
-import './kafka-record-modal-content.less';
+import './kafka-record-modal-content.css';
 import { isJson, NO_OP } from '../../utils';
 import { BodyShort, Label, Textarea, TextField } from '@navikt/ds-react';
 import { toTimestamp } from '../../utils/date-utils';
