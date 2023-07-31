@@ -41,7 +41,7 @@ jobs:
           node-version: 18
 
       - name: Install dependencies
-        run: npm ci --prefix web-app
+        run: npm ci --legacy-peer-deps --prefix web-app
 
       - name: Run tests
         run: npm run test --prefix web-app
@@ -75,7 +75,7 @@ jobs:
         run: mvn -f ./api/pom.xml -B package
 
       - name: Install dependencies
-        run: npm ci --prefix web-app
+        run: npm ci --legacy-peer-deps --prefix web-app
 
       - name: Run web-app tests
         run: npm test --prefix web-app
