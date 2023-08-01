@@ -27,7 +27,7 @@ jobs:
       - name: 'Frontend: Build assets'
         run: npm run build --prefix web-app
       - name: Build and push
-        uses: nais/docker-build-push@v2
+        uses: nais/docker-build-push@v0
         with:
           team: poao
           image-suffix: 'TEMP'
