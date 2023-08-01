@@ -20,6 +20,7 @@ jobs:
         with:
           node-version: 18
           cache: 'npm'
+          cache-dependency-path: 'web-app/package-lock.json'
       - name: 'Backend: Build maven artifacts'
         run: mvn -f ./api/pom.xml -B package
       - name: 'Frontend: Install dependencies'
