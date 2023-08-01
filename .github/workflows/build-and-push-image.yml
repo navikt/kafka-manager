@@ -1,0 +1,18 @@
+name: Build and push docker image with TEMP-suffix
+on: workflow_dispatch
+jobs:
+  build_and_push:
+    permissions:
+      contents: "read"
+      id-token: "write"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Build and push
+        uses: nais/docker-build-push@v0
+        with:
+          team: poao
+          image-suffix: "TEMP"
+          project_id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
+          identity_provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
