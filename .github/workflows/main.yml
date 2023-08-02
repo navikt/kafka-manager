@@ -77,9 +77,6 @@ jobs:
       - name: Build frontend assets
         run: npm run build --prefix web-app
 
-      - name: Create image tag
-        run: echo "IMAGE_TAG=2.$(TZ=\"Europe/Oslo\" date +%Y.%m.%d_%H.%M)-$(git rev-parse --short=12 HEAD)" >> $GITHUB_ENV
-
       - name: Build and push
         uses: nais/docker-build-push@v0
         with:
