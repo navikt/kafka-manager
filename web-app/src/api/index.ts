@@ -68,7 +68,7 @@ export function readFromTopic(request: ReadFromTopicRequest): AxiosPromise<Kafka
 		maxRecords: request.maxRecords,
 		fromOffset: request.fromOffset,
 		filter: {
-			text: request.filterText,
+			text: request.filterText
 		}
 	});
 }
@@ -95,4 +95,3 @@ export function setConsumerOffset(request: SetConsumerOffsetRequest): AxiosPromi
 		groupId: request.groupId
 	});
 }
-

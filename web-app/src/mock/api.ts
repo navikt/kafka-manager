@@ -1,4 +1,4 @@
-import { RequestHandlersList } from 'msw/lib/types/setupWorker/glossary';
+import type { RequestHandler } from 'msw';
 import { rest } from 'msw';
 import { KafkaRecord, LastRecordOffsetResponse, TopicPartitionOffset } from '../api';
 
@@ -42,7 +42,7 @@ const topicPartitionOffsets: TopicPartitionOffset[] = [
 	}
 ];
 
-export const handlers: RequestHandlersList = [
+export const handlers: RequestHandler[] = [
 	rest.get('/api/kafka/available-topics', (req, res, ctx) => {
 		return res(ctx.delay(500), ctx.json(availableTopics));
 	}),

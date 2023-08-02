@@ -1,0 +1,31 @@
+@import '@navikt/ds-css';
+@import '@navikt/ds-tokens';
+
+html,
+body {
+	margin: 0;
+	width: 100vw;
+	height: 100vh;
+	background-color: var(--a-gray-100);
+	overflow-x: hidden;
+}
+html *,
+body * {
+	box-sizing: border-box;
+}
+.kafka-manager {
+	display: grid;
+	grid-template-rows: min-content 1fr;
+}
+.view {
+	margin: 0 auto;
+	max-width: 1900px;
+	padding: 2rem;
+}
+.card__content {
+	display: flex;
+	flex-direction: column;
+}
+.card__content .navds-form-field {
+	margin-bottom: var(--a-spacing-6);
+}

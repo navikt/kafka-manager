@@ -1,7 +1,7 @@
 import React, { ChangeEvent, useEffect, useRef, useState } from 'react';
 import { errorToast, successToast, warningToast } from '../../utils/toast-utils';
 import { Card } from '../../component/card/card';
-import { Flatknapp } from 'nav-frontend-knapper';
+import { BodyShort, Button, Loader, Modal, Select, TextField } from '@navikt/ds-react';
 import {
 	getAvailableTopics,
 	getConsumerOffsets,
@@ -15,13 +15,9 @@ import {
 	SetConsumerOffsetRequest,
 	TopicPartitionOffset
 } from '../../api';
-import { Input, Select } from 'nav-frontend-skjema';
-import { Normaltekst } from 'nav-frontend-typografi';
-import Modal from 'nav-frontend-modal';
-import './kafka-admin.less';
+import './kafka-admin.css';
 import { KafkaRecordModalContent } from './kafka-record-modal-content';
 import { PageSpinner } from '../../component/page-spinner/page-spinner';
-import NavFrontendSpinner from 'nav-frontend-spinner';
 import { toTimerStr } from '../../utils/date-utils';
 
 export function KafkaAdmin() {
@@ -32,12 +28,11 @@ export function KafkaAdmin() {
 			.then(res => {
 				setAvailableTopics(res.data);
 			})
-			.catch(() => {
+			.catch(e => {
 				errorToast('Unable to load available topics');
 				setAvailableTopics([]);
 			});
-
-	}, [])
+	}, []);
 
 	if (availableTopics == null) {
 		return <PageSpinner />;
@@ -57,7 +52,7 @@ export function KafkaAdmin() {
 	);
 }
 
-function TopicSelect(props: { availableTopics: string[], onTopicChanged: (topic: string | null) => void }) {
+function TopicSelect(props: { availableTopics: string[]; onTopicChanged: (topic: string | null) => void }) {
 	const NO_TOPIC = 'NO_TOPIC';
 	const [selectedTopic, setSelectedTopic] = useState(NO_TOPIC);
 	const sortedTopics = props.availableTopics.sort();
@@ -74,7 +69,11 @@ function TopicSelect(props: { availableTopics: string[], onTopicChanged: (topic:
 		<Select label="Topic name" value={selectedTopic} onChange={handleTopicChanged}>
 			<option value={NO_TOPIC}>Choose a topic</option>
 			{sortedTopics.map((topic, idx) => {
-				return <option key={idx} value={topic}>{topic}</option>;
+				return (
+					<option key={idx} value={topic}>
+						{topic}
+					</option>
+				);
 			})}
 		</Select>
 	);
@@ -88,11 +87,11 @@ function ConsumerOffsetsCard(props: { availableTopics: string[] }) {
 
 	function handleHentConsumerOffsets() {
 		if (topicNameField == null) {
-			errorToast("Topic is missing");
+			errorToast('Topic is missing');
 			return;
 		}
 
-		const request: GetConsumerOffsetsRequest = {groupId: groupIdField, topicName: topicNameField};
+		const request: GetConsumerOffsetsRequest = { groupId: groupIdField, topicName: topicNameField };
 
 		getConsumerOffsets(request)
 			.then(res => {
@@ -107,24 +106,28 @@ function ConsumerOffsetsCard(props: { availableTopics: string[] }) {
 
 	return (
 		<Card title="Get consumer offsets" className="consumer-offset-card" innholdClassName="card__content">
-			<Normaltekst className="blokk-s">
+			<BodyShort spacing>
 				Henter siste commitet offset for alle partisjoner tilhørende en consumer gruppe for en gitt topic
-			</Normaltekst>
+			</BodyShort>
 
-			<Input label="Consumer group id" value={groupIdField} onChange={e => setGroupIdField(e.target.value)} />
+			<TextField label="Consumer group id" value={groupIdField} onChange={e => setGroupIdField(e.target.value)} />
 			<TopicSelect availableTopics={props.availableTopics} onTopicChanged={setTopicNameField} />
 
-			<Flatknapp onClick={handleHentConsumerOffsets}>Fetch</Flatknapp>
+			<Button onClick={handleHentConsumerOffsets} variant="tertiary">
+				Fetch
+			</Button>
 
-			<ul>
-				{topicPartitionOffsets.map((tpo, idx) => {
-					return (
-						<li key={idx}>
-							Partition={tpo.topicPartition} Offset={tpo.offset}
-						</li>
-					);
-				})}
-			</ul>
+			{topicPartitionOffsets.length > 0 && (
+				<ul>
+					{topicPartitionOffsets.map((tpo, idx) => {
+						return (
+							<li key={idx}>
+								Partition={tpo.topicPartition} Offset={tpo.offset}
+							</li>
+						);
+					})}
+				</ul>
+			)}
 		</Card>
 	);
 }
@@ -137,11 +140,14 @@ function LastRecordOffsetCard(props: { availableTopics: string[] }) {
 
 	function handleHentLastRecordOffset() {
 		if (topicNameField == null) {
-			errorToast("Topic is missing");
+			errorToast('Topic is missing');
 			return;
 		}
 
-		const request: GetLastRecordOffsetRequest = {topicName: topicNameField, topicPartition: parseInt(topicPartition, 10)};
+		const request: GetLastRecordOffsetRequest = {
+			topicName: topicNameField,
+			topicPartition: parseInt(topicPartition, 10)
+		};
 
 		getLastRecordOffset(request)
 			.then(res => {
@@ -152,24 +158,26 @@ function LastRecordOffsetCard(props: { availableTopics: string[] }) {
 
 	return (
 		<Card title="Last record offset" className="last-record-offset-card" innholdClassName="card__content">
-			<Normaltekst className="blokk-s">
+			<BodyShort spacing>
 				Henter offset til siste record(melding på kafka) som ligger på en topic+partisjon
-			</Normaltekst>
+			</BodyShort>
 
 			<TopicSelect availableTopics={props.availableTopics} onTopicChanged={setTopicNameField} />
-			<Input
+			<TextField
 				label="Topic partition (first partition starts at 0)"
 				type="number"
 				value={topicPartition}
 				onChange={e => setTopicPartition(e.target.value)}
 			/>
 
-			<Flatknapp onClick={handleHentLastRecordOffset}>Fetch</Flatknapp>
+			<Button onClick={handleHentLastRecordOffset} variant="tertiary">
+				Fetch
+			</Button>
 
 			{lastRecordOffset != null ? (
-				<Normaltekst style={{ marginTop: '2rem' }}>
+				<BodyShort style={{ marginTop: '2rem' }}>
 					Offset til siste record: <strong>{lastRecordOffset}</strong>
-				</Normaltekst>
+				</BodyShort>
 			) : null}
 		</Card>
 	);
@@ -183,7 +191,7 @@ function SetConsumerOffsetCard(props: { availableTopics: string[] }) {
 
 	function handleSetConsumerOffset() {
 		if (topicNameField == null) {
-			errorToast("Topic is missing");
+			errorToast('Topic is missing');
 			return;
 		}
 
@@ -201,25 +209,32 @@ function SetConsumerOffsetCard(props: { availableTopics: string[] }) {
 
 	return (
 		<Card title="Set consumer offset" className="set-consumer-offset-card" innholdClassName="card__content">
-			<Normaltekst className="blokk-s">
+			<BodyShort spacing>
 				Setter offset til en consumer for en topic+partisjon. Det er viktig å vite at selv om offsetet blir
 				endret, så vil ikke consumere plukke opp endringen i offset før de er startet på nytt. Hvis en consumer
 				committer et nytt offset før den har blitt startet på nytt og fått hentet inn endringen, så vil den
 				overskrive offsetet fra kafka-manager.
-			</Normaltekst>
+			</BodyShort>
 
 			<TopicSelect availableTopics={props.availableTopics} onTopicChanged={setTopicNameField} />
 
-			<Input
+			<TextField
 				label="Topic partition (first partition starts at 0)"
 				type="number"
 				value={topicPartitionField}
 				onChange={e => setTopicPartitionField(e.target.value)}
 			/>
-			<Input label="Consumer group id" value={groupIdField} onChange={e => setGroupIdField(e.target.value)} />
-			<Input label="Offset" type="number" value={offsetField} onChange={e => setOffsetField(e.target.value)} />
+			<TextField label="Consumer group id" value={groupIdField} onChange={e => setGroupIdField(e.target.value)} />
+			<TextField
+				label="Offset"
+				type="number"
+				value={offsetField}
+				onChange={e => setOffsetField(e.target.value)}
+			/>
 
-			<Flatknapp onClick={handleSetConsumerOffset}>Set offset</Flatknapp>
+			<Button onClick={handleSetConsumerOffset} variant="tertiary">
+				Set offset
+			</Button>
 		</Card>
 	);
 }
@@ -248,7 +263,7 @@ function ReadFromTopicCard(props: { availableTopics: string[] }) {
 
 	async function handleReadFromTopic() {
 		if (topicNameField == null) {
-			errorToast("Topic is missing");
+			errorToast('Topic is missing');
 			return;
 		}
 
@@ -265,9 +280,8 @@ function ReadFromTopicCard(props: { availableTopics: string[] }) {
 			fetchFromOffset = 0;
 		} else if (fetchFromField === FetchFrom.END) {
 			try {
-				const lastRecordOffset = (
-					await getLastRecordOffset({topicName: topicNameField, topicPartition})
-				).data.latestRecordOffset;
+				const lastRecordOffset = (await getLastRecordOffset({ topicName: topicNameField, topicPartition })).data
+					.latestRecordOffset;
 
 				fetchFromOffset = lastRecordOffset - maxRecords;
 			} catch (e) {
@@ -285,7 +299,7 @@ function ReadFromTopicCard(props: { availableTopics: string[] }) {
 			topicPartition,
 			fromOffset: fetchFromOffset,
 			maxRecords,
-			filterText: keyValueFilterField,
+			filterText: keyValueFilterField
 		};
 
 		readFromTopic(request)
@@ -305,8 +319,7 @@ function ReadFromTopicCard(props: { availableTopics: string[] }) {
 
 	useEffect(() => {
 		if (startTimeMs != null) {
-			timerRef.current =
-				setInterval(() => setTimeTakenMs(Date.now() - startTimeMs), 100) as unknown as number;
+			timerRef.current = (setInterval(() => setTimeTakenMs(Date.now() - startTimeMs), 100) as unknown) as number;
 		}
 
 		if (startTimeMs == null && timerRef.current != null) {
@@ -322,13 +335,13 @@ function ReadFromTopicCard(props: { availableTopics: string[] }) {
 			className="read-from-topic-card very-large-card center-horizontal"
 			innholdClassName="card__content"
 		>
-			<Normaltekst className="blokk-s">
+			<BodyShort spacing>
 				Leser meldinger fra en topic+partisjon. Trykk på en av meldingene for å se mer detaljert informasjon
-			</Normaltekst>
+			</BodyShort>
 
 			<TopicSelect availableTopics={props.availableTopics} onTopicChanged={setTopicNameField} />
 
-			<Input
+			<TextField
 				label="Topic partition (first partition starts at 0)"
 				type="number"
 				value={topicPartitionField}
@@ -346,7 +359,7 @@ function ReadFromTopicCard(props: { availableTopics: string[] }) {
 			</Select>
 
 			{fetchFromField === FetchFrom.OFFSET ? (
-				<Input
+				<TextField
 					label="From offset"
 					type="number"
 					value={fromOffsetField}
@@ -354,25 +367,27 @@ function ReadFromTopicCard(props: { availableTopics: string[] }) {
 				/>
 			) : null}
 
-			<Input
+			<TextField
 				label="Max records (maximum of records that will be returned, max=100)"
 				type="number"
 				value={maxRecordsField}
 				onChange={e => setMaxRecordsField(e.target.value)}
 			/>
 
-			<Input
+			<TextField
 				label="Key/value filter (tip: max=1 can be used to reduce waiting)"
 				value={keyValueFilterField}
 				onChange={e => setKeyValueFilterField(e.target.value)}
 			/>
 
-			<Flatknapp onClick={handleReadFromTopic}>Fetch</Flatknapp>
+			<Button onClick={handleReadFromTopic} variant="tertiary">
+				Fetch
+			</Button>
 
 			{isLoading && recordsFromTopic.length === 0 ? (
 				<div className="read-from-topic-card__loader">
-					<NavFrontendSpinner type="XL" className="blokk-xxs" />
-					<Normaltekst className="read-from-topic-card__loader-timer">{toTimerStr(timeTakenMs)}</Normaltekst>
+					<Loader size="2xlarge" />
+					<BodyShort className="read-from-topic-card__loader-timer">{toTimerStr(timeTakenMs)}</BodyShort>
 				</div>
 			) : null}
 
@@ -404,13 +419,10 @@ function ReadFromTopicCard(props: { availableTopics: string[] }) {
 					</tbody>
 				</table>
 			) : null}
-			<Modal
-				isOpen={clickedRecord != null}
-				onRequestClose={() => setClickedRecord(null)}
-				closeButton={true}
-				contentLabel="View kafka record"
-			>
-				<KafkaRecordModalContent record={clickedRecord} />
+			<Modal open={clickedRecord !== null} onClose={() => setClickedRecord(null)}>
+				<Modal.Content>
+					<KafkaRecordModalContent record={clickedRecord} />
+				</Modal.Content>
 			</Modal>
 		</Card>
 	);

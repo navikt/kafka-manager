@@ -1,7 +1,7 @@
 import React from 'react';
 import cls from 'classnames';
-import { Innholdstittel } from 'nav-frontend-typografi';
-import './card.less';
+import './card.css';
+import { Heading } from '@navikt/ds-react';
 
 interface CardProps {
 	title?: string;
@@ -13,7 +13,11 @@ interface CardProps {
 export function Card(props: CardProps) {
 	return (
 		<div className={cls('card', props.className)}>
-			{props.title && <Innholdstittel className="card__title">{props.title}</Innholdstittel>}
+			{props.title && (
+				<Heading size="large" className="card__title">
+					{props.title}
+				</Heading>
+			)}
 			<div className={props.innholdClassName}>{props.children}</div>
 		</div>
 	);

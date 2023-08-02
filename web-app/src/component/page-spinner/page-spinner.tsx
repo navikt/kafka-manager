@@ -1,11 +1,11 @@
-import NavFrontendSpinner from 'nav-frontend-spinner';
 import React from 'react';
-import './page-spinner.less';
+import './page-spinner.css';
+import { Loader } from '@navikt/ds-react';
 
 export function PageSpinner() {
 	return (
 		<div className="page-spinner">
-			<NavFrontendSpinner type="XL" />
+			<Loader size="2xlarge" />
 		</div>
 	);
 }
