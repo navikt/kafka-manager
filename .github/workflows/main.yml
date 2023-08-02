@@ -45,6 +45,9 @@ jobs:
 
   test-build-and-push:
     name: Test, build and push
+    permissions:
+      contents: 'read'
+      id-token: 'write'
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     steps:
