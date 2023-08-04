@@ -392,7 +392,7 @@ function ReadFromTopicCard(props: { availableTopics: string[] }) {
 			) : null}
 
 			{recordsFromTopic.length > 0 ? (
-				<table className="tabell tabell--stripet">
+				<table className="tabell">
 					<thead>
 						<tr>
 							<th>Offset</th>

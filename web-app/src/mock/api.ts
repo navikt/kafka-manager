@@ -7,7 +7,7 @@ const availableTopics = ['test-topic-b', 'test-topic-a', 'test-topic-c'];
 const kafkaRecords: KafkaRecord[] = [];
 
 for (let i = 0; i < 25; i++) {
-	const key = (i + 123) * (i + 99999);
+	const key = mockUuidv4();
 	const offset = i + 10000;
 
 	kafkaRecords.push({
@@ -41,6 +41,14 @@ const topicPartitionOffsets: TopicPartitionOffset[] = [
 		offset: 4570
 	}
 ];
+
+function mockUuidv4(): string {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    var r = (Math.random() * 16) | 0,
+        v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
 
 export const handlers: RequestHandler[] = [
 	rest.get('/api/kafka/available-topics', (req, res, ctx) => {

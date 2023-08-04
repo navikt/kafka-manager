@@ -34,3 +34,17 @@
 .read-from-topic-card__loader-timer {
   color: var(--a-gray-900);
 }
+.tabell {
+  border-collapse: collapse;
+  border-spacing: 0;
+  text-align: left;
+}
+.tabell th {
+  border-bottom: solid 1px black;
+}
+.tabell tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+.tabell td, .tabell th {
+  padding: 0.5rem; /* top right bottom left */
+}
