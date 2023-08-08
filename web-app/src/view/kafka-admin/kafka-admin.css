@@ -43,10 +43,10 @@
   border-bottom: solid 1px black;
 }
 .tabell tr:nth-child(even) {
-  background-color: #f2f2f2;
+  background-color: var(--a-gray-100);
 }
 .tabell td, .tabell th {
-  padding: 0.5rem; /* top right bottom left */
+  padding: 0.5rem;
 }
 .tabell td {
   font-family: monospace;
