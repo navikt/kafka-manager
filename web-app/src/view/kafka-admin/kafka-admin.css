@@ -34,3 +34,21 @@
 .read-from-topic-card__loader-timer {
   color: var(--a-gray-900);
 }
+.tabell {
+  border-collapse: collapse;
+  border-spacing: 0;
+  text-align: left;
+}
+.tabell th {
+  border-bottom: solid 1px black;
+}
+.tabell tr:nth-child(even) {
+  background-color: var(--a-gray-100);
+}
+.tabell td, .tabell th {
+  padding: 0.5rem;
+}
+.tabell td {
+  font-family: monospace;
+  font-size: 1rem;
+}
