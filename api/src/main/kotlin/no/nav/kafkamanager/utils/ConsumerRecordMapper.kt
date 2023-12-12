@@ -14,12 +14,12 @@ object ConsumerRecordMapper {
             consumerRecord.offset(),
             consumerRecord.timestamp(),
             consumerRecord.timestampType(),
-            -1,
             consumerRecord.serializedKeySize(),
             consumerRecord.serializedValueSize(),
             convertToString(consumerRecord.key()),
             convertToString(consumerRecord.value()),
-            consumerRecord.headers()
+            consumerRecord.headers(),
+            null
         )
     }
 
