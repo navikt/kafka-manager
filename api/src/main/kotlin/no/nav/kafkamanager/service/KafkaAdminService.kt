@@ -170,7 +170,7 @@ class KafkaAdminService(
         }
 
         private fun insensitiveText(str: String): String {
-            return str.toLowerCase()
+            return str.lowercase(Locale.getDefault())
                 .replace(" ","")
                 .replace("\n", "")
         }
