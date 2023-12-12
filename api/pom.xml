@@ -18,7 +18,7 @@
     <properties>
         <java.version>17</java.version>
         <kotlin.version>1.9.21</kotlin.version>
-        <common.version>3.2023.11.16_08.57-4fe62b8f9658</common.version>
+        <common.version>3.2023.12.12_13.53-510909d4aa1a</common.version>
     </properties>
 
     <repositories>
