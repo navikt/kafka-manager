@@ -3,7 +3,7 @@ import './kafka-record-modal-content.css';
 import { isJson, NO_OP } from '../../utils';
 import { BodyShort, Label, Textarea, TextField } from '@navikt/ds-react';
 import { toTimestamp } from '../../utils/date-utils';
-import ReactJson from 'react-json-view';
+import ReactJson from '@microlink/react-json-view';
 import { KafkaRecord } from '../../api';
 
 export function KafkaRecordModalContent(props: { record: KafkaRecord | null }) {

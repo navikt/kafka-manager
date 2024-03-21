@@ -44,7 +44,7 @@
     "prop-types": "^15.7.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-json-view": "^1.21.3",
+    "@microlink/react-json-view": "^1.23.0",
     "react-toastify": "^7.0.3"
   },
   "devDependencies": {
