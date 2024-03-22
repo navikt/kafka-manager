@@ -1,7 +1,7 @@
 import React, { ChangeEvent, useEffect, useRef, useState } from 'react';
 import { errorToast, successToast, warningToast } from '../../utils/toast-utils';
 import { Card } from '../../component/card/card';
-import { BodyShort, Button, Loader, Modal, Select, TextField } from '@navikt/ds-react';
+import { BodyShort, Button, Loader, Modal, RadioGroup, Select, TextField, Radio } from '@navikt/ds-react';
 import {
 	getAvailableTopics,
 	getConsumerOffsets,
@@ -248,6 +248,7 @@ enum FetchFrom {
 function ReadFromTopicCard(props: { availableTopics: string[] }) {
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 	const [topicNameField, setTopicNameField] = useState<string | null>(null);
+	const [topicAllPartitionsField, setAllPartitionsField] = useState<boolean>(true);
 	const [topicPartitionField, setTopicPartitionField] = useState('0');
 	const [fetchFromField, setFetchFromField] = useState<FetchFrom>(FetchFrom.END);
 	const [fromOffsetField, setFromOffsetField] = useState('0');
@@ -296,6 +297,7 @@ function ReadFromTopicCard(props: { availableTopics: string[] }) {
 
 		const request: ReadFromTopicRequest = {
 			topicName: topicNameField,
+			topicAllPartitions: topicAllPartitionsField,
 			topicPartition,
 			fromOffset: fetchFromOffset,
 			maxRecords,
@@ -341,12 +343,24 @@ function ReadFromTopicCard(props: { availableTopics: string[] }) {
 
 			<TopicSelect availableTopics={props.availableTopics} onTopicChanged={setTopicNameField} />
 
-			<TextField
-				label="Topic partition (first partition starts at 0)"
+			<RadioGroup
+				legend="Topic partitions"
+				onChange={(value: boolean) => setAllPartitionsField(value)}
+				defaultValue={true}
+				required
+			>
+				<Radio value={true}>All partitions</Radio>
+				<Radio value={false}>Specific partition</Radio>
+			</RadioGroup>
+
+			{ !topicAllPartitionsField ? (
+				<TextField
+				label="Topic partition number (first partition starts at 0)"
 				type="number"
 				value={topicPartitionField}
 				onChange={e => setTopicPartitionField(e.target.value)}
-			/>
+				/>
+			) : null }
 
 			<Select
 				label="Fetch records from"
@@ -395,6 +409,7 @@ function ReadFromTopicCard(props: { availableTopics: string[] }) {
 				<table className="tabell">
 					<thead>
 						<tr>
+							<th>Partition</th>
 							<th>Offset</th>
 							<th>Key</th>
 							<th>Value</th>
@@ -406,10 +421,11 @@ function ReadFromTopicCard(props: { availableTopics: string[] }) {
 							.map(record => {
 								return (
 									<tr
-										key={record.offset}
+										key={`${record.partition}-${record.offset}`}
 										onClick={() => setClickedRecord(record)}
 										className="kafka-record-row"
 									>
+										<td>{record.partition}</td>
 										<td>{record.offset}</td>
 										<td>{record.key || 'NO_KEY'}</td>
 										<td className="kafka-record-value">{record.value}</td>

@@ -10,7 +10,8 @@ import org.junit.jupiter.api.Test
 class KafkaAdminServiceTest {
 
     private val records = listOf(
-        KafkaRecord( 
+        KafkaRecord(
+            partition = 0,
             key = "",
             value = "",
             headers = emptyList(),
@@ -18,6 +19,7 @@ class KafkaAdminServiceTest {
             offset = 123
         ),
         KafkaRecord(
+            partition = 0,
             key = null,
             value = null,
             headers = emptyList(),
@@ -25,6 +27,7 @@ class KafkaAdminServiceTest {
             offset = 124
         ),
         KafkaRecord(
+            partition = 0,
             key = "key123",
             value = "value123",
             headers = emptyList(),
@@ -32,6 +35,7 @@ class KafkaAdminServiceTest {
             offset = 125
         ),
         KafkaRecord(
+            partition = 0,
             key = "key1234",
             value = "value1234",
             headers = emptyList(),
@@ -39,6 +43,7 @@ class KafkaAdminServiceTest {
             offset = 126
         ),
         KafkaRecord(
+            partition = 0,
             key = "key9876",
             value = "value9876",
             headers = emptyList(),

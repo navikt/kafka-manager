@@ -20,6 +20,7 @@ object DTOMappers {
 
     fun toKafkaRecordHeader(consumerRecord: ConsumerRecord<String, String>): KafkaRecord {
         return KafkaRecord(
+            partition = consumerRecord.partition(),
             key = consumerRecord.key(),
             value = consumerRecord.value(),
             timestamp = consumerRecord.timestamp(),

@@ -11,7 +11,9 @@ import no.nav.kafkamanager.utils.ConsumerRecordMapper
 import no.nav.kafkamanager.utils.DTOMappers.toKafkaRecordHeader
 import no.nav.kafkamanager.utils.KafkaPropertiesFactory.createAivenConsumerProperties
 import no.nav.kafkamanager.utils.KafkaPropertiesFactory.createOnPremConsumerProperties
-import org.apache.kafka.clients.consumer.*
+import org.apache.kafka.clients.consumer.ConsumerConfig
+import org.apache.kafka.clients.consumer.KafkaConsumer
+import org.apache.kafka.clients.consumer.OffsetAndMetadata
 import org.apache.kafka.common.TopicPartition
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -20,9 +22,7 @@ import java.time.Duration
 import java.util.*
 import java.util.Collections.singleton
 import java.util.function.Supplier
-import kotlin.collections.ArrayList
 import kotlin.math.max
-import kotlin.math.min
 
 @Service
 class KafkaAdminService(
@@ -40,12 +40,15 @@ class KafkaAdminService(
         val kafkaRecords = ArrayList<KafkaRecord>()
 
         kafkaConsumer.use { consumer ->
-            val topicPartition = TopicPartition(request.topicName, request.topicPartition)
+            val topicPartitions: List<TopicPartition> = if (request.topicAllPartitions)
+                consumer.partitionsFor(request.topicName).map { TopicPartition(it.topic(), it.partition()) }
+            else
+                listOf(TopicPartition(request.topicName, request.topicPartition))
             val fromOffset = max(0, request.fromOffset)
             val maxRecords = request.maxRecords
 
-            consumer.assign(singleton(topicPartition))
-            consumer.seek(topicPartition, fromOffset)
+            consumer.assign(topicPartitions)
+            topicPartitions.forEach { consumer.seek(it, fromOffset) }
 
             while (kafkaRecords.size < maxRecords) {
                 val consumerRecords = consumer.poll(Duration.ofSeconds(1))
@@ -55,7 +58,7 @@ class KafkaAdminService(
                     break
                 }
 
-                val kafkaRecordsBatch = consumerRecords.records(topicPartition).map {
+                val kafkaRecordsBatch = consumerRecords.records(request.topicName).map {
                     val stringRecord = ConsumerRecordMapper.mapConsumerRecord(it)
                     toKafkaRecordHeader(stringRecord)
                 }
@@ -65,12 +68,7 @@ class KafkaAdminService(
                 kafkaRecords.addAll(filteredRecords)
             }
 
-            // Shrink to fit maxRecords
-            if (kafkaRecords.size > maxRecords) {
-                return kafkaRecords.subList(0, min(kafkaRecords.size, maxRecords))
-            }
-
-            return kafkaRecords
+            return kafkaRecords.take(request.maxRecords)
         }
     }
 
@@ -140,6 +138,7 @@ class KafkaAdminService(
                 keyDesType,
                 valueDesType
             )
+
             TopicLocation.AIVEN -> createAivenConsumerProperties(keyDesType, valueDesType)
         }
 
@@ -155,7 +154,7 @@ class KafkaAdminService(
         fun filterRecords(
             filter: KafkaAdminController.RecordFilter?,
             records: List<KafkaRecord>
-        ): List<KafkaRecord>  {
+        ): List<KafkaRecord> {
             if (filter == null || filter.text.isNullOrBlank()) {
                 return records
             }
@@ -171,7 +170,7 @@ class KafkaAdminService(
 
         private fun insensitiveText(str: String): String {
             return str.lowercase(Locale.getDefault())
-                .replace(" ","")
+                .replace(" ", "")
                 .replace("\n", "")
         }
 

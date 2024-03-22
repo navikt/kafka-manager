@@ -16,6 +16,7 @@ export function me(): AxiosPromise<User> {
 
 export interface ReadFromTopicRequest {
 	topicName: string;
+	topicAllPartitions: boolean,
 	topicPartition: number;
 	maxRecords: number;
 	fromOffset: number;
@@ -40,6 +41,7 @@ export interface SetConsumerOffsetRequest {
 }
 
 export interface KafkaRecord {
+	partition: number;
 	key: string | null;
 	value: string | null;
 	timestamp: number;
@@ -65,6 +67,7 @@ export function readFromTopic(request: ReadFromTopicRequest): AxiosPromise<Kafka
 	return axiosInstance.post(`/api/kafka/read-topic`, {
 		topicName: request.topicName,
 		topicPartition: request.topicPartition,
+		topicAllPartitions: request.topicAllPartitions,
 		maxRecords: request.maxRecords,
 		fromOffset: request.fromOffset,
 		filter: {

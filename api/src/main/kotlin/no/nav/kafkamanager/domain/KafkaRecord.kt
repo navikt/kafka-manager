@@ -1,6 +1,7 @@
 package no.nav.kafkamanager.domain
 
 data class KafkaRecord(
+    val partition: Int,
     val key: String?,
     val value: String?,
     val headers: List<KafkaRecordHeader>,
