@@ -11,13 +11,14 @@ export function KafkaRecordModalContent(props: { record: KafkaRecord | null }) {
 		return null;
 	}
 
-	const { key, value, offset, timestamp, headers } = props.record;
+	const { partition, key, value, offset, timestamp, headers } = props.record;
 	const safeValue = value || '';
 	const isRecordValueJson = isJson(safeValue);
 
 	return (
 		<div className="kafka-record-modal-content">
 			<div className="blokk-m">
+				<TextField label="Partition" value={partition} readOnly={true} />
 				<TextField label="Offset" value={offset} readOnly={true} />
 				<TextField label="Key" value={key || 'NO_KEY'} readOnly={true} />
 				<TextField label="Timestamp" value={toTimestamp(timestamp)} readOnly={true} />

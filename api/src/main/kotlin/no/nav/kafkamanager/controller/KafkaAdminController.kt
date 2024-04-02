@@ -53,6 +53,7 @@ class KafkaAdminController(
 
     data class ReadTopicRequest(
         val topicName: String,
+        val topicAllPartitions: Boolean,
         val topicPartition: Int,
         val maxRecords: Int,
         val fromOffset: Long,
