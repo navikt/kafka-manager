@@ -12,6 +12,7 @@ import no.nav.kafkamanager.utils.DTOMappers.toKafkaRecordHeader
 import no.nav.kafkamanager.utils.KafkaPropertiesFactory.createAivenConsumerProperties
 import no.nav.kafkamanager.utils.KafkaPropertiesFactory.createOnPremConsumerProperties
 import org.apache.kafka.clients.consumer.ConsumerConfig
+import org.apache.kafka.clients.consumer.ConsumerConfig.DEFAULT_ISOLATION_LEVEL
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.consumer.OffsetAndMetadata
 import org.apache.kafka.common.TopicPartition
@@ -129,6 +130,7 @@ class KafkaAdminService(
     private fun createPropertiesForTopic(consumerGroupId: String?, topicConfig: TopicConfig): Properties {
         val keyDesType = topicConfig.keyDeserializerType
         val valueDesType = topicConfig.valueDeserializerType
+        val isolationLevel = topicConfig.isolationLevel ?: DEFAULT_ISOLATION_LEVEL
 
         val properties = when (topicConfig.location) {
             TopicLocation.ON_PREM -> createOnPremConsumerProperties(
@@ -136,10 +138,11 @@ class KafkaAdminService(
                 systemUserCredentialsSupplier.get(),
                 environmentProperties.onPremSchemaRegistryUrl,
                 keyDesType,
-                valueDesType
+                valueDesType,
+                isolationLevel
             )
 
-            TopicLocation.AIVEN -> createAivenConsumerProperties(keyDesType, valueDesType)
+            TopicLocation.AIVEN -> createAivenConsumerProperties(keyDesType, valueDesType, isolationLevel)
         }
 
         if (consumerGroupId != null) {
