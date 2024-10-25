@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.3.2</version>
+        <version>3.3.4</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
@@ -18,7 +18,10 @@
     <properties>
         <java.version>21</java.version>
         <kotlin.version>1.9.23</kotlin.version>
-        <common.version>3.2024.02.21_11.18-8f9b43befae1</common.version>
+        <common.version>3.2024.09.16_11.09-578823a87a2f</common.version>
+        <avro.version>1.12.0</avro.version>
+        <kafka-avro-serializer.version>7.7.1</kafka-avro-serializer.version>
+        <commons-compress.version>1.27.1</commons-compress.version>
     </properties>
 
     <dependencyManagement>
@@ -26,7 +29,7 @@
             <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-compress</artifactId>
-                <version>1.26.1</version>
+                <version>${commons-compress.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -87,12 +90,12 @@
         <dependency>
             <groupId>org.apache.avro</groupId>
             <artifactId>avro</artifactId>
-            <version>1.11.4</version>
+            <version>${avro.version}</version>
         </dependency>
         <dependency>
             <groupId>io.confluent</groupId>
             <artifactId>kafka-avro-serializer</artifactId>
-            <version>7.6.0</version>
+            <version>${kafka-avro-serializer.version}</version>
         </dependency>
 
         <dependency>
