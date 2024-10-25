@@ -8,7 +8,8 @@ data class TopicConfig(
     val name: String,
     val location: TopicLocation,
     val keyDeserializerType: DeserializerType,
-    val valueDeserializerType: DeserializerType
+    val valueDeserializerType: DeserializerType,
+    val isolationLevel: String?
 )
 
 enum class TopicLocation {
