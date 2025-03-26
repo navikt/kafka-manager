@@ -19,8 +19,7 @@ if (import.meta.env.DEV) {
 	try {
 		await worker.start({
 			onUnhandledRequest: 'bypass',
-			serviceWorker: { url: import.meta.env.BASE_URL + 'mockServiceWorker.js' },
-			waitUntilReady: true
+			serviceWorker: { url: import.meta.env.BASE_URL + 'mockServiceWorker.js' }
 		});
 
 		mountReactApp();

@@ -1,5 +1,4 @@
-import type { RequestHandler } from 'msw';
-import { rest } from 'msw';
+import { delay, http, HttpResponse, RequestHandler } from 'msw';
 import { KafkaRecord, LastRecordOffsetResponse, TopicPartitionOffset } from '../api';
 
 const availableTopics = ['test-topic-b', 'test-topic-a', 'test-topic-c'];
@@ -44,27 +43,31 @@ const topicPartitionOffsets: TopicPartitionOffset[] = [
 ];
 
 function mockUuidv4(): string {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    const r = (Math.random() * 16) | 0,
-        v = c === 'x' ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
+	return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+		const r = Math.floor(Math.random() * 16);
+		const v = c === 'x' ? r : Math.floor(r % 4) + 8;
+		return v.toString(16);
+	});
 }
 
 export const handlers: RequestHandler[] = [
-	rest.get('/api/kafka/available-topics', (req, res, ctx) => {
-		return res(ctx.delay(500), ctx.json(availableTopics));
+	http.get('/api/kafka/available-topics', async () => {
+		return HttpResponse.json(availableTopics);
 	}),
-	rest.post('/api/kafka/read-topic', (req, res, ctx) => {
-		return res(ctx.delay(1000), ctx.json(kafkaRecords));
+	http.post('/api/kafka/read-topic', async () => {
+		await delay(500);
+		return HttpResponse.json(kafkaRecords);
 	}),
-	rest.post('/api/kafka/get-consumer-offsets', (req, res, ctx) => {
-		return res(ctx.delay(500), ctx.json(topicPartitionOffsets));
+	http.post('/api/kafka/get-consumer-offsets', async () => {
+		await delay(500);
+		return HttpResponse.json(topicPartitionOffsets);
 	}),
-	rest.post('/api/kafka/get-last-record-offset', (req, res, ctx) => {
-		return res(ctx.delay(500), ctx.json(lastRecordOffsetResponse));
+	http.post('/api/kafka/get-last-record-offset', async () => {
+		await delay(500);
+		return HttpResponse.json(lastRecordOffsetResponse);
 	}),
-	rest.post('/api/kafka/set-consumer-offset', (req, res, ctx) => {
-		return res(ctx.delay(500), ctx.status(200));
+	http.post('/api/kafka/set-consumer-offset', async () => {
+		await delay(500);
+		return HttpResponse.json(null, {status: 200});
 	})
 ];
