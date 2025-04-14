@@ -34,7 +34,7 @@
   "dependencies": {
     "@navikt/ds-css": "^4.7.2",
     "@navikt/ds-react": "^4.7.2",
-    "@navikt/ds-tokens": "^4.7.2",
+    "@navikt/ds-tokens": "^7.20.0",
     "@navikt/fnrvalidator": "^2.1.5",
     "axios": "^1.8.3",
     "classnames": "^2.3.1",
