@@ -55,7 +55,7 @@
     "@types/react-modal": "^3.16.0",
     "@vitejs/plugin-react": "^4.3.4",
     "husky": "^4.3.5",
-    "lint-staged": "^10.5.3",
+    "lint-staged": "^16.1.2",
     "msw": "^2.7.3",
     "prettier": "^2.2.1",
     "tslint": "^6.1.3",
