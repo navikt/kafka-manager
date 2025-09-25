@@ -62,7 +62,7 @@
     "tslint-config-prettier": "^1.18.0",
     "tslint-react": "^5.0.0",
     "typescript": "^5.9.2",
-    "vite": "^6.3.5",
+    "vite": "^7.1.7",
     "vitest": "^3.0.9"
   },
   "msw": {
