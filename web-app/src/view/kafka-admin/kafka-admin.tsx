@@ -58,8 +58,7 @@ function TopicSelect(props: { availableTopics: string[]; onTopicChanged: (topic:
 	const sortedTopics = props.availableTopics.sort();
 
 	function handleTopicChanged(e: ChangeEvent<HTMLSelectElement>) {
-		const selectedTopic = e.target.value;
-		setSelectedTopic(selectedTopic);
+		setSelectedTopic(e.target.value);
 
 		const changedTopic = selectedTopic === NO_TOPIC ? null : selectedTopic;
 		props.onTopicChanged(changedTopic);
@@ -260,7 +259,7 @@ function ReadFromTopicCard(props: { availableTopics: string[] }) {
 
 	const [startTimeMs, setStartTimeMs] = useState<number | null>(null);
 	const [timeTakenMs, setTimeTakenMs] = useState<number>(0);
-	const timerRef = useRef<number | null>();
+	const timerRef = useRef<number | null>(null);
 
 	async function handleReadFromTopic() {
 		if (topicNameField == null) {
@@ -435,10 +434,10 @@ function ReadFromTopicCard(props: { availableTopics: string[] }) {
 					</tbody>
 				</table>
 			) : null}
-			<Modal open={clickedRecord !== null} onClose={() => setClickedRecord(null)}>
-				<Modal.Content>
+			<Modal open={clickedRecord !== null} onClose={() => setClickedRecord(null)} aria-label="kafka record content">
+				<Modal.Body>
 					<KafkaRecordModalContent record={clickedRecord} />
-				</Modal.Content>
+				</Modal.Body>
 			</Modal>
 		</Card>
 	);
