@@ -37,15 +37,15 @@
     "@navikt/ds-react": "^7.30.1",
     "@navikt/ds-tokens": "^7.30.1",
     "@navikt/fnrvalidator": "^2.1.5",
-    "axios": "^1.12.0",
+    "axios": "^1.12.2",
     "classnames": "^2.3.1",
-    "constate": "^3.1.0",
+    "constate": "^3.3.3",
     "dayjs": "^1.10.4",
     "lodash.throttle": "^4.1.1",
     "prop-types": "^15.7.2",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
-    "react-toastify": "^7.0.3"
+    "react-toastify": "^11.0.5"
   },
   "devDependencies": {
     "@types/classnames": "^2.2.11",
@@ -54,7 +54,7 @@
     "@types/react-dom": "^18.2.7",
     "@types/react-modal": "^3.16.0",
     "@vitejs/plugin-react": "^5.0.3",
-    "husky": "^4.3.5",
+    "husky": "^9.1.7",
     "lint-staged": "^16.2.0",
     "msw": "^2.7.3",
     "prettier": "^3.6.2",
@@ -63,7 +63,7 @@
     "tslint-react": "^5.0.0",
     "typescript": "^5.9.2",
     "vite": "^7.1.7",
-    "vitest": "^3.0.9"
+    "vitest": "^3.2.4"
   },
   "msw": {
     "workerDirectory": "public"
