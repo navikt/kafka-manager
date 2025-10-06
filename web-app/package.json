@@ -35,7 +35,7 @@
     "axios": "^1.12.2",
     "classnames": "^2.3.1",
     "constate": "^3.3.3",
-    "dayjs": "^1.10.4",
+    "dayjs": "^1.11.18",
     "lodash.throttle": "^4.1.1",
     "prop-types": "^15.7.2",
     "react": "^19.1.1",
