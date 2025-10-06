@@ -24,6 +24,8 @@ jobs:
 
   test-web-app:
     name: Run frontend tests
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     if: github.ref != 'refs/heads/main'
     steps:
