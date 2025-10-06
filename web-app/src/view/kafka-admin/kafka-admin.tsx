@@ -60,7 +60,7 @@ function TopicSelect(props: { availableTopics: string[]; onTopicChanged: (topic:
 	function handleTopicChanged(e: ChangeEvent<HTMLSelectElement>) {
 		setSelectedTopic(e.target.value);
 
-		const changedTopic = selectedTopic === NO_TOPIC ? null : selectedTopic;
+		const changedTopic = e.target.value === NO_TOPIC ? null : e.target.value;
 		props.onTopicChanged(changedTopic);
 	}
 
