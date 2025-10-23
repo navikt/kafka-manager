@@ -8,7 +8,6 @@ import no.nav.common.utils.Credentials
 import no.nav.common.utils.EnvironmentUtils.getRequiredProperty
 import no.nav.kafkamanager.controller.KafkaAdminController
 import no.nav.kafkamanager.domain.DeserializerType
-import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.ConsumerConfig.*
 import org.apache.kafka.common.serialization.*
 import java.util.*
@@ -61,6 +60,14 @@ object KafkaPropertiesFactory {
             .withProp(KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG, schemaRegistryUrl)
             .withProp(KafkaAvroSerializerConfig.BASIC_AUTH_CREDENTIALS_SOURCE, "USER_INFO")
             .withProp(KafkaAvroSerializerConfig.USER_INFO_CONFIG, "$schemaRegistryUsername:$schemaRegistryPassword")
+            .build()
+    }
+
+    fun createAivenAdminProperties(): Properties {
+        return KafkaPropertiesBuilder.consumerBuilder()
+            .withBaseProperties()
+            .withAivenBrokerUrl()
+            .withAivenAuth()
             .build()
     }
 
