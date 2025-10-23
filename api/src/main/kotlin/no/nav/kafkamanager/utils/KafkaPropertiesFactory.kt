@@ -63,11 +63,18 @@ object KafkaPropertiesFactory {
             .build()
     }
 
-    fun createAivenAdminProperties(): Properties {
+    fun createAivenAdminProperties(
+        keyDeserializerType: DeserializerType,
+        valueDeserializerType: DeserializerType,
+        isolationLevel: String
+    ): Properties {
         return KafkaPropertiesBuilder.consumerBuilder()
             .withBaseProperties()
             .withAivenBrokerUrl()
             .withAivenAuth()
+            .withProp(ISOLATION_LEVEL_CONFIG, isolationLevel)
+            .withProp(KEY_DESERIALIZER_CLASS_CONFIG, findDeserializer(keyDeserializerType).name)
+            .withProp(VALUE_DESERIALIZER_CLASS_CONFIG, findDeserializer(valueDeserializerType).name)
             .build()
     }
 

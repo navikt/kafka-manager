@@ -191,9 +191,12 @@ class KafkaAdminService(
     }
 
     private fun createAdminPropertiesForTopic(topicConfig: TopicConfig): Properties {
+        val keyDesType = topicConfig.keyDeserializerType
+        val valueDesType = topicConfig.valueDeserializerType
+        val isolationLevel = topicConfig.isolationLevel ?: DEFAULT_ISOLATION_LEVEL
         return when (topicConfig.location) {
             TopicLocation.ON_PREM -> throw RuntimeException("On prem kafka endpoint is not supported")
-            TopicLocation.AIVEN -> createAivenAdminProperties()
+            TopicLocation.AIVEN -> createAivenAdminProperties(keyDesType, valueDesType, isolationLevel)
         }
     }
 
