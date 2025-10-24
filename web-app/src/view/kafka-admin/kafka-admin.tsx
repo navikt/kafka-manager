@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { errorToast, successToast, warningToast } from '../../utils/toast-utils';
 import { Card } from '../../component/card/card';
-import { BodyShort, Button, Heading, Label, Loader, Modal, TextField, ToggleGroup } from '@navikt/ds-react';
+import { BodyShort, Button, Label, Loader, Modal, TextField, ToggleGroup, UNSAFE_Combobox } from '@navikt/ds-react';
 import {
 	getAvailableTopics,
 	getConsumerOffsets,
@@ -39,45 +39,29 @@ export function KafkaAdmin() {
 		return <PageSpinner />;
 	}
 
+	const sortedTopics = availableTopics.sort();
+
 	return (
 		<div className="view kafka-admin">
-			<TopicSidebar availableTopics={availableTopics} selectedTopic={selectedTopic} onTopicSelected={setSelectedTopic} />
-			<div className="kafka-admin__col">
-				<ConsumerOffsetsCard selectedTopic={selectedTopic} />
-				<LastRecordOffsetCard selectedTopic={selectedTopic} />
-				<SetConsumerOffsetCard selectedTopic={selectedTopic} />
+			<div className="kafka-admin__topic-selector">
+				<UNSAFE_Combobox
+					label="Select Kafka Topic"
+					options={sortedTopics.map(topic => topic)}
+					onToggleSelected={(option) => setSelectedTopic(option)}
+					selectedOptions={selectedTopic ? [selectedTopic] : []}
+					isMultiSelect={false}
+					shouldAutocomplete={true}
+				/>
 			</div>
-			<div>
-				<ReadFromTopicCard selectedTopic={selectedTopic} />
-			</div>
-		</div>
-	);
-}
-
-function TopicSidebar(props: { availableTopics: string[]; selectedTopic: string | null; onTopicSelected: (topic: string) => void }) {
-	const sortedTopics = props.availableTopics.sort();
-
-	return (
-		<div className="topic-sidebar">
-			<div className="topic-sidebar__header">
-				<Heading size="large">Topics</Heading>
-				<BodyShort size="small" className="topic-sidebar__count">
-					{sortedTopics.length} available
-				</BodyShort>
-			</div>
-			<div className="topic-sidebar__list">
-				{sortedTopics.map((topic, idx) => {
-					const isSelected = props.selectedTopic === topic;
-					return (
-						<button
-							key={idx}
-							className={`topic-sidebar__item ${isSelected ? 'topic-sidebar__item--selected' : ''}`}
-							onClick={() => props.onTopicSelected(topic)}
-						>
-							{topic}
-						</button>
-					);
-				})}
+			<div className="kafka-admin__content">
+				<div className="kafka-admin__col">
+					<ConsumerOffsetsCard selectedTopic={selectedTopic} />
+					<LastRecordOffsetCard selectedTopic={selectedTopic} />
+					<SetConsumerOffsetCard selectedTopic={selectedTopic} />
+				</div>
+				<div>
+					<ReadFromTopicCard selectedTopic={selectedTopic} />
+				</div>
 			</div>
 		</div>
 	);

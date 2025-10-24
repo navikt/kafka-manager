@@ -1,85 +1,31 @@
 .kafka-admin {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.kafka-admin__topic-selector {
+  max-width: 600px;
+}
+
+.kafka-admin__content {
   display: grid;
   grid-column-gap: 2rem;
   grid-template-rows: 1fr;
-  grid-template-columns: 280px 600px 1fr;
-  height: calc(100vh - 160px);
-  overflow: hidden;
+  grid-template-columns: 600px 1fr;
 }
+
 .kafka-admin__col {
   overflow-y: auto;
   padding-right: 1rem;
 }
+
 .kafka-admin__col > *:not(:last-child) {
   margin-bottom: 2rem;
 }
+
 .kafka-admin__spinner {
   margin: 2rem auto auto;
-}
-
-/* Topic Sidebar Styles */
-.topic-sidebar {
-  display: flex;
-  flex-direction: column;
-  background-color: var(--a-gray-100);
-  border-radius: 8px;
-  padding: 1rem;
-  height: 100%;
-  overflow: hidden;
-}
-
-.topic-sidebar__header {
-  padding-bottom: 0.75rem;
-  margin-bottom: 1rem;
-}
-
-.topic-sidebar__count {
-  color: var(--a-gray-700);
-  margin-top: 0.25rem;
-}
-
-.topic-sidebar__list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  overflow-y: auto;
-  overflow-x: hidden;
-  flex: 1;
-}
-
-.topic-sidebar__item {
-  display: block;
-  width: 100%;
-  padding: 0.75rem 1rem;
-  text-align: left;
-  background-color: white;
-  border: 1px solid var(--a-gray-300);
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  font-size: 0.9rem;
-  font-family: monospace;
-  word-break: break-word;
-  white-space: normal;
-}
-
-.topic-sidebar__item:hover {
-  background-color: var(--a-gray-200);
-  border-color: var(--a-gray-500);
-  transform: translateX(4px);
-}
-
-.topic-sidebar__item--selected {
-  background-color: var(--a-surface-action-selected);
-  border-color: var(--a-border-action-selected);
-  color: var(--a-white);
-  font-weight: 600;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.topic-sidebar__item--selected:hover {
-  background-color: var(--a-surface-action-selected);
-  transform: translateX(4px);
 }
 
 /* Selected Topic Indicator */
