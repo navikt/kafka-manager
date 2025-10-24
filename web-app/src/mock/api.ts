@@ -1,7 +1,7 @@
 import { delay, http, HttpResponse, RequestHandler } from 'msw';
 import { KafkaRecord, LastRecordOffsetResponse, TopicPartitionOffset } from '../api';
 
-const availableTopics = ['test-topic-b', 'test-topic-a', 'test-topic-c'];
+const availableTopics = ['test-topic-b', 'test-topic-a', 'test-topic-c','test-topic-d', 'test-topic-e', 'test-topic-f','test-topic-h'];
 
 const kafkaRecords: KafkaRecord[] = [];
 
