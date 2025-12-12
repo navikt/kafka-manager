@@ -1,19 +1,19 @@
 name: Build, push and deploy
-on: push
-env:
-  IMAGE: ghcr.io/${{ github.repository }}/kafka-manager
+on:
+  workflow_dispatch:
+  push:
 
 jobs:
   test-api:
-    name: Run tests
+    name: Run backend tests
     runs-on: ubuntu-latest
     if: github.ref != 'refs/heads/main'
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           java-version: 21
           distribution: 'temurin'
@@ -23,22 +23,25 @@ jobs:
         run: mvn -f ./api/pom.xml -B verify
 
   test-web-app:
-    name: Run tests
+    name: Run frontend tests
     runs-on: ubuntu-latest
     if: github.ref != 'refs/heads/main'
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v5
         with:
-          node-version: 18
+          node-version: 24
           cache: 'npm'
           cache-dependency-path: 'web-app/package-lock.json'
+          registry-url: 'https://npm.pkg.github.com'
 
       - name: Install dependencies
-        run: npm ci --legacy-peer-deps --prefix web-app
+        run: npm ci --prefix web-app
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.READER_TOKEN }}
 
       - name: Run tests
         run: npm run test --prefix web-app
@@ -46,33 +49,36 @@ jobs:
   test-build-and-push:
     name: Test, build and push
     permissions:
-      contents: 'read'
+      contents: 'write'
       id-token: 'write'
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
+      - name: Set up JDK
+        uses: actions/setup-java@v5
         with:
           java-version: 21
           distribution: 'temurin'
           cache: 'maven'
 
-      - name: Setup node
-        uses: actions/setup-node@v3
+      - name: Setup Node
+        uses: actions/setup-node@v5
         with:
-          node-version: 18
+          node-version: 24
           cache: 'npm'
           cache-dependency-path: 'web-app/package-lock.json'
+          registry-url: 'https://npm.pkg.github.com'
 
       - name: Build maven artifacts
         run: mvn -f ./api/pom.xml -B package
 
       - name: Install dependencies
-        run: npm ci --legacy-peer-deps --prefix web-app
+        run: npm ci --prefix web-app
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.READER_TOKEN }}
 
       - name: Run web-app tests
         run: npm test --prefix web-app
@@ -82,7 +88,17 @@ jobs:
 
       - name: Build and push
         uses: nais/docker-build-push@v0
+        id: docker-build-push
         with:
           team: poao
-          project_id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
-          identity_provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
+          tag: ${{ env.IMAGE_TAG }}
+
+      - name: Create image tag
+        run: echo "IMAGE_TAG=$(TZ=\"Europe/Oslo\" date +%Y.%m.%d_%H.%M)-$(git rev-parse --short=12 HEAD)" >> $GITHUB_ENV
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Release kafka-manager
+          tag_name: ${{ env.IMAGE_TAG }}
+          prerelease: false

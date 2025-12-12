@@ -231,7 +231,7 @@ function ReadFromTopicCard(props: { selectedTopic: string | null }) {
 
 	const [startTimeMs, setStartTimeMs] = useState<number | null>(null);
 	const [timeTakenMs, setTimeTakenMs] = useState<number>(0);
-	const timerRef = useRef<number | null>();
+	const timerRef = useRef<number | null>(null);
 
 	async function handleReadFromTopic() {
 		if (props.selectedTopic == null) {
@@ -405,7 +405,7 @@ function ReadFromTopicCard(props: { selectedTopic: string | null }) {
 					</tbody>
 				</table>
 			) : null}
-			<Modal aria-label="Modal" open={clickedRecord !== null} onClose={() => setClickedRecord(null)}>
+			<Modal open={clickedRecord !== null} onClose={() => setClickedRecord(null)} aria-label="kafka record content">
 				<Modal.Body>
 					<KafkaRecordModalContent record={clickedRecord} />
 				</Modal.Body>
