@@ -13,6 +13,7 @@ import no.nav.kafkamanager.utils.KafkaPropertiesFactory.createAivenAdminProperti
 import no.nav.kafkamanager.utils.KafkaPropertiesFactory.createAivenConsumerProperties
 import no.nav.kafkamanager.utils.KafkaPropertiesFactory.createOnPremConsumerProperties
 import org.apache.kafka.clients.admin.AdminClient
+import org.apache.kafka.clients.admin.RecordsToDelete
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.ConsumerConfig.DEFAULT_ISOLATION_LEVEL
 import org.apache.kafka.clients.consumer.KafkaConsumer
@@ -140,6 +141,27 @@ class KafkaAdminService(
             consumer.assign(listOf(topicPartition))
             consumer.seek(topicPartition, request.offset)
             consumer.commitSync()
+        }
+    }
+
+    /**
+     * Deletes records from a topic partition before the specified offset.
+     * @param topicName The name of the topic.
+     * @param partition The partition number.
+     * @param beforeOffset Delete all records before this offset.
+     * @throws ResponseStatusException if the operation fails.
+     */
+    fun deleteRecords(topicName: String, partition: Int, beforeOffset: Long) {
+        val adminClient = createKafkaAdminClientForTopic(topicName)
+        val topicPartition = TopicPartition(topicName, partition)
+        val recordsToDelete = mapOf(topicPartition to RecordsToDelete.beforeOffset(beforeOffset))
+        adminClient.use { admin ->
+            try {
+                val result = admin.deleteRecords(recordsToDelete)
+                result.all().get() // Wait for completion
+            } catch (e: Exception) {
+                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete records: ${e.message}", e)
+            }
         }
     }
 

@@ -98,3 +98,17 @@ export function setConsumerOffset(request: SetConsumerOffsetRequest): AxiosPromi
 		groupId: request.groupId
 	});
 }
+
+export interface DeleteRecordsRequest {
+    topicName: string;
+    topicPartition: number;
+    beforeOffset: number;
+}
+
+export function deleteConsumerRecords(request: DeleteRecordsRequest): AxiosPromise<void> {
+    return axiosInstance.post('/api/kafka/delete-records', {
+        topicName: request.topicName,
+        topicPartition: request.topicPartition,
+        beforeOffset: request.beforeOffset
+    });
+}

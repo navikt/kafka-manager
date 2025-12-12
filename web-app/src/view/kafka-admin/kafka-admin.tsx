@@ -19,6 +19,8 @@ import './kafka-admin.css';
 import { KafkaRecordModalContent } from './kafka-record-modal-content';
 import { PageSpinner } from '../../component/page-spinner/page-spinner';
 import { toTimerStr } from '../../utils/date-utils';
+import { DeleteRecordsCard } from './DeleteRecordsCard';
+import { SelectedTopic } from './SelectedTopic';
 
 export function KafkaAdmin() {
 	const [availableTopics, setAvailableTopics] = useState<string[] | null>(null);
@@ -58,6 +60,7 @@ export function KafkaAdmin() {
 					<ConsumerOffsetsCard selectedTopic={selectedTopic} />
 					<LastRecordOffsetCard selectedTopic={selectedTopic} />
 					<SetConsumerOffsetCard selectedTopic={selectedTopic} />
+					<DeleteRecordsCard selectedTopic={selectedTopic} />
 				</div>
 				<div>
 					<ReadFromTopicCard selectedTopic={selectedTopic} />
@@ -212,16 +215,6 @@ function SetConsumerOffsetCard(props: { selectedTopic: string | null }) {
 			</Button>
 		</Card>
 	);
-}
-
-const SelectedTopic = (props: { selectedTopic: string | null }) => {
-	return props.selectedTopic ? (
-		<BodyShort size="small" className="selected-topic-indicator">
-			Topic: <strong>{props.selectedTopic}</strong>
-		</BodyShort>
-	) : <BodyShort size="small" className="no-topic-selected-indicator">
-		Topic: <strong>No topic selected</strong>
-	</BodyShort>
 }
 
 function ReadFromTopicCard(props: { selectedTopic: string | null }) {
@@ -412,10 +405,10 @@ function ReadFromTopicCard(props: { selectedTopic: string | null }) {
 					</tbody>
 				</table>
 			) : null}
-			<Modal open={clickedRecord !== null} onClose={() => setClickedRecord(null)}>
-				<Modal.Content>
+			<Modal aria-label="Modal" open={clickedRecord !== null} onClose={() => setClickedRecord(null)}>
+				<Modal.Body>
 					<KafkaRecordModalContent record={clickedRecord} />
-				</Modal.Content>
+				</Modal.Body>
 			</Modal>
 		</Card>
 	);

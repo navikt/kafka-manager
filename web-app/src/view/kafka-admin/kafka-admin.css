@@ -107,3 +107,7 @@
   font-family: monospace;
   font-size: 1rem;
 }
+.delete-records-card {
+  display: flex;
+  gap: 1rem;
+}
