@@ -1,7 +1,7 @@
-import React, { ChangeEvent, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { errorToast, successToast, warningToast } from '../../utils/toast-utils';
 import { Card } from '../../component/card/card';
-import { BodyShort, Button, Loader, Modal, RadioGroup, Select, TextField, Radio } from '@navikt/ds-react';
+import { BodyShort, Button, Label, Loader, Modal, TextField, ToggleGroup, UNSAFE_Combobox } from '@navikt/ds-react';
 import {
 	getAvailableTopics,
 	getConsumerOffsets,
@@ -19,9 +19,12 @@ import './kafka-admin.css';
 import { KafkaRecordModalContent } from './kafka-record-modal-content';
 import { PageSpinner } from '../../component/page-spinner/page-spinner';
 import { toTimerStr } from '../../utils/date-utils';
+import { DeleteRecordsCard } from './DeleteRecordsCard';
+import { SelectedTopic } from './SelectedTopic';
 
 export function KafkaAdmin() {
 	const [availableTopics, setAvailableTopics] = useState<string[] | null>(null);
+	const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
 
 	useEffect(() => {
 		getAvailableTopics()
@@ -38,59 +41,46 @@ export function KafkaAdmin() {
 		return <PageSpinner />;
 	}
 
+	const sortedTopics = availableTopics.sort();
+
 	return (
 		<div className="view kafka-admin">
-			<div className="kafka-admin__col">
-				<ConsumerOffsetsCard availableTopics={availableTopics} />
-				<LastRecordOffsetCard availableTopics={availableTopics} />
-				<SetConsumerOffsetCard availableTopics={availableTopics} />
+			<div className="kafka-admin__topic-selector">
+				<UNSAFE_Combobox
+					label="Select Kafka Topic"
+					options={sortedTopics.map(topic => topic)}
+					onToggleSelected={(option) => setSelectedTopic(option)}
+					selectedOptions={selectedTopic ? [selectedTopic] : []}
+					isMultiSelect={false}
+					shouldAutocomplete={true}
+				/>
 			</div>
-			<div>
-				<ReadFromTopicCard availableTopics={availableTopics} />
+			<div className="kafka-admin__content">
+				<div className="kafka-admin__col">
+					<ConsumerOffsetsCard selectedTopic={selectedTopic} />
+					<LastRecordOffsetCard selectedTopic={selectedTopic} />
+					<SetConsumerOffsetCard selectedTopic={selectedTopic} />
+					<DeleteRecordsCard selectedTopic={selectedTopic} />
+				</div>
+				<div>
+					<ReadFromTopicCard selectedTopic={selectedTopic} />
+				</div>
 			</div>
 		</div>
 	);
 }
 
-function TopicSelect(props: { availableTopics: string[]; onTopicChanged: (topic: string | null) => void }) {
-	const NO_TOPIC = 'NO_TOPIC';
-	const [selectedTopic, setSelectedTopic] = useState(NO_TOPIC);
-	const sortedTopics = props.availableTopics.sort();
-
-	function handleTopicChanged(e: ChangeEvent<HTMLSelectElement>) {
-		setSelectedTopic(e.target.value);
-
-		const changedTopic = e.target.value === NO_TOPIC ? null : e.target.value;
-		props.onTopicChanged(changedTopic);
-	}
-
-	return (
-		<Select label="Topic name" value={selectedTopic} onChange={handleTopicChanged}>
-			<option value={NO_TOPIC}>Choose a topic</option>
-			{sortedTopics.map((topic, idx) => {
-				return (
-					<option key={idx} value={topic}>
-						{topic}
-					</option>
-				);
-			})}
-		</Select>
-	);
-}
-
-function ConsumerOffsetsCard(props: { availableTopics: string[] }) {
+function ConsumerOffsetsCard(props: { selectedTopic: string | null }) {
 	const [groupIdField, setGroupIdField] = useState('');
-	const [topicNameField, setTopicNameField] = useState<string | null>(null);
-
 	const [topicPartitionOffsets, setTopicPartitionOffsets] = useState<TopicPartitionOffset[]>([]);
 
 	function handleHentConsumerOffsets() {
-		if (topicNameField == null) {
-			errorToast('Topic is missing');
+		if (props.selectedTopic == null) {
+			errorToast('Please select a topic from the sidebar');
 			return;
 		}
 
-		const request: GetConsumerOffsetsRequest = { groupId: groupIdField, topicName: topicNameField };
+		const request: GetConsumerOffsetsRequest = { groupId: groupIdField, topicName: props.selectedTopic };
 
 		getConsumerOffsets(request)
 			.then(res => {
@@ -108,14 +98,11 @@ function ConsumerOffsetsCard(props: { availableTopics: string[] }) {
 			<BodyShort spacing>
 				Henter siste commitet offset for alle partisjoner tilhørende en consumer gruppe for en gitt topic
 			</BodyShort>
-
+			<SelectedTopic selectedTopic={props.selectedTopic} />
 			<TextField label="Consumer group id" value={groupIdField} onChange={e => setGroupIdField(e.target.value)} />
-			<TopicSelect availableTopics={props.availableTopics} onTopicChanged={setTopicNameField} />
-
-			<Button onClick={handleHentConsumerOffsets} variant="tertiary">
+			<Button onClick={handleHentConsumerOffsets} variant="tertiary" disabled={!props.selectedTopic}>
 				Fetch
 			</Button>
-
 			{topicPartitionOffsets.length > 0 && (
 				<ul>
 					{topicPartitionOffsets.map((tpo, idx) => {
@@ -131,20 +118,18 @@ function ConsumerOffsetsCard(props: { availableTopics: string[] }) {
 	);
 }
 
-function LastRecordOffsetCard(props: { availableTopics: string[] }) {
-	const [topicNameField, setTopicNameField] = useState<string | null>(null);
+function LastRecordOffsetCard(props: { selectedTopic: string | null }) {
 	const [topicPartition, setTopicPartition] = useState('0');
-
 	const [lastRecordOffset, setLastRecordOffset] = useState<number | null>(null);
 
 	function handleHentLastRecordOffset() {
-		if (topicNameField == null) {
-			errorToast('Topic is missing');
+		if (props.selectedTopic == null) {
+			errorToast('Please select a topic from the sidebar');
 			return;
 		}
 
 		const request: GetLastRecordOffsetRequest = {
-			topicName: topicNameField,
+			topicName: props.selectedTopic,
 			topicPartition: parseInt(topicPartition, 10)
 		};
 
@@ -160,19 +145,16 @@ function LastRecordOffsetCard(props: { availableTopics: string[] }) {
 			<BodyShort spacing>
 				Henter offset til siste record(melding på kafka) som ligger på en topic+partisjon
 			</BodyShort>
-
-			<TopicSelect availableTopics={props.availableTopics} onTopicChanged={setTopicNameField} />
+			<SelectedTopic selectedTopic={props.selectedTopic} />
 			<TextField
 				label="Topic partition (first partition starts at 0)"
 				type="number"
 				value={topicPartition}
 				onChange={e => setTopicPartition(e.target.value)}
 			/>
-
-			<Button onClick={handleHentLastRecordOffset} variant="tertiary">
+			<Button onClick={handleHentLastRecordOffset} variant="tertiary" disabled={!props.selectedTopic}>
 				Fetch
 			</Button>
-
 			{lastRecordOffset != null ? (
 				<BodyShort style={{ marginTop: '2rem' }}>
 					Offset til siste record: <strong>{lastRecordOffset}</strong>
@@ -182,20 +164,19 @@ function LastRecordOffsetCard(props: { availableTopics: string[] }) {
 	);
 }
 
-function SetConsumerOffsetCard(props: { availableTopics: string[] }) {
-	const [topicNameField, setTopicNameField] = useState<string | null>(null);
+function SetConsumerOffsetCard(props: { selectedTopic: string | null }) {
 	const [groupIdField, setGroupIdField] = useState('');
 	const [topicPartitionField, setTopicPartitionField] = useState('0');
 	const [offsetField, setOffsetField] = useState('0');
 
 	function handleSetConsumerOffset() {
-		if (topicNameField == null) {
-			errorToast('Topic is missing');
+		if (props.selectedTopic == null) {
+			errorToast('Please select a topic from the sidebar');
 			return;
 		}
 
 		const request: SetConsumerOffsetRequest = {
-			topicName: topicNameField,
+			topicName: props.selectedTopic,
 			topicPartition: parseInt(topicPartitionField, 10),
 			offset: parseInt(offsetField, 10),
 			groupId: groupIdField
@@ -214,9 +195,7 @@ function SetConsumerOffsetCard(props: { availableTopics: string[] }) {
 				committer et nytt offset før den har blitt startet på nytt og fått hentet inn endringen, så vil den
 				overskrive offsetet fra kafka-manager.
 			</BodyShort>
-
-			<TopicSelect availableTopics={props.availableTopics} onTopicChanged={setTopicNameField} />
-
+			<SelectedTopic selectedTopic={props.selectedTopic} />
 			<TextField
 				label="Topic partition (first partition starts at 0)"
 				type="number"
@@ -231,25 +210,18 @@ function SetConsumerOffsetCard(props: { availableTopics: string[] }) {
 				onChange={e => setOffsetField(e.target.value)}
 			/>
 
-			<Button onClick={handleSetConsumerOffset} variant="tertiary">
+			<Button onClick={handleSetConsumerOffset} variant="tertiary" disabled={!props.selectedTopic}>
 				Set offset
 			</Button>
 		</Card>
 	);
 }
 
-enum FetchFrom {
-	BEGINNING = 'BEGINNING',
-	END = 'END',
-	OFFSET = 'OFFSET'
-}
-
-function ReadFromTopicCard(props: { availableTopics: string[] }) {
+function ReadFromTopicCard(props: { selectedTopic: string | null }) {
 	const [isLoading, setIsLoading] = useState<boolean>(false);
-	const [topicNameField, setTopicNameField] = useState<string | null>(null);
-	const [topicAllPartitionsField, setAllPartitionsField] = useState<boolean>(true);
+	const [partitionMode, setPartitionMode] = useState<'all' | 'specific'>('all');
 	const [topicPartitionField, setTopicPartitionField] = useState('0');
-	const [fetchFromField, setFetchFromField] = useState<FetchFrom>(FetchFrom.END);
+	const [fetchFromField, setFetchFromField] = useState<'BEGINNING' | 'END' | 'OFFSET'>('END');
 	const [fromOffsetField, setFromOffsetField] = useState('0');
 	const [maxRecordsField, setMaxRecordsField] = useState('50');
 	const [keyValueFilterField, setKeyValueFilterField] = useState('');
@@ -262,8 +234,8 @@ function ReadFromTopicCard(props: { availableTopics: string[] }) {
 	const timerRef = useRef<number | null>(null);
 
 	async function handleReadFromTopic() {
-		if (topicNameField == null) {
-			errorToast('Topic is missing');
+		if (props.selectedTopic == null) {
+			errorToast('Please select a topic from the sidebar');
 			return;
 		}
 
@@ -276,11 +248,11 @@ function ReadFromTopicCard(props: { availableTopics: string[] }) {
 
 		let fetchFromOffset;
 
-		if (fetchFromField === FetchFrom.BEGINNING) {
+		if (fetchFromField === 'BEGINNING') {
 			fetchFromOffset = 0;
-		} else if (fetchFromField === FetchFrom.END) {
+		} else if (fetchFromField === 'END') {
 			try {
-				const lastRecordOffset = (await getLastRecordOffset({ topicName: topicNameField, topicPartition })).data
+				const lastRecordOffset = (await getLastRecordOffset({ topicName: props.selectedTopic, topicPartition })).data
 					.latestRecordOffset;
 
 				fetchFromOffset = lastRecordOffset - maxRecords;
@@ -295,8 +267,8 @@ function ReadFromTopicCard(props: { availableTopics: string[] }) {
 		}
 
 		const request: ReadFromTopicRequest = {
-			topicName: topicNameField,
-			topicAllPartitions: topicAllPartitionsField,
+			topicName: props.selectedTopic,
+			topicAllPartitions: partitionMode === 'all',
 			topicPartition,
 			fromOffset: fetchFromOffset,
 			maxRecords,
@@ -340,45 +312,44 @@ function ReadFromTopicCard(props: { availableTopics: string[] }) {
 				Leser meldinger fra en topic+partisjon. Trykk på en av meldingene for å se mer detaljert informasjon
 			</BodyShort>
 
-			<TopicSelect availableTopics={props.availableTopics} onTopicChanged={setTopicNameField} />
+			<SelectedTopic selectedTopic={props.selectedTopic} />
 
-			<RadioGroup
-				legend="Topic partitions"
-				onChange={(value: boolean) => setAllPartitionsField(value)}
-				defaultValue={true}
-				required
-			>
-				<Radio value={true}>All partitions</Radio>
-				<Radio value={false}>Specific partition</Radio>
-			</RadioGroup>
+			<div className="toggle-group-container">
+				<div className="toggle-group-wrapper">
+					<Label className="toggle-group-label">Topic partitions</Label>
+					<ToggleGroup value={partitionMode} onChange={(value) => setPartitionMode(value as 'all' | 'specific')} size="small">
+						<ToggleGroup.Item value="all">All</ToggleGroup.Item>
+						<ToggleGroup.Item value="specific">Specific</ToggleGroup.Item>
+					</ToggleGroup>
+				</div>
 
-			{ !topicAllPartitionsField ? (
+				<div className="toggle-group-wrapper">
+					<Label  className="toggle-group-label">Fetch from</Label>
+					<ToggleGroup value={fetchFromField} onChange={(value) => setFetchFromField(value as 'BEGINNING' | 'END' | 'OFFSET')} size="small">
+						<ToggleGroup.Item value="BEGINNING">Beginning</ToggleGroup.Item>
+						<ToggleGroup.Item value="END">End</ToggleGroup.Item>
+						<ToggleGroup.Item value="OFFSET">Offset</ToggleGroup.Item>
+					</ToggleGroup>
+				</div>
+			</div>
+
+			{partitionMode === 'specific' && (
 				<TextField
-				label="Topic partition number (first partition starts at 0)"
-				type="number"
-				value={topicPartitionField}
-				onChange={e => setTopicPartitionField(e.target.value)}
+					label="Topic partition number (first partition starts at 0)"
+					type="number"
+					value={topicPartitionField}
+					onChange={e => setTopicPartitionField(e.target.value)}
 				/>
-			) : null }
+			)}
 
-			<Select
-				label="Fetch records from"
-				value={fetchFromField}
-				onChange={e => setFetchFromField(e.target.value as FetchFrom)}
-			>
-				<option value={FetchFrom.BEGINNING}>Beginning (fetch the first records in the topic)</option>
-				<option value={FetchFrom.END}>End (fetch the last records in the topic)</option>
-				<option value={FetchFrom.OFFSET}>Offset (fetch from a specified offset)</option>
-			</Select>
-
-			{fetchFromField === FetchFrom.OFFSET ? (
+			{fetchFromField === 'OFFSET' && (
 				<TextField
 					label="From offset"
 					type="number"
 					value={fromOffsetField}
 					onChange={e => setFromOffsetField(e.target.value)}
 				/>
-			) : null}
+			)}
 
 			<TextField
 				label="Max records (maximum of records that will be returned, max=100)"
@@ -393,7 +364,7 @@ function ReadFromTopicCard(props: { availableTopics: string[] }) {
 				onChange={e => setKeyValueFilterField(e.target.value)}
 			/>
 
-			<Button onClick={handleReadFromTopic} variant="tertiary">
+			<Button onClick={handleReadFromTopic} variant="tertiary" disabled={!props.selectedTopic}>
 				Fetch
 			</Button>
 

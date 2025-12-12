@@ -41,6 +41,17 @@ class KafkaAdminController(
         kafkaAdminService.setConsumerOffset(request)
     }
 
+    @PostMapping("/get-consumer-groups")
+    fun getConsumerGroups(@RequestBody request: GetConsumerGroupsRequest): List<String> {
+        return kafkaAdminService.getConsumerGroups(request)
+    }
+
+    @PostMapping("/delete-records")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    fun deleteRecords(@RequestBody request: DeleteRecordsRequest) {
+        kafkaAdminService.deleteRecords(request.topicName, request.topicPartition, request.beforeOffset)
+    }
+
     private fun validateReadTopicRequestDTO(readTopicRequest: ReadTopicRequest) {
         if (readTopicRequest.maxRecords < 0 || readTopicRequest.maxRecords > MAX_KAFKA_RECORDS) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "maxRecords must be between 0 and 100")
@@ -89,6 +100,16 @@ class KafkaAdminController(
         val topicName: String,
         val topicPartition: Int,
         val offset: Long
+    )
+
+    data class GetConsumerGroupsRequest(
+        val topicName: String
+    )
+
+    data class DeleteRecordsRequest(
+        val topicName: String,
+        val topicPartition: Int,
+        val beforeOffset: Long
     )
 
 }

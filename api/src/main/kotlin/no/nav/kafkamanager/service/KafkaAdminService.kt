@@ -9,8 +9,11 @@ import no.nav.kafkamanager.domain.TopicConfig
 import no.nav.kafkamanager.domain.TopicLocation
 import no.nav.kafkamanager.utils.ConsumerRecordMapper
 import no.nav.kafkamanager.utils.DTOMappers.toKafkaRecordHeader
+import no.nav.kafkamanager.utils.KafkaPropertiesFactory.createAivenAdminProperties
 import no.nav.kafkamanager.utils.KafkaPropertiesFactory.createAivenConsumerProperties
 import no.nav.kafkamanager.utils.KafkaPropertiesFactory.createOnPremConsumerProperties
+import org.apache.kafka.clients.admin.AdminClient
+import org.apache.kafka.clients.admin.RecordsToDelete
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.ConsumerConfig.DEFAULT_ISOLATION_LEVEL
 import org.apache.kafka.clients.consumer.KafkaConsumer
@@ -34,6 +37,35 @@ class KafkaAdminService(
 
     fun getAvailableTopics(): List<String> {
         return appConfig.topics.map { it.name }
+    }
+
+    fun getConsumerGroups(request: KafkaAdminController.GetConsumerGroupsRequest): List<String> {
+        val adminClient = createKafkaAdminClientForTopic(request.topicName)
+
+        adminClient.use { admin ->
+            // List all consumer groups
+            val consumerGroups = admin.listConsumerGroups().all().get()
+            val consumerGroupIds = consumerGroups.map { it.groupId() }
+
+            // For each consumer group, check if it has committed offsets for the topic
+            val groupsForTopic = consumerGroupIds.filter { groupId ->
+                try {
+                    val topicPartitions = admin.listConsumerGroupOffsets(groupId)
+                        .partitionsToOffsetAndMetadata()
+                        .get()
+                        .keys
+                        .map { it.topic() }
+                        .toSet()
+
+                    topicPartitions.contains(request.topicName)
+                } catch (e: Exception) {
+                    // Skip groups that we can't describe (e.g., permission issues)
+                    false
+                }
+            }
+
+            return groupsForTopic.sorted()
+        }
     }
 
     fun readTopic(request: KafkaAdminController.ReadTopicRequest): List<KafkaRecord> {
@@ -112,6 +144,27 @@ class KafkaAdminService(
         }
     }
 
+    /**
+     * Deletes records from a topic partition before the specified offset.
+     * @param topicName The name of the topic.
+     * @param partition The partition number.
+     * @param beforeOffset Delete all records before this offset.
+     * @throws ResponseStatusException if the operation fails.
+     */
+    fun deleteRecords(topicName: String, partition: Int, beforeOffset: Long) {
+        val adminClient = createKafkaAdminClientForTopic(topicName)
+        val topicPartition = TopicPartition(topicName, partition)
+        val recordsToDelete = mapOf(topicPartition to RecordsToDelete.beforeOffset(beforeOffset))
+        adminClient.use { admin ->
+            try {
+                val result = admin.deleteRecords(recordsToDelete)
+                result.all().get() // Wait for completion
+            } catch (e: Exception) {
+                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete records: ${e.message}", e)
+            }
+        }
+    }
+
     private fun createKafkaConsumerForTopic(
         consumerGroupId: String?,
         topicName: String
@@ -120,6 +173,13 @@ class KafkaAdminService(
         val properties = createPropertiesForTopic(consumerGroupId, topicConfig)
 
         return KafkaConsumer(properties)
+    }
+
+    private fun createKafkaAdminClientForTopic(topicName: String): AdminClient {
+        val topicConfig = findTopicConfigOrThrow(topicName)
+        val properties = createAdminPropertiesForTopic(topicConfig)
+
+        return AdminClient.create(properties)
     }
 
     private fun findTopicConfigOrThrow(topicName: String): TopicConfig {
@@ -150,6 +210,16 @@ class KafkaAdminService(
         }
 
         return properties
+    }
+
+    private fun createAdminPropertiesForTopic(topicConfig: TopicConfig): Properties {
+        val keyDesType = topicConfig.keyDeserializerType
+        val valueDesType = topicConfig.valueDeserializerType
+        val isolationLevel = topicConfig.isolationLevel ?: DEFAULT_ISOLATION_LEVEL
+        return when (topicConfig.location) {
+            TopicLocation.ON_PREM -> throw RuntimeException("On prem kafka endpoint is not supported")
+            TopicLocation.AIVEN -> createAivenAdminProperties(keyDesType, valueDesType, isolationLevel)
+        }
     }
 
     companion object {

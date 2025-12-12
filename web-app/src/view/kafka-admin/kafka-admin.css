@@ -1,14 +1,69 @@
 .kafka-admin {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.kafka-admin__topic-selector {
+  max-width: 600px;
+}
+
+.kafka-admin__content {
   display: grid;
   grid-column-gap: 2rem;
   grid-template-rows: 1fr;
   grid-template-columns: 600px 1fr;
 }
+
+.kafka-admin__col {
+  overflow-y: auto;
+  padding-right: 1rem;
+}
+
 .kafka-admin__col > *:not(:last-child) {
   margin-bottom: 2rem;
 }
+
 .kafka-admin__spinner {
   margin: 2rem auto auto;
+}
+
+/* Selected Topic Indicator */
+.selected-topic-indicator {
+  padding: 0.5rem 0.75rem;
+  background-color: var(--a-surface-info-subtle);
+  border-left: 3px solid var(--a-border-info);
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+/* Selected Topic Indicator */
+.no-topic-selected-indicator {
+    padding: 0.5rem 0.75rem;
+    background-color: var(--a-surface-warning-subtle);
+    border-left: 3px solid var(--a-border-warning);
+    border-radius: 4px;
+    margin-bottom: 1rem;
+}
+
+/* Toggle Group Layout */
+.toggle-group-container {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.toggle-group-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.toggle-group-label {
+  margin: 0;
 }
 .kafka-record-value {
   max-width: 400px;
@@ -51,4 +106,8 @@
 .tabell td {
   font-family: monospace;
   font-size: 1rem;
+}
+.delete-records-card {
+  display: flex;
+  gap: 1rem;
 }
