@@ -27,7 +27,7 @@
     "not op_mini all"
   ],
   "dependencies": {
-    "@microlink/react-json-view": "^1.26.2",
+    "@microlink/react-json-view": "^1.27.0",
     "@navikt/ds-css": "^7.35.2",
     "@navikt/ds-react": "^7.35.2",
     "@navikt/ds-tokens": "^7.35.2",
