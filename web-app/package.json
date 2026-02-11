@@ -32,7 +32,7 @@
     "@navikt/ds-react": "^7.35.2",
     "@navikt/ds-tokens": "^7.35.2",
     "@navikt/fnrvalidator": "^2.1.5",
-    "axios": "^1.12.2",
+    "axios": "^1.13.5",
     "classnames": "^2.3.1",
     "constate": "^3.3.3",
     "dayjs": "^1.10.4",
