@@ -1,6 +1,6 @@
 package no.nav.kafkamanager.config
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.common.utils.Credentials
 import no.nav.common.utils.NaisUtils
 import no.nav.kafkamanager.domain.AppConfig
@@ -18,8 +18,8 @@ class ApplicationConfig {
     }
 
     @Bean
-    fun appConfig(properties: EnvironmentProperties, objectMapper: ObjectMapper): AppConfig {
-        return objectMapper.readValue(properties.appConfigJson, AppConfig::class.java)
+    fun appConfig(properties: EnvironmentProperties): AppConfig {
+        return jacksonObjectMapper().readValue(properties.appConfigJson, AppConfig::class.java)
     }
 
     @Bean
