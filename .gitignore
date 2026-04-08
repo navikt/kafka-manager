@@ -8,3 +8,5 @@ bash.exe.stackdump
 web-app/node_modules
 
 web-app/dist
+
+api/src/main/resources/static
