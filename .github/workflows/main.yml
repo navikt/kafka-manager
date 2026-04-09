@@ -36,6 +36,8 @@ jobs:
       - run: npm ci --prefix web-app
         env:
           NODE_AUTH_TOKEN: ${{ secrets.READER_TOKEN }}
+          npm_config_ignore_scripts: "true"
+          npm_config_min_release_age: "7"
       - run: npm run test --prefix web-app
 
   build-and-push:
@@ -67,6 +69,8 @@ jobs:
       - run: npm ci --prefix web-app
         env:
           NODE_AUTH_TOKEN: ${{ secrets.READER_TOKEN }}
+          npm_config_ignore_scripts: "true"
+          npm_config_min_release_age: "7"
 
       - run: npm test --prefix web-app
 

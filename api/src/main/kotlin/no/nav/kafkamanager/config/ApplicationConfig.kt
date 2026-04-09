@@ -1,6 +1,6 @@
 package no.nav.kafkamanager.config
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import tools.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.common.utils.Credentials
 import no.nav.common.utils.NaisUtils
 import no.nav.kafkamanager.domain.AppConfig
