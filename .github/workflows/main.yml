@@ -11,8 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref != 'refs/heads/main'
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-java@v5
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # ratchet:actions/checkout@v6
+      - uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # ratchet:actions/setup-java@v5
         with:
           java-version: 21
           distribution: temurin
@@ -26,8 +26,8 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref != 'refs/heads/main'
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # ratchet:actions/checkout@v6
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # ratchet:actions/setup-node@v6
         with:
           node-version: 24
           cache: npm
@@ -48,18 +48,18 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # ratchet:actions/checkout@v6
 
       - name: Create image tag
         run: echo "IMAGE_TAG=$(TZ='Europe/Oslo' date +%Y.%m.%d-%H.%M)-$(git rev-parse --short=7 HEAD)" >> $GITHUB_ENV
 
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # ratchet:actions/setup-java@v5
         with:
           java-version: 21
           distribution: temurin
           cache: maven
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # ratchet:actions/setup-node@v6
         with:
           node-version: 24
           cache: npm
@@ -79,14 +79,14 @@ jobs:
       - run: mvn -f ./api/pom.xml -B package
 
       - name: Build and push image
-        uses: nais/docker-build-push@v0
+        uses: nais/docker-build-push@45d352fb62fb52ccb5ff6cba22c047fa02b35321 # ratchet:nais/docker-build-push@v0
         id: docker
         with:
           team: poao
           tag: ${{ env.IMAGE_TAG }}
 
       - name: Create GitHub release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # ratchet:softprops/action-gh-release@v2
         with:
           name: Release kafka-manager
           tag_name: ${{ env.IMAGE_TAG }}
