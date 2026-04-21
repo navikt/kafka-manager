@@ -79,14 +79,14 @@ jobs:
       - run: mvn -f ./api/pom.xml -B package
 
       - name: Build and push image
-        uses: nais/docker-build-push@45d352fb62fb52ccb5ff6cba22c047fa02b35321 # ratchet:nais/docker-build-push@v0
+        uses: nais/docker-build-push@cd5ec5663feb0e05c3fa374d1fb442605b046c6b # ratchet:nais/docker-build-push@v0
         id: docker
         with:
           team: poao
           tag: ${{ env.IMAGE_TAG }}
 
       - name: Create GitHub release
-        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # ratchet:softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # ratchet:softprops/action-gh-release@v3.0.0
         with:
           name: Release kafka-manager
           tag_name: ${{ env.IMAGE_TAG }}
