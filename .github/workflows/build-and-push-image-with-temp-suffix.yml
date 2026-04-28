@@ -18,7 +18,7 @@ jobs:
           cache: 'maven'
 
       - name: Setup Node
-        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # ratchet:actions/setup-node@v6
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # ratchet:actions/setup-node@v6
         with:
           node-version: 24
           cache: 'npm'
@@ -37,7 +37,7 @@ jobs:
         run: echo "IMAGE_TAG=$(TZ=\"Europe/Oslo\" date +%Y.%m.%d_%H.%M)-$(git rev-parse --short=12 HEAD)-temp" >> $GITHUB_ENV
 
       - name: Build and push
-        uses: nais/docker-build-push@45d352fb62fb52ccb5ff6cba22c047fa02b35321 # ratchet:nais/docker-build-push@v0
+        uses: nais/docker-build-push@be85229e81c0293c265c646c084f05317fb6e0d2 # ratchet:nais/docker-build-push@v0
         id: docker-build-push
         with:
           tag: ${{ env.IMAGE_TAG }}
@@ -46,7 +46,7 @@ jobs:
 
 
       - name: Create release
-        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # ratchet:softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # ratchet:softprops/action-gh-release@v3.0.0
         with:
           name: Release kafka-manager-temp
           tag_name: ${{ env.IMAGE_TAG }}
