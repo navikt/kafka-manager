@@ -31,7 +31,7 @@
     "@navikt/ds-css": "7.40.0",
     "@navikt/ds-react": "7.40.0",
     "@navikt/ds-tokens": "7.40.0",
-    "@navikt/fnrvalidator": "2.1.5",
+    "@navikt/fnrvalidator": "2.2.1",
     "axios": "1.15.0",
     "classnames": "2.5.1",
     "constate": "3.3.3",
