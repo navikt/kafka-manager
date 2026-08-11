@@ -20,7 +20,7 @@
         <kotlin.version>2.4.10</kotlin.version>
         <common.version>4.2026.08.03_08.40-c4e43f2ee45b</common.version>
         <avro.version>1.12.1</avro.version>
-        <kafka-avro-serializer.version>8.3.0</kafka-avro-serializer.version>
+        <kafka-avro-serializer.version>8.3.1</kafka-avro-serializer.version>
         <commons-compress.version>1.28.0</commons-compress.version>
     </properties>
 
