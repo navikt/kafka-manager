@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>4.1.0</version>
+        <version>4.1.1</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
@@ -18,10 +18,12 @@
     <properties>
         <java.version>21</java.version>
         <kotlin.version>2.4.10</kotlin.version>
-        <common.version>4.2026.08.03_08.40-c4e43f2ee45b</common.version>
+        <common.version>4.2026.09.14_05.43-2bd32bda23c4</common.version>
         <avro.version>1.12.2</avro.version>
-        <kafka-avro-serializer.version>8.3.0</kafka-avro-serializer.version>
+        <kafka-avro-serializer.version>8.3.1</kafka-avro-serializer.version>
         <commons-compress.version>1.28.0</commons-compress.version>
+        <!-- Midlertidig override pga Tomcat-CVE-er. Fjernes når Spring Boot henter en ny versjon -->
+        <tomcat.version>11.0.25</tomcat.version>
     </properties>
 
     <dependencyManagement>
