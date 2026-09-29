@@ -18,7 +18,7 @@
     <properties>
         <java.version>21</java.version>
         <kotlin.version>2.4.10</kotlin.version>
-        <common.version>4.2026.09.14_05.43-2bd32bda23c4</common.version>
+        <common.version>4.2026.09.24_06.17-80dfc0eacb29</common.version>
         <avro.version>1.12.2</avro.version>
         <kafka-avro-serializer.version>8.3.1</kafka-avro-serializer.version>
         <commons-compress.version>1.28.0</commons-compress.version>
