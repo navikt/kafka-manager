@@ -32,33 +32,36 @@
     "@navikt/ds-react": "8.9.0",
     "@navikt/ds-tokens": "8.9.0",
     "@navikt/fnrvalidator": "2.2.1",
-    "axios": "1.15.0",
+    "axios": "1.20.0",
     "classnames": "2.5.1",
-    "constate": "3.3.3",
-    "dayjs": "1.11.20",
+    "constate": "4.0.0",
+    "dayjs": "1.11.23",
     "lodash.throttle": "4.1.1",
     "prop-types": "15.8.1",
-    "react": "19.2.4",
-    "react-dom": "19.2.4",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
     "react-toastify": "11.0.5"
   },
   "devDependencies": {
     "@types/classnames": "2.3.4",
     "@types/jest": "30.0.0",
-    "@types/react": "19.2.14",
-    "@types/react-dom": "19.2.3",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.5",
     "@types/react-modal": "3.16.3",
     "@vitejs/plugin-react": "5.2.0",
     "husky": "9.1.7",
-    "lint-staged": "16.4.0",
-    "msw": "2.13.2",
-    "prettier": "3.8.2",
+    "lint-staged": "17.3.0",
+    "msw": "2.15.0",
+    "prettier": "3.9.6",
     "tslint": "6.1.3",
     "tslint-config-prettier": "1.18.0",
     "tslint-react": "5.0.0",
     "typescript": "6.0.2",
-    "vite": "7.3.2",
-    "vitest": "4.1.4"
+    "vite": "8.2.2",
+    "vitest": "4.1.11"
+  },
+  "overrides": {
+    "esbuild": "0.28.2"
   },
   "msw": {
     "workerDirectory": "public"
