@@ -6,7 +6,7 @@ body {
 	margin: 0;
 	width: 100vw;
 	height: 100vh;
-	background-color: var(--a-gray-100);
+	background-color: var(--ax-neutral-100);
 	overflow-x: hidden;
 }
 html *,
@@ -27,5 +27,5 @@ body * {
 	flex-direction: column;
 }
 .card__content .navds-form-field {
-	margin-bottom: var(--a-spacing-6);
+	margin-bottom: 1.5rem;
 }

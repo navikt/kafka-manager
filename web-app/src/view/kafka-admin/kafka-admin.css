@@ -31,8 +31,8 @@
 /* Selected Topic Indicator */
 .selected-topic-indicator {
   padding: 0.5rem 0.75rem;
-  background-color: var(--a-surface-info-subtle);
-  border-left: 3px solid var(--a-border-info);
+  background-color: var(--ax-info-100);
+  border-left: 3px solid var(--ax-info-700);
   border-radius: 4px;
   margin-bottom: 1rem;
 }
@@ -40,8 +40,8 @@
 /* Selected Topic Indicator */
 .no-topic-selected-indicator {
     padding: 0.5rem 0.75rem;
-    background-color: var(--a-surface-warning-subtle);
-    border-left: 3px solid var(--a-border-warning);
+    background-color: var(--ax-warning-100);
+    border-left: 3px solid var(--ax-warning-700);
     border-radius: 4px;
     margin-bottom: 1rem;
 }
@@ -87,7 +87,7 @@
   background: rgba(0, 0, 0, 0.12);
 }
 .read-from-topic-card__loader-timer {
-  color: var(--a-gray-900);
+  color: var(--ax-neutral-900);
 }
 .tabell {
   border-collapse: collapse;
@@ -98,7 +98,7 @@
   border-bottom: solid 1px black;
 }
 .tabell tr:nth-child(even) {
-  background-color: var(--a-gray-100);
+  background-color: var(--ax-neutral-100);
 }
 .tabell td, .tabell th {
   padding: 0.5rem;
