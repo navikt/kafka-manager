@@ -51,7 +51,7 @@
     "@vitejs/plugin-react": "5.2.0",
     "husky": "9.1.7",
     "lint-staged": "17.3.0",
-    "msw": "2.15.0",
+    "msw": "3.0.2",
     "prettier": "3.9.6",
     "tslint": "6.1.3",
     "tslint-config-prettier": "1.18.0",
