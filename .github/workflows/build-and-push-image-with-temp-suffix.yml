@@ -18,7 +18,7 @@ jobs:
           cache: 'maven'
 
       - name: Setup Node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # ratchet:actions/setup-node@v6
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # ratchet:actions/setup-node@v6
         with:
           node-version: 24
           cache: 'npm'
@@ -37,7 +37,7 @@ jobs:
         run: echo "IMAGE_TAG=$(TZ=\"Europe/Oslo\" date +%Y.%m.%d_%H.%M)-$(git rev-parse --short=12 HEAD)-temp" >> $GITHUB_ENV
 
       - name: Build and push
-        uses: nais/docker-build-push@423a915c9b72edf2ba848b88171ccb0489e2a40a # ratchet:nais/docker-build-push@v0
+        uses: nais/docker-build-push@dd7421d5068057a020ca46ead966c26190c516b1 # ratchet:nais/docker-build-push@v0
         id: docker-build-push
         with:
           tag: ${{ env.IMAGE_TAG }}
