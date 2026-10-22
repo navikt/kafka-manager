@@ -17,13 +17,13 @@
 
     <properties>
         <java.version>21</java.version>
-        <kotlin.version>2.4.20</kotlin.version>
-        <common.version>4.2026.09.24_06.17-80dfc0eacb29</common.version>
+        <kotlin.version>2.4.21</kotlin.version>
+        <common.version>4.2026.10.19_05.55-7add0b457c1d</common.version>
         <avro.version>1.12.2</avro.version>
         <kafka-avro-serializer.version>8.3.2</kafka-avro-serializer.version>
         <commons-compress.version>1.28.0</commons-compress.version>
         <!-- Midlertidig override pga Tomcat-CVE-er. Fjernes når Spring Boot henter en ny versjon -->
-        <tomcat.version>11.0.25</tomcat.version>
+        <tomcat.version>11.0.27</tomcat.version>
     </properties>
 
     <dependencyManagement>
