@@ -28,7 +28,7 @@
 	],
 	"dependencies": {
 		"@microlink/react-json-view": "1.31.40",
-		"@navikt/ds-css": "8.19.1",
+		"@navikt/ds-css": "8.19.2",
 		"@navikt/ds-react": "8.19.1",
 		"@navikt/ds-tokens": "8.19.1",
 		"@navikt/fnrvalidator": "2.2.1",
