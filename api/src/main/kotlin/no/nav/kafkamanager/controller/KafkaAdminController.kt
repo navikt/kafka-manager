@@ -4,7 +4,12 @@ import no.nav.kafkamanager.domain.KafkaRecord
 import no.nav.kafkamanager.service.KafkaAdminService
 import no.nav.kafkamanager.utils.DTOMappers.toTopicWithOffset
 import org.springframework.http.HttpStatus
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.ResponseStatus
+import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.server.ResponseStatusException
 
 @RestController
@@ -12,48 +17,52 @@ import org.springframework.web.server.ResponseStatusException
 class KafkaAdminController(
     val kafkaAdminService: KafkaAdminService,
 ) {
-
     @GetMapping("/available-topics")
-    fun availableTopics(): List<String> {
-        return kafkaAdminService.getAvailableTopics()
-    }
+    fun availableTopics(): List<String> = kafkaAdminService.getAvailableTopics()
 
     @PostMapping("/read-topic")
-    fun readTopic(@RequestBody request: ReadTopicRequest): List<KafkaRecord> {
+    fun readTopic(
+        @RequestBody request: ReadTopicRequest,
+    ): List<KafkaRecord> {
         validateReadTopicRequestDTO(request)
         return kafkaAdminService.readTopic(request)
     }
 
     @PostMapping("/get-consumer-offsets")
-    fun getOffsets(@RequestBody request: GetConsumerOffsetsRequest): List<TopicWithOffset> {
-        return kafkaAdminService.getConsumerOffsets(request).entries.map {
+    fun getOffsets(
+        @RequestBody request: GetConsumerOffsetsRequest,
+    ): List<TopicWithOffset> =
+        kafkaAdminService.getConsumerOffsets(request).entries.map {
             toTopicWithOffset(it.key, it.value)
         }
-    }
 
     @PostMapping("/get-last-record-offset")
-    fun getLastRecordOffset(@RequestBody request: GetLastRecordOffsetRequest): GetLastRecordOffsetResponse {
-        return GetLastRecordOffsetResponse(kafkaAdminService.getLastRecordOffset(request))
-    }
+    fun getLastRecordOffset(
+        @RequestBody request: GetLastRecordOffsetRequest,
+    ): GetLastRecordOffsetResponse = GetLastRecordOffsetResponse(kafkaAdminService.getLastRecordOffset(request))
 
     @PostMapping("/set-consumer-offset")
-    fun setConsumerOffset(@RequestBody request: SetConsumerOffsetRequest) {
+    fun setConsumerOffset(
+        @RequestBody request: SetConsumerOffsetRequest,
+    ) {
         kafkaAdminService.setConsumerOffset(request)
     }
 
     @PostMapping("/get-consumer-groups")
-    fun getConsumerGroups(@RequestBody request: GetConsumerGroupsRequest): List<String> {
-        return kafkaAdminService.getConsumerGroups(request)
-    }
+    fun getConsumerGroups(
+        @RequestBody request: GetConsumerGroupsRequest,
+    ): List<String> = kafkaAdminService.getConsumerGroups(request)
 
     @PostMapping("/delete-records")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    fun deleteRecords(@RequestBody request: DeleteRecordsRequest) {
+    fun deleteRecords(
+        @RequestBody request: DeleteRecordsRequest,
+    ) {
         kafkaAdminService.deleteRecords(request.topicName, request.topicPartition, request.beforeOffset)
     }
 
     private fun validateReadTopicRequestDTO(readTopicRequest: ReadTopicRequest) {
-        if (readTopicRequest.maxRecords < 0 || readTopicRequest.maxRecords > MAX_KAFKA_RECORDS) {
+        if (readTopicRequest.maxRecords !in 0..MAX_KAFKA_RECORDS) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "maxRecords must be between 0 and 100")
         }
     }
@@ -68,48 +77,47 @@ class KafkaAdminController(
         val topicPartition: Int,
         val maxRecords: Int,
         val fromOffset: Long,
-        val filter: RecordFilter?
+        val filter: RecordFilter?,
     )
 
     data class RecordFilter(
-        val text: String?
+        val text: String?,
     )
 
     data class GetLastRecordOffsetRequest(
         val topicName: String,
-        val topicPartition: Int
+        val topicPartition: Int,
     )
 
     data class GetLastRecordOffsetResponse(
-        val latestRecordOffset: Long
+        val latestRecordOffset: Long,
     )
 
     data class GetConsumerOffsetsRequest(
         val groupId: String,
-        val topicName: String
+        val topicName: String,
     )
 
     data class SetConsumerOffsetRequest(
         val groupId: String,
         val topicName: String,
         val topicPartition: Int,
-        val offset: Long
+        val offset: Long,
     )
 
     data class TopicWithOffset(
         val topicName: String,
         val topicPartition: Int,
-        val offset: Long
+        val offset: Long,
     )
 
     data class GetConsumerGroupsRequest(
-        val topicName: String
+        val topicName: String,
     )
 
     data class DeleteRecordsRequest(
         val topicName: String,
         val topicPartition: Int,
-        val beforeOffset: Long
+        val beforeOffset: Long,
     )
-
 }

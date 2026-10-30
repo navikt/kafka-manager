@@ -8,16 +8,17 @@ import org.springframework.boot.web.servlet.FilterRegistrationBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 class FilterConfig {
-
     @Bean
     fun logFilterRegistrationBean(): FilterRegistrationBean<LogRequestFilter> {
         val registration = FilterRegistrationBean<LogRequestFilter>()
-        registration.setFilter(LogRequestFilter(
-            EnvironmentUtils.getApplicationName().orElse(DEFAULT_APPLICATION_NAME),
-            EnvironmentUtils.isDevelopment().orElse(false)
-        ))
+        registration.setFilter(
+            LogRequestFilter(
+                EnvironmentUtils.getApplicationName().orElse(DEFAULT_APPLICATION_NAME),
+                EnvironmentUtils.isDevelopment().orElse(false),
+            ),
+        )
         registration.order = 1
         registration.addUrlPatterns("/api/*")
         return registration
@@ -31,5 +32,4 @@ class FilterConfig {
         registration.addUrlPatterns("/api/*")
         return registration
     }
-
 }

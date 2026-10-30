@@ -8,49 +8,49 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class KafkaAdminServiceTest {
-
-    private val records = listOf(
-        KafkaRecord(
-            partition = 0,
-            key = "",
-            value = "",
-            headers = emptyList(),
-            timestamp = 123,
-            offset = 123
-        ),
-        KafkaRecord(
-            partition = 0,
-            key = null,
-            value = null,
-            headers = emptyList(),
-            timestamp = 123,
-            offset = 124
-        ),
-        KafkaRecord(
-            partition = 0,
-            key = "key123",
-            value = "value123",
-            headers = emptyList(),
-            timestamp = 123,
-            offset = 125
-        ),
-        KafkaRecord(
-            partition = 0,
-            key = "key1234",
-            value = "value1234",
-            headers = emptyList(),
-            timestamp = 123,
-            offset = 126
-        ),
-        KafkaRecord(
-            partition = 0,
-            key = "key9876",
-            value = "value9876",
-            headers = emptyList(),
-            timestamp = 123,
-            offset = 127
+    private val records =
+        listOf(
+            KafkaRecord(
+                partition = 0,
+                key = "",
+                value = "",
+                headers = emptyList(),
+                timestamp = 123,
+                offset = 123,
+            ),
+            KafkaRecord(
+                partition = 0,
+                key = null,
+                value = null,
+                headers = emptyList(),
+                timestamp = 123,
+                offset = 124,
+            ),
+            KafkaRecord(
+                partition = 0,
+                key = "key123",
+                value = "value123",
+                headers = emptyList(),
+                timestamp = 123,
+                offset = 125,
+            ),
+            KafkaRecord(
+                partition = 0,
+                key = "key1234",
+                value = "value1234",
+                headers = emptyList(),
+                timestamp = 123,
+                offset = 126,
+            ),
+            KafkaRecord(
+                partition = 0,
+                key = "key9876",
+                value = "value9876",
+                headers = emptyList(),
+                timestamp = 123,
+                offset = 127,
+            ),
         )
-    )
 
     @Test
     fun `filterRecords should not filter with null filter`() {
@@ -62,7 +62,7 @@ class KafkaAdminServiceTest {
         assertEquals(records, filterRecords(KafkaAdminController.RecordFilter(text = ""), records))
         assertEquals(records, filterRecords(KafkaAdminController.RecordFilter(text = null), records))
     }
-    
+
     @Test
     fun `filterRecords should filter records with key`() {
         val filter = KafkaAdminController.RecordFilter(text = "123")
@@ -102,5 +102,4 @@ class KafkaAdminServiceTest {
         val filteredRecords = filterRecords(filter, records)
         assertEquals(2, filteredRecords.size)
     }
-
 }
