@@ -1,6 +1,6 @@
-package no.nav.kafkamanager;
+package no.nav.kafkamanager
 
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 
 @SpringBootApplication

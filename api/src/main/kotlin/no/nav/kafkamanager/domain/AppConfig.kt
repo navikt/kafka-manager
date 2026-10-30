@@ -1,7 +1,7 @@
 package no.nav.kafkamanager.domain
 
-data class AppConfig (
-    val topics: List<TopicConfig>
+data class AppConfig(
+    val topics: List<TopicConfig>,
 )
 
 data class TopicConfig(
@@ -9,12 +9,12 @@ data class TopicConfig(
     val location: TopicLocation,
     val keyDeserializerType: DeserializerType,
     val valueDeserializerType: DeserializerType,
-    val isolationLevel: String?
+    val isolationLevel: String?,
 )
 
 enum class TopicLocation {
     ON_PREM,
-    AIVEN
+    AIVEN,
 }
 
 enum class DeserializerType {
@@ -25,6 +25,5 @@ enum class DeserializerType {
     LONG,
     SHORT,
     UUID,
-    AVRO
+    AVRO,
 }
-

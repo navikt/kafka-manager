@@ -23,8 +23,9 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
 import java.time.Duration
-import java.util.*
 import java.util.Collections.singleton
+import java.util.Locale
+import java.util.Properties
 import java.util.function.Supplier
 import kotlin.math.max
 
@@ -32,37 +33,37 @@ import kotlin.math.max
 class KafkaAdminService(
     private val environmentProperties: EnvironmentProperties,
     private val appConfig: AppConfig,
-    private val systemUserCredentialsSupplier: Supplier<Credentials>
+    private val systemUserCredentialsSupplier: Supplier<Credentials>,
 ) {
-
-    fun getAvailableTopics(): List<String> {
-        return appConfig.topics.map { it.name }
-    }
+    fun getAvailableTopics(): List<String> = appConfig.topics.map { it.name }
 
     fun getConsumerGroups(request: KafkaAdminController.GetConsumerGroupsRequest): List<String> {
         val adminClient = createKafkaAdminClientForTopic(request.topicName)
 
         adminClient.use { admin ->
             // List all consumer groups
-            val consumerGroups = admin.listConsumerGroups().all().get()
+            val consumerGroups = admin.listGroups().all().get()
             val consumerGroupIds = consumerGroups.map { it.groupId() }
 
             // For each consumer group, check if it has committed offsets for the topic
-            val groupsForTopic = consumerGroupIds.filter { groupId ->
-                try {
-                    val topicPartitions = admin.listConsumerGroupOffsets(groupId)
-                        .partitionsToOffsetAndMetadata()
-                        .get()
-                        .keys
-                        .map { it.topic() }
-                        .toSet()
+            val groupsForTopic =
+                consumerGroupIds.filter { groupId ->
+                    try {
+                        val topicPartitions =
+                            admin
+                                .listConsumerGroupOffsets(groupId)
+                                .partitionsToOffsetAndMetadata()
+                                .get()
+                                .keys
+                                .map { it.topic() }
+                                .toSet()
 
-                    topicPartitions.contains(request.topicName)
-                } catch (e: Exception) {
-                    // Skip groups that we can't describe (e.g., permission issues)
-                    false
+                        topicPartitions.contains(request.topicName)
+                    } catch (_: Exception) {
+                        // Skip groups that we can't describe (e.g., permission issues)
+                        false
+                    }
                 }
-            }
 
             return groupsForTopic.sorted()
         }
@@ -73,10 +74,12 @@ class KafkaAdminService(
         val kafkaRecords = ArrayList<KafkaRecord>()
 
         kafkaConsumer.use { consumer ->
-            val topicPartitions: List<TopicPartition> = if (request.topicAllPartitions)
-                consumer.partitionsFor(request.topicName).map { TopicPartition(it.topic(), it.partition()) }
-            else
-                listOf(TopicPartition(request.topicName, request.topicPartition))
+            val topicPartitions: List<TopicPartition> =
+                if (request.topicAllPartitions) {
+                    consumer.partitionsFor(request.topicName).map { TopicPartition(it.topic(), it.partition()) }
+                } else {
+                    listOf(TopicPartition(request.topicName, request.topicPartition))
+                }
             val fromOffset = max(0, request.fromOffset)
             val maxRecords = request.maxRecords
 
@@ -91,10 +94,11 @@ class KafkaAdminService(
                     break
                 }
 
-                val kafkaRecordsBatch = consumerRecords.records(request.topicName).map {
-                    val stringRecord = ConsumerRecordMapper.mapConsumerRecord(it)
-                    toKafkaRecordHeader(stringRecord)
-                }
+                val kafkaRecordsBatch =
+                    consumerRecords.records(request.topicName).map {
+                        val stringRecord = ConsumerRecordMapper.mapConsumerRecord(it)
+                        toKafkaRecordHeader(stringRecord)
+                    }
 
                 val filteredRecords = filterRecords(request.filter, kafkaRecordsBatch)
 
@@ -121,9 +125,11 @@ class KafkaAdminService(
         val kafkaConsumer = createKafkaConsumerForTopic(request.groupId, request.topicName)
 
         kafkaConsumer.use { consumer ->
-            val topicPartitions = consumer.partitionsFor(request.topicName)
-                .map { TopicPartition(it.topic(), it.partition()) }
-                .toSet()
+            val topicPartitions =
+                consumer
+                    .partitionsFor(request.topicName)
+                    .map { TopicPartition(it.topic(), it.partition()) }
+                    .toSet()
 
             val committed = consumer.committed(topicPartitions)
 
@@ -151,7 +157,11 @@ class KafkaAdminService(
      * @param beforeOffset Delete all records before this offset.
      * @throws ResponseStatusException if the operation fails.
      */
-    fun deleteRecords(topicName: String, partition: Int, beforeOffset: Long) {
+    fun deleteRecords(
+        topicName: String,
+        partition: Int,
+        beforeOffset: Long,
+    ) {
         val adminClient = createKafkaAdminClientForTopic(topicName)
         val topicPartition = TopicPartition(topicName, partition)
         val recordsToDelete = mapOf(topicPartition to RecordsToDelete.beforeOffset(beforeOffset))
@@ -160,14 +170,18 @@ class KafkaAdminService(
                 val result = admin.deleteRecords(recordsToDelete)
                 result.all().get() // Wait for completion
             } catch (e: Exception) {
-                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete records: ${e.message}", e)
+                throw ResponseStatusException(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Failed to delete records: ${e.message}",
+                    e,
+                )
             }
         }
     }
 
     private fun createKafkaConsumerForTopic(
         consumerGroupId: String?,
-        topicName: String
+        topicName: String,
     ): KafkaConsumer<Any?, Any?> {
         val topicConfig = findTopicConfigOrThrow(topicName)
         val properties = createPropertiesForTopic(consumerGroupId, topicConfig)
@@ -182,28 +196,35 @@ class KafkaAdminService(
         return AdminClient.create(properties)
     }
 
-    private fun findTopicConfigOrThrow(topicName: String): TopicConfig {
-        return appConfig.topics.find { it.name == topicName }
+    private fun findTopicConfigOrThrow(topicName: String): TopicConfig =
+        appConfig.topics.find { it.name == topicName }
             ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Could not find config for topic")
-    }
 
-    private fun createPropertiesForTopic(consumerGroupId: String?, topicConfig: TopicConfig): Properties {
+    private fun createPropertiesForTopic(
+        consumerGroupId: String?,
+        topicConfig: TopicConfig,
+    ): Properties {
         val keyDesType = topicConfig.keyDeserializerType
         val valueDesType = topicConfig.valueDeserializerType
         val isolationLevel = topicConfig.isolationLevel ?: DEFAULT_ISOLATION_LEVEL
 
-        val properties = when (topicConfig.location) {
-            TopicLocation.ON_PREM -> createOnPremConsumerProperties(
-                environmentProperties.onPremKafkaBrokersUrl,
-                systemUserCredentialsSupplier.get(),
-                environmentProperties.onPremSchemaRegistryUrl,
-                keyDesType,
-                valueDesType,
-                isolationLevel
-            )
+        val properties =
+            when (topicConfig.location) {
+                TopicLocation.ON_PREM -> {
+                    createOnPremConsumerProperties(
+                        environmentProperties.onPremKafkaBrokersUrl,
+                        systemUserCredentialsSupplier.get(),
+                        environmentProperties.onPremSchemaRegistryUrl,
+                        keyDesType,
+                        valueDesType,
+                        isolationLevel,
+                    )
+                }
 
-            TopicLocation.AIVEN -> createAivenConsumerProperties(keyDesType, valueDesType, isolationLevel)
-        }
+                TopicLocation.AIVEN -> {
+                    createAivenConsumerProperties(keyDesType, valueDesType, isolationLevel)
+                }
+            }
 
         if (consumerGroupId != null) {
             properties[ConsumerConfig.GROUP_ID_CONFIG] = consumerGroupId
@@ -223,10 +244,9 @@ class KafkaAdminService(
     }
 
     companion object {
-
         fun filterRecords(
             filter: KafkaAdminController.RecordFilter?,
-            records: List<KafkaRecord>
+            records: List<KafkaRecord>,
         ): List<KafkaRecord> {
             if (filter == null || filter.text.isNullOrBlank()) {
                 return records
@@ -241,12 +261,10 @@ class KafkaAdminService(
             }
         }
 
-        private fun insensitiveText(str: String): String {
-            return str.lowercase(Locale.getDefault())
+        private fun insensitiveText(str: String): String =
+            str
+                .lowercase(Locale.getDefault())
                 .replace(" ", "")
                 .replace("\n", "")
-        }
-
     }
-
 }

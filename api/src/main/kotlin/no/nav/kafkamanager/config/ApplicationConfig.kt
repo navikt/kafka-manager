@@ -1,26 +1,24 @@
 package no.nav.kafkamanager.config
 
-import tools.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.common.utils.Credentials
 import no.nav.common.utils.NaisUtils
 import no.nav.kafkamanager.domain.AppConfig
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import tools.jackson.module.kotlin.jacksonObjectMapper
 import java.util.function.Supplier
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(EnvironmentProperties::class)
 class ApplicationConfig {
-
     companion object {
         const val DEFAULT_APPLICATION_NAME = "kafka-manager"
     }
 
     @Bean
-    fun appConfig(properties: EnvironmentProperties): AppConfig {
-        return jacksonObjectMapper().readValue(properties.appConfigJson, AppConfig::class.java)
-    }
+    fun appConfig(properties: EnvironmentProperties): AppConfig =
+        jacksonObjectMapper().readValue(properties.appConfigJson, AppConfig::class.java)
 
     @Bean
     fun systemUserCredentialsSupplier(properties: EnvironmentProperties): Supplier<Credentials> {
@@ -33,5 +31,4 @@ class ApplicationConfig {
             }
         }
     }
-
 }
