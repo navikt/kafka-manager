@@ -5,17 +5,15 @@ import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import org.springframework.web.servlet.config.annotation.ViewControllerRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 
-
-@Configuration
+@Configuration(proxyBeanMethods = false)
 class StaticResourceConfiguration : WebMvcConfigurer {
-
     override fun addViewControllers(registry: ViewControllerRegistry) {
         registry.addRedirectViewController("/", "/index.html")
     }
 
     override fun addResourceHandlers(registry: ResourceHandlerRegistry) {
-        registry.addResourceHandler("/**")
+        registry
+            .addResourceHandler("/**")
             .addResourceLocations("classpath:/static/", "classpath:/public/")
     }
-
 }

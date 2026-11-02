@@ -2,34 +2,46 @@ package no.nav.kafkamanager.utils
 
 import io.confluent.kafka.serializers.KafkaAvroDeserializer
 import io.confluent.kafka.serializers.KafkaAvroSerializerConfig
-import no.nav.common.kafka.util.KafkaEnvironmentVariables.*
+import no.nav.common.kafka.util.KafkaEnvironmentVariables.KAFKA_SCHEMA_REGISTRY
+import no.nav.common.kafka.util.KafkaEnvironmentVariables.KAFKA_SCHEMA_REGISTRY_PASSWORD
+import no.nav.common.kafka.util.KafkaEnvironmentVariables.KAFKA_SCHEMA_REGISTRY_USER
 import no.nav.common.kafka.util.KafkaPropertiesBuilder
 import no.nav.common.utils.Credentials
 import no.nav.common.utils.EnvironmentUtils.getRequiredProperty
 import no.nav.kafkamanager.controller.KafkaAdminController
 import no.nav.kafkamanager.domain.DeserializerType
-import org.apache.kafka.clients.consumer.ConsumerConfig.*
-import org.apache.kafka.common.serialization.*
-import java.util.*
+import org.apache.kafka.clients.consumer.ConsumerConfig.ISOLATION_LEVEL_CONFIG
+import org.apache.kafka.clients.consumer.ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG
+import org.apache.kafka.clients.consumer.ConsumerConfig.MAX_POLL_RECORDS_CONFIG
+import org.apache.kafka.clients.consumer.ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG
+import org.apache.kafka.common.serialization.DoubleDeserializer
+import org.apache.kafka.common.serialization.FloatDeserializer
+import org.apache.kafka.common.serialization.IntegerDeserializer
+import org.apache.kafka.common.serialization.LongDeserializer
+import org.apache.kafka.common.serialization.ShortDeserializer
+import org.apache.kafka.common.serialization.StringDeserializer
+import org.apache.kafka.common.serialization.UUIDDeserializer
+import java.util.Properties
 
 object KafkaPropertiesFactory {
-
     fun createOnPremConsumerProperties(
         kafkaBrokerUrl: String,
         credentials: Credentials,
         schemaRegistryUrl: String?,
         keyDeserializerType: DeserializerType,
         valueDeserializerType: DeserializerType,
-        isolationLevel: String
+        isolationLevel: String,
     ): Properties {
-        val builder = KafkaPropertiesBuilder.consumerBuilder()
-            .withBaseProperties()
-            .withProp(ISOLATION_LEVEL_CONFIG, isolationLevel)
-            .withProp(MAX_POLL_RECORDS_CONFIG, KafkaAdminController.MAX_KAFKA_RECORDS)
-            .withBrokerUrl(kafkaBrokerUrl)
-            .withOnPremAuth(credentials.username, credentials.password)
-            .withProp(KEY_DESERIALIZER_CLASS_CONFIG, findDeserializer(keyDeserializerType).name)
-            .withProp(VALUE_DESERIALIZER_CLASS_CONFIG, findDeserializer(valueDeserializerType).name)
+        val builder =
+            KafkaPropertiesBuilder
+                .consumerBuilder()
+                .withBaseProperties()
+                .withProp(ISOLATION_LEVEL_CONFIG, isolationLevel)
+                .withProp(MAX_POLL_RECORDS_CONFIG, KafkaAdminController.MAX_KAFKA_RECORDS)
+                .withBrokerUrl(kafkaBrokerUrl)
+                .withOnPremAuth(credentials.username, credentials.password)
+                .withProp(KEY_DESERIALIZER_CLASS_CONFIG, findDeserializer(keyDeserializerType).name)
+                .withProp(VALUE_DESERIALIZER_CLASS_CONFIG, findDeserializer(valueDeserializerType).name)
 
         if (schemaRegistryUrl != null) {
             if (schemaRegistryUrl.isNotBlank()) {
@@ -43,13 +55,14 @@ object KafkaPropertiesFactory {
     fun createAivenConsumerProperties(
         keyDeserializerType: DeserializerType,
         valueDeserializerType: DeserializerType,
-        isolationLevel: String
+        isolationLevel: String,
     ): Properties {
         val schemaRegistryUrl = getRequiredProperty(KAFKA_SCHEMA_REGISTRY)
         val schemaRegistryUsername = getRequiredProperty(KAFKA_SCHEMA_REGISTRY_USER)
         val schemaRegistryPassword = getRequiredProperty(KAFKA_SCHEMA_REGISTRY_PASSWORD)
 
-        return KafkaPropertiesBuilder.consumerBuilder()
+        return KafkaPropertiesBuilder
+            .consumerBuilder()
             .withBaseProperties()
             .withProp(MAX_POLL_RECORDS_CONFIG, KafkaAdminController.MAX_KAFKA_RECORDS)
             .withAivenBrokerUrl()
@@ -66,9 +79,10 @@ object KafkaPropertiesFactory {
     fun createAivenAdminProperties(
         keyDeserializerType: DeserializerType,
         valueDeserializerType: DeserializerType,
-        isolationLevel: String
-    ): Properties {
-        return KafkaPropertiesBuilder.consumerBuilder()
+        isolationLevel: String,
+    ): Properties =
+        KafkaPropertiesBuilder
+            .consumerBuilder()
             .withBaseProperties()
             .withAivenBrokerUrl()
             .withAivenAuth()
@@ -76,10 +90,9 @@ object KafkaPropertiesFactory {
             .withProp(KEY_DESERIALIZER_CLASS_CONFIG, findDeserializer(keyDeserializerType).name)
             .withProp(VALUE_DESERIALIZER_CLASS_CONFIG, findDeserializer(valueDeserializerType).name)
             .build()
-    }
 
-    private fun findDeserializer(deserializerType: DeserializerType): Class<*> {
-        return when (deserializerType) {
+    private fun findDeserializer(deserializerType: DeserializerType): Class<*> =
+        when (deserializerType) {
             DeserializerType.STRING -> StringDeserializer::class.java
             DeserializerType.DOUBLE -> DoubleDeserializer::class.java
             DeserializerType.FLOAT -> FloatDeserializer::class.java
@@ -89,6 +102,4 @@ object KafkaPropertiesFactory {
             DeserializerType.UUID -> UUIDDeserializer::class.java
             DeserializerType.AVRO -> KafkaAvroDeserializer::class.java
         }
-    }
-
 }
