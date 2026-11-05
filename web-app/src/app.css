@@ -4,10 +4,12 @@
 html,
 body {
 	margin: 0;
-	width: 100vw;
-	height: 100vh;
+	width: 100%;
 	background-color: var(--ax-neutral-100);
 	overflow-x: hidden;
+}
+body {
+	min-height: 100vh;
 }
 html *,
 body * {
@@ -15,7 +17,7 @@ body * {
 }
 .kafka-manager {
 	display: grid;
-	grid-template-rows: min-content 1fr;
+	grid-template-rows: min-content auto;
 }
 .view {
 	margin: 0 auto;
