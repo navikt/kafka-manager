@@ -18,7 +18,7 @@ if (import.meta.env.DEV) {
 
 	try {
 		await worker.start({
-			onUnhandledRequest: 'bypass',
+			onUnhandledFrame: 'bypass',
 			serviceWorker: { url: import.meta.env.BASE_URL + 'mockServiceWorker.js' }
 		});
 
