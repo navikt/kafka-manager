@@ -1,0 +1,10 @@
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+app:
+  env:
+    app-config-json: '{"topics": []}'
+    on-prem-kafka-brokers-url: test
