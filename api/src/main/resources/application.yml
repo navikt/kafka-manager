@@ -1,0 +1,60 @@
+spring:
+  main:
+    banner-mode: "off"
+  security:
+    oauth2:
+      client:
+        registration:
+          azure:
+            client-name: "Kafka Manager"
+            client-id: "${AZURE_APP_CLIENT_ID:}"
+            client-secret: "${AZURE_APP_CLIENT_SECRET:}"
+            authorization-grant-type: authorization_code
+            redirect-uri: "{baseUrl}/oauth2/callback"
+            scope:
+              - openid
+              - profile
+        provider:
+          azure:
+            issuer-uri: "${AZURE_OPENID_CONFIG_ISSUER:}"
+
+server:
+  servlet:
+    session:
+      cookie:
+        same-site: lax
+
+management:
+  endpoint:
+    prometheus:
+      access: read_only
+    health:
+      probes:
+        enabled: true
+      group:
+        liveness:
+          include:
+            - livenessState
+        readiness:
+          include:
+            - readinessState
+
+  endpoints:
+    web:
+      base-path: /internal
+      exposure:
+        include:
+          - prometheus
+          - health
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+
+app:
+  env:
+    app-config-json: "${APP_CONFIG_JSON:}"
+    on-prem-kafka-brokers-url: "${ON_PREM_KAFKA_BROKERS_URL:}"
+    on-prem-schema-registry-url: "${ON_PREM_SCHEMA_REGISTRY_URL:}"
+    service-user-name: "${SERVICE_USER_NAME:}"
+    service-user-password: "${SERVICE_USER_PASSWORD:}"
