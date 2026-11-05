@@ -1,12 +1,22 @@
-# Kafka manager
+# Kafka Manager
 
-Applikasjon for håndtering av Kafka topics.
+Kafka Manager lar deg lese meldinger fra Kafka-topics, vise consumer offsets og endre eller slette meldinger.
 
-Kan f.eks brukes for å hente ut meldinger, offsets på consumer, offsets på siste melding eller sette consumer offsets.
+Appen støtter både on-prem Kafka og Aiven Kafka, og viser de fleste meldingstyper.
 
-Appen støtter både on-prem og Aiven Kafka og visning av de aller fleste typer meldinger.
+## Innhold
 
-## Screenshots
+- [Skjermbilder](#skjermbilder)
+- [Bygg og test lokalt](#bygg-og-test-lokalt)
+- [Deploy](#deploy)
+- [Autorisering](#autorisering)
+- [Deserialisering](#deserialisering)
+- [Tilgang til topics](#tilgang-til-topics)
+- [Image repository](#image-repository)
+- [Sikkerhet](#sikkerhet)
+- [Status](#status)
+
+## Skjermbilder
 
 ![Skjermbilde som viser en oversikt over Kafka Manager](.doc/screenshot-overview.png)
 
@@ -14,21 +24,22 @@ Appen støtter både on-prem og Aiven Kafka og visning av de aller fleste typer 
 
 ## Bygg og test lokalt
 
-Åpne repo-roten i IntelliJ IDEA som Gradle-prosjekt. Bygg backend og frontend med:
+Åpne repoet som et Gradle-prosjekt i IntelliJ IDEA, eller kjør kommandoene fra repo-roten. Bygget bruker Java 25. Gradle laster ned riktig Node.js-versjon for frontend-byggingen.
 
 ```shell
 ./gradlew build
+./gradlew check
 ```
 
-Bygget bruker Java 25. Kjør testene med `./gradlew check`. Gradle laster ned riktig Node.js-versjon for frontend-byggingen.
 Frontend-avhengigheten `@navikt/fnrvalidator` hentes fra GitHub Packages. Sett `NODE_AUTH_TOKEN` med lesetilgang til pakken før du bygger.
 
-## Hvordan sette opp
+## Deploy
 
-Hvert team som ønsker å bruke Kafka Manager må deploye sin egen instanse i eget team namespace.
+Hvert team må deploye sin egen instans i sitt team namespace. Erstatt plassholderne i malen med egne verdier, og lagre manifestet som `team-kafka-manager.yaml`. Deploy det med:
 
-Dette kan f.eks gjøres ved å bruke `kubectl apply -f <team>-kafka-manager.yaml`.
-YAML-filen burde følge malen nedenfor.
+```shell
+kubectl apply -f team-kafka-manager.yaml
+```
 
 ```yaml
 kind: Application
@@ -55,7 +66,7 @@ spec:
     initialDelay: 20
   replicas:
     min: 1
-    max: 1  # 1 instance is required since in-memory session management is used
+    max: 1  # Keep one replica because sessions are stored in memory
     cpuThresholdPercentage: 75
   resources:
     limits:
@@ -64,7 +75,7 @@ spec:
     requests:
       cpu: 250m
       memory: 512Mi
-  vault:   # Optional. Required for on-prem (the env variables SERVICE_USER_NAME, SERVICE_USER_PASSWORD can also be used)
+  vault:   # Optional. Required for on-prem. Alternatively, set SERVICE_USER_NAME and SERVICE_USER_PASSWORD.
     enabled: true
     paths:
       - kvPath: /serviceuser/data/<dev|prod>/srv<team>-kafka-manager
@@ -81,7 +92,7 @@ spec:
   env:
     - name: ON_PREM_KAFKA_BROKERS_URL # Optional. Required for on-prem
       value: <BROKER URL>
-    - name: ON_PREM_SCHEMA_REGISTRY_URL # Optional. Required for on-prem topics that uses Avro
+    - name: ON_PREM_SCHEMA_REGISTRY_URL # Optional. Required for on-prem topics that use Avro
       value: <SCHEMA REGISTRY URL>
     - name: APP_CONFIG_JSON # Required
       value: >
@@ -110,32 +121,30 @@ spec:
 ```
 
 ### Autorisering
-Pr nå så er autoriseringen gjort ved bruk av `spec.azure.application.claims.groups`.
-Dvs at det viktig å spesifisere IDen til en gruppe i Azure AD som kun inneholder brukere som skal få tilgang til appen.
+Kafka Manager bruker gruppene i `spec.azure.application.claims.groups` til å styre hvem som får tilgang. Oppgi ID-en til en Azure AD-gruppe som bare inneholder brukere som skal ha tilgang.
 
-Se: https://doc.nais.io/security/auth/azure-ad/#groups
+Se [NAIS-dokumentasjonen om gruppetilgang i Entra ID](https://doc.nais.io/auth/entra-id/how-to/secure/#groups).
 
 ### Deserialisering
 
-Følgende typer verdier er støttet i `keyDeserializerType` og `valueDeserializerType`:
-```
-STRING,
-DOUBLE,
-FLOAT,
-INTEGER,
-LONG,
-SHORT,
-UUID,
+Disse typene støttes i `keyDeserializerType` og `valueDeserializerType`:
+
+```text
+STRING
+DOUBLE
+FLOAT
+INTEGER
+LONG
+SHORT
+UUID
 AVRO
 ```
 
 ### Tilgang til topics
 
-Det er viktig at applikasjonen har tilgang til topicene som er beskrevet i **APP_CONFIG_JSON**.
+Gi Kafka Manager tilgang til alle topicene i `APP_CONFIG_JSON`.
 
-Applikasjonen/systembrukeren må bli lagt til som consumer for at kafka-manager skal få tilgang.
-
-For on-prem så kan man legge til en ny systembruker med oneshot endepunktet, som f.eks:
+For on-prem legger du til systembrukeren som consumer med oneshot-endepunktet, for eksempel:
 ```json
 "members": [
     {
@@ -145,7 +154,7 @@ For on-prem så kan man legge til en ny systembruker med oneshot endepunktet, so
 ]
 ```
 
-For Aiven så kan man legge til en ny applikasjon med Topic-ressursen, f.eks:
+For Aiven legger du til applikasjonen med `read`-tilgang på topicet, for eksempel:
 ```yaml
 spec:
   acl:
@@ -156,15 +165,17 @@ spec:
 
 ## Image repository
 
-Per 01.08.2023 så lastes Docker images opp til Google Artifact Registry (GAR) - i skrivende stund er dette URL-en der disse kan finnes https://console.cloud.google.com/artifacts/docker/nais-management-233d/europe-north1/poao/kafka-manager.
-Versjoner med temp-suffikset finnes her: https://console.cloud.google.com/artifacts/docker/nais-management-233d/europe-north1/poao/kafka-manager-temp.
-Referer forøvrig til [NAIS-dokumentasjonen](https://doc.nais.io/workloads/explanations/imagerepository/) for spørsmål/svar vedrørende bruk av Docker images fra GAR.
+Kafka Manager-images publiseres i Google Artifact Registry:
 
-## NB
+- [Kafka Manager](https://console.cloud.google.com/artifacts/docker/nais-management-233d/europe-north1/poao/kafka-manager)
+- [Kafka Manager med `-temp`-suffiks](https://console.cloud.google.com/artifacts/docker/nais-management-233d/europe-north1/poao/kafka-manager-temp)
 
-Det er viktig at teamet selv gjør en avklaring på hvilke topics som er greit å eksponere i GUIet, og hvem som skal ha tilgang til dem.
+Se [NAIS-dokumentasjonen om image repository](https://doc.nais.io/workloads/explanations/imagerepository/) for informasjon om image repositories på Nais.
 
-## Disclaimer
+## Sikkerhet
 
-Denne appen ble utviklet som en POC så det er mye som potensielt kan forbedres, både i kode og funksjonelt.
-Bruk på eget ansvar ;)
+Teamet må vurdere hvilke topics som kan vises i grensesnittet, og hvem som skal ha tilgang til dem.
+
+## Status
+
+Kafka Manager ble utviklet som en POC. Det kan være mangler i både kode og funksjonalitet. Bruk på eget ansvar.
