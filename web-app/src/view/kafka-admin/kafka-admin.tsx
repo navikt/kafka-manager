@@ -49,7 +49,7 @@ export function KafkaAdmin() {
 				<UNSAFE_Combobox
 					label="Select Kafka Topic"
 					options={sortedTopics.map(topic => topic)}
-					onToggleSelected={(option) => setSelectedTopic(option)}
+					onToggleSelected={option => setSelectedTopic(option)}
 					selectedOptions={selectedTopic ? [selectedTopic] : []}
 					isMultiSelect={false}
 					shouldAutocomplete={true}
@@ -57,13 +57,13 @@ export function KafkaAdmin() {
 			</div>
 			<div className="kafka-admin__content">
 				<div className="kafka-admin__col">
-					<ConsumerOffsetsCard selectedTopic={selectedTopic} />
 					<LastRecordOffsetCard selectedTopic={selectedTopic} />
+					<ConsumerOffsetsCard selectedTopic={selectedTopic} />
 					<SetConsumerOffsetCard selectedTopic={selectedTopic} />
-					<DeleteRecordsCard selectedTopic={selectedTopic} />
 				</div>
 				<div>
 					<ReadFromTopicCard selectedTopic={selectedTopic} />
+					<DeleteRecordsCard selectedTopic={selectedTopic} />
 				</div>
 			</div>
 		</div>
@@ -252,8 +252,8 @@ function ReadFromTopicCard(props: { selectedTopic: string | null }) {
 			fetchFromOffset = 0;
 		} else if (fetchFromField === 'END') {
 			try {
-				const lastRecordOffset = (await getLastRecordOffset({ topicName: props.selectedTopic, topicPartition })).data
-					.latestRecordOffset;
+				const lastRecordOffset = (await getLastRecordOffset({ topicName: props.selectedTopic, topicPartition }))
+					.data.latestRecordOffset;
 
 				fetchFromOffset = lastRecordOffset - maxRecords;
 			} catch (e) {
@@ -292,7 +292,7 @@ function ReadFromTopicCard(props: { selectedTopic: string | null }) {
 
 	useEffect(() => {
 		if (startTimeMs != null) {
-			timerRef.current = (setInterval(() => setTimeTakenMs(Date.now() - startTimeMs), 100) as unknown) as number;
+			timerRef.current = setInterval(() => setTimeTakenMs(Date.now() - startTimeMs), 100) as unknown as number;
 		}
 
 		if (startTimeMs == null && timerRef.current != null) {
@@ -317,15 +317,23 @@ function ReadFromTopicCard(props: { selectedTopic: string | null }) {
 			<div className="toggle-group-container">
 				<div className="toggle-group-wrapper">
 					<Label className="toggle-group-label">Topic partitions</Label>
-					<ToggleGroup value={partitionMode} onChange={(value) => setPartitionMode(value as 'all' | 'specific')} size="small">
+					<ToggleGroup
+						value={partitionMode}
+						onChange={value => setPartitionMode(value as 'all' | 'specific')}
+						size="small"
+					>
 						<ToggleGroup.Item value="all">All</ToggleGroup.Item>
 						<ToggleGroup.Item value="specific">Specific</ToggleGroup.Item>
 					</ToggleGroup>
 				</div>
 
 				<div className="toggle-group-wrapper">
-					<Label  className="toggle-group-label">Fetch from</Label>
-					<ToggleGroup value={fetchFromField} onChange={(value) => setFetchFromField(value as 'BEGINNING' | 'END' | 'OFFSET')} size="small">
+					<Label className="toggle-group-label">Fetch from</Label>
+					<ToggleGroup
+						value={fetchFromField}
+						onChange={value => setFetchFromField(value as 'BEGINNING' | 'END' | 'OFFSET')}
+						size="small"
+					>
 						<ToggleGroup.Item value="BEGINNING">Beginning</ToggleGroup.Item>
 						<ToggleGroup.Item value="END">End</ToggleGroup.Item>
 						<ToggleGroup.Item value="OFFSET">Offset</ToggleGroup.Item>
@@ -405,7 +413,11 @@ function ReadFromTopicCard(props: { selectedTopic: string | null }) {
 					</tbody>
 				</table>
 			) : null}
-			<Modal open={clickedRecord !== null} onClose={() => setClickedRecord(null)} aria-label="kafka record content">
+			<Modal
+				open={clickedRecord !== null}
+				onClose={() => setClickedRecord(null)}
+				aria-label="kafka record content"
+			>
 				<Modal.Body>
 					<KafkaRecordModalContent record={clickedRecord} />
 				</Modal.Body>

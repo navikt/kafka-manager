@@ -11,16 +11,14 @@
 .kafka-admin__content {
   display: grid;
   grid-column-gap: 2rem;
-  grid-template-rows: 1fr;
   grid-template-columns: 600px 1fr;
 }
 
 .kafka-admin__col {
-  overflow-y: auto;
   padding-right: 1rem;
 }
 
-.kafka-admin__col > *:not(:last-child) {
+.kafka-admin__content > div > *:not(:last-child) {
   margin-bottom: 2rem;
 }
 
@@ -110,4 +108,14 @@
 .delete-records-card {
   display: flex;
   gap: 1rem;
+}
+
+@media (max-width: 1200px) {
+  .kafka-admin__content {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .kafka-admin__col {
+    padding-right: 0;
+  }
 }
