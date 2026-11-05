@@ -12,6 +12,17 @@ Appen støtter både on-prem og Aiven Kafka og visning av de aller fleste typer 
 
 ![Skjermbilde som viser en modal med mer informasjon om en Kafka record](.doc/screenshot-record-details.png)
 
+## Bygg og test lokalt
+
+Åpne repo-roten i IntelliJ IDEA som Gradle-prosjekt. Bygg backend og frontend med:
+
+```shell
+./gradlew build
+```
+
+Bygget bruker Java 25. Kjør testene med `./gradlew check`. Gradle laster ned riktig Node.js-versjon for frontend-byggingen.
+Frontend-avhengigheten `@navikt/fnrvalidator` hentes fra GitHub Packages. Sett `NODE_AUTH_TOKEN` med lesetilgang til pakken før du bygger.
+
 ## Hvordan sette opp
 
 Hvert team som ønsker å bruke Kafka Manager må deploye sin egen instanse i eget team namespace.

@@ -27,20 +27,20 @@
 		"not op_mini all"
 	],
 	"dependencies": {
-		"@microlink/react-json-view": "1.31.40",
-		"@navikt/ds-css": "8.19.2",
-		"@navikt/ds-react": "8.19.2",
-		"@navikt/ds-tokens": "8.19.2",
+		"@microlink/react-json-view": "1.31.43",
+		"@navikt/ds-css": "8.20.1",
+		"@navikt/ds-react": "8.20.1",
+		"@navikt/ds-tokens": "8.20.1",
 		"@navikt/fnrvalidator": "2.2.1",
-		"axios": "1.20.0",
+		"axios": "1.21.0",
 		"classnames": "2.5.1",
 		"constate": "4.0.0",
 		"dayjs": "1.11.23",
 		"lodash.throttle": "4.1.1",
 		"prop-types": "15.8.1",
-		"react": "19.3.0",
-		"react-dom": "19.3.0",
-		"react-toastify": "11.1.0"
+		"react": "19.3.1",
+		"react-dom": "19.3.1",
+		"react-toastify": "11.2.0"
 	},
 	"devDependencies": {
 		"@types/classnames": "2.3.4",
@@ -57,7 +57,7 @@
 		"tslint-config-prettier": "1.18.0",
 		"tslint-react": "5.0.0",
 		"typescript": "7.0.2",
-		"vite": "8.3.4",
+		"vite": "8.3.5",
 		"vitest": "5.0.5"
 	},
 	"overrides": {
