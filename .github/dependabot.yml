@@ -1,8 +1,3 @@
-# To get started with Dependabot version updates, you'll need to specify which
-# package ecosystems to update and where the package manifests are located.
-# Please see the documentation for all configuration options:
-# https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
-
 version: 2
 
 registries:
@@ -13,8 +8,8 @@ registries:
     replaces-base: false
 
 updates:
-  - package-ecosystem: "npm" # See documentation for possible values
-    directory: "/web-app" # Location of package manifests
+  - package-ecosystem: "npm"
+    directory: "/web-app"
     registries:
       - npm-github
     schedule:
@@ -31,8 +26,8 @@ updates:
           - 'patch'
           - 'minor'
 
-  - package-ecosystem: "gradle" # See documentation for possible values
-    directory: "/" # Location of package manifests
+  - package-ecosystem: "gradle"
+    directory: "/"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
