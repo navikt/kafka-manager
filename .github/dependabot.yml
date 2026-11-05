@@ -4,17 +4,35 @@
 # https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
 
 version: 2
-updates:
-  - package-ecosystem: "gradle" # See documentation for possible values
-    directory: "/" # Location of package manifests
-    schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 10
-    cooldown:
-      default-days: 7
 
+registries:
+  npm-github:
+    type: npm-registry
+    url: https://npm.pkg.github.com
+    token: ${{secrets.READER_TOKEN}}
+    replaces-base: false
+
+updates:
   - package-ecosystem: "npm" # See documentation for possible values
     directory: "/web-app" # Location of package manifests
+    registries:
+      - npm-github
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 10
+    groups:
+      major:
+        update-types:
+          - 'major'
+      minor-and-patch:
+        update-types:
+          - 'patch'
+          - 'minor'
+
+  - package-ecosystem: "gradle" # See documentation for possible values
+    directory: "/" # Location of package manifests
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
