@@ -29,7 +29,7 @@ dependencyManagement {
         dependency("org.apache.commons:commons-compress:1.28.0")
         dependency("org.xerial.snappy:snappy-java:1.1.10.12")
         dependency("at.yawk.lz4:lz4-java:1.12.1")
-        dependency("com.google.guava:guava:33.7.2-jre")
+        dependency("com.google.guava:guava:33.8.0-jre")
     }
 }
 
