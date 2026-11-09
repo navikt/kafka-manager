@@ -30,7 +30,7 @@ jobs:
         run: echo "IMAGE_TAG=$(TZ=\"Europe/Oslo\" date +%Y.%m.%d_%H.%M)-$(git rev-parse --short=12 HEAD)-temp" >> $GITHUB_ENV
 
       - name: Build and push
-        uses: nais/docker-build-push@d3a1f7e259ecc381a50435e1d4add9059429ebd7 # v0
+        uses: nais/docker-build-push@ceabe305c64640175f133b7e59af6666b0a3c46c # v0
         id: docker-build-push
         with:
           tag: ${{ env.IMAGE_TAG }}
