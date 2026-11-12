@@ -65,8 +65,7 @@ class KafkaAdminControllerTest
                     post("/api/kafka/delete-records")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""{"topicName":"aiven-topic","topicPartition":2,"beforeOffset":42}"""),
-                )
-                .andExpect(status().isNoContent)
+                ).andExpect(status().isNoContent)
 
             verify(exactly = 1) {
                 kafkaAdminService.deleteRecords("aiven-topic", 2, 42)
@@ -86,8 +85,7 @@ class KafkaAdminControllerTest
                     post("/api/kafka/delete-records")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""{"topicName":"on-prem-topic","topicPartition":0,"beforeOffset":42}"""),
-                )
-                .andExpect(status().isNotImplemented)
+                ).andExpect(status().isNotImplemented)
 
             verify(exactly = 1) { kafkaAdminService.deleteRecords("on-prem-topic", 0, 42) }
         }

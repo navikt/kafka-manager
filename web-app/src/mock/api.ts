@@ -49,6 +49,8 @@ const topicPartitionOffsets: TopicPartitionOffset[] = [
 	}
 ]
 
+const consumerGroups = ['test-consumer-group-a', 'test-consumer-group-b']
+
 function mockUuidv4(): string {
 	return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
 		const r = Math.floor(Math.random() * 16)
@@ -68,6 +70,10 @@ export const handlers: RequestHandler[] = [
 	http.post('/api/kafka/get-consumer-offsets', async () => {
 		await delay(500)
 		return HttpResponse.json(topicPartitionOffsets)
+	}),
+	http.post('/api/kafka/get-consumer-groups', async () => {
+		await delay(500)
+		return HttpResponse.json(consumerGroups)
 	}),
 	http.post('/api/kafka/get-last-record-offset', async () => {
 		await delay(500)
