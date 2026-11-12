@@ -19,6 +19,10 @@ export interface GetConsumerOffsetsRequest {
 	topicName: string
 }
 
+export interface GetConsumerGroupsRequest {
+	topicName: string
+}
+
 export interface GetLastRecordOffsetRequest {
 	topicName: string
 	topicPartition: number
@@ -76,6 +80,12 @@ export function getConsumerOffsets(request: GetConsumerOffsetsRequest): AxiosPro
 	return axiosInstance.post('/api/kafka/get-consumer-offsets', {
 		topicName: request.topicName,
 		groupId: request.groupId
+	})
+}
+
+export function getConsumerGroups(request: GetConsumerGroupsRequest): AxiosPromise<string[]> {
+	return axiosInstance.post('/api/kafka/get-consumer-groups', {
+		topicName: request.topicName
 	})
 }
 

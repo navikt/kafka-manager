@@ -15,6 +15,7 @@ import {
 import {
 	AvailableTopic,
 	getAvailableTopics,
+	getConsumerGroups,
 	getConsumerOffsets,
 	GetConsumerOffsetsRequest,
 	getLastRecordOffset,
@@ -41,6 +42,8 @@ const KafkaRecordModalContent = lazy(() =>
 export function KafkaAdmin() {
 	const [availableTopics, setAvailableTopics] = useState<AvailableTopic[] | null>(null)
 	const [selectedTopic, setSelectedTopic] = useState<string | null>(null)
+	const [consumerGroups, setConsumerGroups] = useState<{ topicName: string; groups: string[] } | null>(null)
+	const [loadingConsumerGroupsTopic, setLoadingConsumerGroupsTopic] = useState<string | null>(null)
 
 	useEffect(() => {
 		getAvailableTopics()
@@ -53,12 +56,49 @@ export function KafkaAdmin() {
 			})
 	}, [])
 
+	useEffect(() => {
+		const topic = availableTopics?.find(availableTopic => availableTopic.name === selectedTopic)
+		if (!topic?.supportsRecordDeletion) {
+			setConsumerGroups(null)
+			setLoadingConsumerGroupsTopic(null)
+			return
+		}
+
+		let isCurrentRequest = true
+		setConsumerGroups(null)
+		setLoadingConsumerGroupsTopic(topic.name)
+		getConsumerGroups({ topicName: topic.name })
+			.then(response => {
+				if (isCurrentRequest) {
+					setConsumerGroups({ topicName: topic.name, groups: response.data })
+				}
+			})
+			.catch(() => {
+				if (isCurrentRequest) {
+					setConsumerGroups({ topicName: topic.name, groups: [] })
+					errorToast('Unable to load consumer groups')
+				}
+			})
+			.finally(() => {
+				if (isCurrentRequest) {
+					setLoadingConsumerGroupsTopic(null)
+				}
+			})
+
+		return () => {
+			isCurrentRequest = false
+		}
+	}, [availableTopics, selectedTopic])
+
 	if (availableTopics == null) {
 		return <PageSpinner />
 	}
 
 	const sortedTopics = [...availableTopics].sort((a, b) => a.name.localeCompare(b.name))
 	const selectedTopicDetails = availableTopics.find(topic => topic.name === selectedTopic)
+	const consumerGroupOptions = consumerGroups?.topicName === selectedTopic ? consumerGroups.groups : []
+	const isConsumerGroupsLoading = selectedTopic != null && loadingConsumerGroupsTopic === selectedTopic
+	const supportsConsumerGroupLookup = selectedTopicDetails?.supportsRecordDeletion ?? false
 
 	return (
 		<div className="view kafka-admin">
@@ -75,8 +115,18 @@ export function KafkaAdmin() {
 			<div className="kafka-admin__content">
 				<div className="kafka-admin__col">
 					<LastRecordOffsetCard selectedTopic={selectedTopic} />
-					<ConsumerOffsetsCard selectedTopic={selectedTopic} />
-					<SetConsumerOffsetCard selectedTopic={selectedTopic} />
+					<ConsumerOffsetsCard
+						selectedTopic={selectedTopic}
+						consumerGroups={consumerGroupOptions}
+						consumerGroupsLoading={isConsumerGroupsLoading}
+						supportsConsumerGroupLookup={supportsConsumerGroupLookup}
+					/>
+					<SetConsumerOffsetCard
+						selectedTopic={selectedTopic}
+						consumerGroups={consumerGroupOptions}
+						consumerGroupsLoading={isConsumerGroupsLoading}
+						supportsConsumerGroupLookup={supportsConsumerGroupLookup}
+					/>
 				</div>
 				<div>
 					<ReadFromTopicCard selectedTopic={selectedTopic} />
@@ -90,9 +140,53 @@ export function KafkaAdmin() {
 	)
 }
 
-function ConsumerOffsetsCard(props: { selectedTopic: string | null }) {
+interface ConsumerGroupFieldProps {
+	groupId: string
+	onGroupIdChange: (groupId: string) => void
+	consumerGroups: string[]
+	consumerGroupsLoading: boolean
+	supportsConsumerGroupLookup: boolean
+}
+
+function ConsumerGroupField(props: ConsumerGroupFieldProps) {
+	if (!props.supportsConsumerGroupLookup) {
+		return (
+			<TextField
+				label="Consumer group id"
+				value={props.groupId}
+				onChange={event => props.onGroupIdChange(event.target.value)}
+			/>
+		)
+	}
+
+	return (
+		<UNSAFE_Combobox
+			label="Consumer group id"
+			options={props.consumerGroups}
+			selectedOptions={props.groupId ? [props.groupId] : []}
+			onToggleSelected={(option, isSelected) => props.onGroupIdChange(isSelected ? option : '')}
+			isMultiSelect={false}
+			allowNewValues
+			isLoading={props.consumerGroupsLoading}
+			shouldAutocomplete
+		/>
+	)
+}
+
+interface ConsumerGroupCardProps {
+	selectedTopic: string | null
+	consumerGroups: string[]
+	consumerGroupsLoading: boolean
+	supportsConsumerGroupLookup: boolean
+}
+
+function ConsumerOffsetsCard(props: ConsumerGroupCardProps) {
 	const [groupIdField, setGroupIdField] = useState('')
 	const [topicPartitionOffsets, setTopicPartitionOffsets] = useState<TopicPartitionOffset[]>([])
+
+	useEffect(() => {
+		setGroupIdField('')
+	}, [props.selectedTopic])
 
 	function handleHentConsumerOffsets() {
 		if (props.selectedTopic == null) {
@@ -120,10 +214,12 @@ function ConsumerOffsetsCard(props: { selectedTopic: string | null }) {
 			</BodyShort>
 			<SelectedTopic selectedTopic={props.selectedTopic} />
 			<VStack gap="space-12">
-				<TextField
-					label="Consumer group id"
-					value={groupIdField}
-					onChange={e => setGroupIdField(e.target.value)}
+				<ConsumerGroupField
+					groupId={groupIdField}
+					onGroupIdChange={setGroupIdField}
+					consumerGroups={props.consumerGroups}
+					consumerGroupsLoading={props.consumerGroupsLoading}
+					supportsConsumerGroupLookup={props.supportsConsumerGroupLookup}
 				/>
 				<Button
 					onClick={handleHentConsumerOffsets}
@@ -196,10 +292,14 @@ function LastRecordOffsetCard(props: { selectedTopic: string | null }) {
 	)
 }
 
-function SetConsumerOffsetCard(props: { selectedTopic: string | null }) {
+function SetConsumerOffsetCard(props: ConsumerGroupCardProps) {
 	const [groupIdField, setGroupIdField] = useState('')
 	const [topicPartitionField, setTopicPartitionField] = useState('0')
 	const [offsetField, setOffsetField] = useState('0')
+
+	useEffect(() => {
+		setGroupIdField('')
+	}, [props.selectedTopic])
 
 	function handleSetConsumerOffset() {
 		if (props.selectedTopic == null) {
@@ -234,7 +334,13 @@ function SetConsumerOffsetCard(props: { selectedTopic: string | null }) {
 				value={topicPartitionField}
 				onChange={e => setTopicPartitionField(e.target.value)}
 			/>
-			<TextField label="Consumer group id" value={groupIdField} onChange={e => setGroupIdField(e.target.value)} />
+			<ConsumerGroupField
+				groupId={groupIdField}
+				onGroupIdChange={setGroupIdField}
+				consumerGroups={props.consumerGroups}
+				consumerGroupsLoading={props.consumerGroupsLoading}
+				supportsConsumerGroupLookup={props.supportsConsumerGroupLookup}
+			/>
 			<VStack gap="space-12">
 				<TextField
 					label="Offset"
