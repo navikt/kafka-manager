@@ -1,50 +1,50 @@
-import { Button, LocalAlert, TextField, Modal } from '@navikt/ds-react';
-import React, { useState } from 'react';
-import { errorToast, successToast } from '../../utils/toast-utils';
-import { SelectedTopic } from './SelectedTopic';
-import { Card } from '../../component/card/card';
+import { Button, LocalAlert, TextField, Modal } from '@navikt/ds-react'
+import { useState } from 'react'
+import { deleteConsumerRecords } from '../../api'
+import { errorToast, successToast } from '../../utils/toast-utils'
+import { SelectedTopic } from './SelectedTopic'
+import { Card } from '../../component/card/card'
+import { parseNonNegativeSafeInteger } from '../../utils'
 
 export function DeleteRecordsCard(props: { selectedTopic: string | null }) {
-	const [partitionField, setPartitionField] = useState('0');
-	const [offsetField, setOffsetField] = useState('0');
-	const [isLoading, setIsLoading] = useState(false);
-	const [showConfirm, setShowConfirm] = useState(false);
+	const [partitionField, setPartitionField] = useState('0')
+	const [offsetField, setOffsetField] = useState('0')
+	const [isLoading, setIsLoading] = useState(false)
+	const [showConfirm, setShowConfirm] = useState(false)
 
 	function handleDeleteRecords() {
 		if (props.selectedTopic == null) {
-			errorToast('Please select a topic from the sidebar');
-			return;
+			errorToast('Please select a topic from the sidebar')
+			return
 		}
-		const topicPartition = parseInt(partitionField, 10);
-		const beforeOffset = parseInt(offsetField, 10);
-		if (isNaN(topicPartition) || isNaN(beforeOffset)) {
-			errorToast('Partition and offset must be valid numbers');
-			return;
+		const topicPartition = parseNonNegativeSafeInteger(partitionField)
+		const beforeOffset = parseNonNegativeSafeInteger(offsetField)
+		if (topicPartition == null || beforeOffset == null) {
+			errorToast('Partition and offset must be non-negative integers')
+			return
 		}
-		setIsLoading(true);
-		import('../../api').then(({ deleteConsumerRecords }) => {
-			deleteConsumerRecords({
-				topicName: props.selectedTopic!,
-				topicPartition,
-				beforeOffset
-			})
-				.then(() => successToast('Records deleted successfully'))
-				.catch(() => errorToast('Failed to delete records'))
-				.finally(() => setIsLoading(false));
-		});
+		setIsLoading(true)
+		deleteConsumerRecords({
+			topicName: props.selectedTopic,
+			topicPartition,
+			beforeOffset
+		})
+			.then(() => successToast('Records deleted successfully'))
+			.catch(() => errorToast('Failed to delete records'))
+			.finally(() => setIsLoading(false))
 	}
 
 	function handleDeleteClick() {
-		setShowConfirm(true);
+		setShowConfirm(true)
 	}
 
 	function handleConfirm() {
-		setShowConfirm(false);
-		handleDeleteRecords();
+		setShowConfirm(false)
+		handleDeleteRecords()
 	}
 
 	function handleCancel() {
-		setShowConfirm(false);
+		setShowConfirm(false)
 	}
 
 	return (
@@ -103,5 +103,5 @@ export function DeleteRecordsCard(props: { selectedTopic: string | null }) {
 				</Modal.Footer>
 			</Modal>
 		</Card>
-	);
+	)
 }

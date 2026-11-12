@@ -1,10 +1,9 @@
-import React from 'react';
-import { createRoot } from 'react-dom/client';
-import App from './app';
-import * as dayjs from 'dayjs';
-import 'dayjs/locale/nb';
+import { createRoot } from 'react-dom/client'
+import App from './app'
+import dayjs from 'dayjs'
+import 'dayjs/locale/nb'
 
-dayjs.locale('nb');
+dayjs.locale('nb')
 
 if (import.meta.env.DEV) {
 	// Siden registrering av MSW service-workers er en asynkron operasjon
@@ -14,26 +13,27 @@ if (import.meta.env.DEV) {
 	// Ved å conditionally kjøre ReactDOM.render først etter at MSW
 	// er klar kan vi unngå denne race-conditionen.
 
-	const { worker } = await import('./mock');
+	const { worker } = await import('./mock')
 
 	try {
 		await worker.start({
 			onUnhandledFrame: 'bypass',
 			serviceWorker: { url: import.meta.env.BASE_URL + 'mockServiceWorker.js' }
-		});
+		})
 
-		mountReactApp();
+		mountReactApp()
 	} catch (e) {
-		// tslint:disable-next-line:no-console
-		console.error('Unable to setup mocked API endpoints', e);
+		console.error('Unable to setup mocked API endpoints', e)
 	}
 } else {
-	mountReactApp();
+	mountReactApp()
 }
 
 function mountReactApp() {
-	const domNode = document.getElementById('root');
-	// @ts-ignore
-	const reactRoot = createRoot(domNode);
-	reactRoot.render(<App />);
+	const domNode = document.getElementById('root')
+	if (!domNode) {
+		throw new Error('Root element not found')
+	}
+	const reactRoot = createRoot(domNode)
+	reactRoot.render(<App />)
 }

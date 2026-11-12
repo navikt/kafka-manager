@@ -24,7 +24,7 @@ jobs:
       - run: ./gradlew :api:check
 
   test-web-app:
-    name: Run frontend tests
+    name: Run frontend checks
     timeout-minutes: 20
     permissions:
       contents: read
@@ -40,7 +40,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
 
-      - run: ./gradlew :web-app:testFrontend
+      - run: ./gradlew :web-app:check
         env:
           NODE_AUTH_TOKEN: ${{ secrets.READER_TOKEN }}
 
@@ -66,10 +66,13 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
 
+      - name: Configure GitHub Packages authentication
+        run: printf '%s\n' '//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}' >> "$HOME/.npmrc"
+
       - run: ./gradlew build
         env:
           NODE_AUTH_TOKEN: ${{ secrets.READER_TOKEN }}
-          npm_config_min_release_age: "7"
+          VITE_APP_VERSION: ${{ env.IMAGE_TAG }}
 
       - name: Build and push image
         uses: nais/docker-build-push@588f76a6f45aeb1e75d5e8417ec6ef6d79b2b39f # v0

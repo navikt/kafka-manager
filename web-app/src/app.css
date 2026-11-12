@@ -5,7 +5,7 @@ html,
 body {
 	margin: 0;
 	width: 100%;
-	background-color: var(--ax-neutral-100);
+	background-color: var(--ax-bg-neutral-soft);
 	overflow-x: hidden;
 }
 body {

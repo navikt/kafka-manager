@@ -31,7 +31,13 @@ Appen støtter både on-prem Kafka og Aiven Kafka, og viser de fleste meldingsty
 ./gradlew check
 ```
 
-Frontend-avhengigheten `@navikt/fnrvalidator` hentes fra GitHub Packages. Sett `NODE_AUTH_TOKEN` med lesetilgang til pakken før du bygger.
+Frontend-pakker fra GitHub Packages krever lesetilgang. Legg `//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}` i `~/.npmrc`, og sett `NODE_AUTH_TOKEN` før du bygger.
+
+Gradle installerer pnpm med npm. Godkjenn installasjonsskriptene til pnpm med:
+
+```shell
+npm config set allow-scripts=pnpm --location=user
+```
 
 ## Deploy
 

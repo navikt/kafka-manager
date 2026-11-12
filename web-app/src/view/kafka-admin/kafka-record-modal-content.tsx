@@ -1,19 +1,18 @@
-import React from 'react';
-import './kafka-record-modal-content.css';
-import { isJson, NO_OP } from '../../utils';
-import { BodyShort, Label, Textarea, TextField } from '@navikt/ds-react';
-import { toTimestamp } from '../../utils/date-utils';
-import ReactJson from '@microlink/react-json-view';
-import { KafkaRecord } from '../../api';
+import './kafka-record-modal-content.css'
+import { isJson, NO_OP } from '../../utils'
+import { BodyShort, Label, Textarea, TextField } from '@navikt/ds-react'
+import { toTimestamp } from '../../utils/date-utils'
+import ReactJson from '@microlink/react-json-view'
+import { KafkaRecord } from '../../api'
 
 export function KafkaRecordModalContent(props: { record: KafkaRecord | null }) {
 	if (props.record == null) {
-		return null;
+		return null
 	}
 
-	const { partition, key, value, offset, timestamp, headers } = props.record;
-	const safeValue = value || '';
-	const isRecordValueJson = isJson(safeValue);
+	const { partition, key, value, offset, timestamp, headers } = props.record
+	const safeValue = value || ''
+	const isRecordValueJson = isJson(safeValue)
 
 	return (
 		<div className="kafka-record-modal-content">
@@ -31,7 +30,7 @@ export function KafkaRecordModalContent(props: { record: KafkaRecord | null }) {
 								<li key={idx}>
 									Name={header.name} Value={header.value}
 								</li>
-							);
+							)
 						})}
 					</ul>
 				) : (
@@ -45,5 +44,5 @@ export function KafkaRecordModalContent(props: { record: KafkaRecord | null }) {
 				<Textarea label="Payload" value={safeValue} readOnly={true} onChange={NO_OP} />
 			)}
 		</div>
-	);
+	)
 }

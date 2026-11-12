@@ -1,7 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { errorToast, successToast, warningToast } from '../../utils/toast-utils';
-import { Card } from '../../component/card/card';
-import { BodyShort, Button, Label, Loader, Modal, TextField, ToggleGroup, UNSAFE_Combobox } from '@navikt/ds-react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
+import { errorToast, successToast, warningToast } from '../../utils/toast-utils'
+import { Card } from '../../component/card/card'
+import { BodyShort, Button, Label, Loader, Modal, TextField, ToggleGroup, UNSAFE_Combobox } from '@navikt/ds-react'
 import {
 	getAvailableTopics,
 	getConsumerOffsets,
@@ -14,34 +14,39 @@ import {
 	setConsumerOffset,
 	SetConsumerOffsetRequest,
 	TopicPartitionOffset
-} from '../../api';
-import './kafka-admin.css';
-import { KafkaRecordModalContent } from './kafka-record-modal-content';
-import { PageSpinner } from '../../component/page-spinner/page-spinner';
-import { toTimerStr } from '../../utils/date-utils';
-import { DeleteRecordsCard } from './DeleteRecordsCard';
-import { SelectedTopic } from './SelectedTopic';
+} from '../../api'
+import './kafka-admin.css'
+import { PageSpinner } from '../../component/page-spinner/page-spinner'
+import { toTimerStr } from '../../utils/date-utils'
+import { DeleteRecordsCard } from './DeleteRecordsCard'
+import { SelectedTopic } from './SelectedTopic'
+
+const KafkaRecordModalContent = lazy(() =>
+	import('./kafka-record-modal-content').then(({ KafkaRecordModalContent }) => ({
+		default: KafkaRecordModalContent
+	}))
+)
 
 export function KafkaAdmin() {
-	const [availableTopics, setAvailableTopics] = useState<string[] | null>(null);
-	const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
+	const [availableTopics, setAvailableTopics] = useState<string[] | null>(null)
+	const [selectedTopic, setSelectedTopic] = useState<string | null>(null)
 
 	useEffect(() => {
 		getAvailableTopics()
 			.then(res => {
-				setAvailableTopics(res.data);
+				setAvailableTopics(res.data)
 			})
-			.catch(e => {
-				errorToast('Unable to load available topics');
-				setAvailableTopics([]);
-			});
-	}, []);
+			.catch(() => {
+				errorToast('Unable to load available topics')
+				setAvailableTopics([])
+			})
+	}, [])
 
 	if (availableTopics == null) {
-		return <PageSpinner />;
+		return <PageSpinner />
 	}
 
-	const sortedTopics = availableTopics.sort();
+	const sortedTopics = availableTopics.sort()
 
 	return (
 		<div className="view kafka-admin">
@@ -67,30 +72,30 @@ export function KafkaAdmin() {
 				</div>
 			</div>
 		</div>
-	);
+	)
 }
 
 function ConsumerOffsetsCard(props: { selectedTopic: string | null }) {
-	const [groupIdField, setGroupIdField] = useState('');
-	const [topicPartitionOffsets, setTopicPartitionOffsets] = useState<TopicPartitionOffset[]>([]);
+	const [groupIdField, setGroupIdField] = useState('')
+	const [topicPartitionOffsets, setTopicPartitionOffsets] = useState<TopicPartitionOffset[]>([])
 
 	function handleHentConsumerOffsets() {
 		if (props.selectedTopic == null) {
-			errorToast('Please select a topic from the sidebar');
-			return;
+			errorToast('Please select a topic from the sidebar')
+			return
 		}
 
-		const request: GetConsumerOffsetsRequest = { groupId: groupIdField, topicName: props.selectedTopic };
+		const request: GetConsumerOffsetsRequest = { groupId: groupIdField, topicName: props.selectedTopic }
 
 		getConsumerOffsets(request)
 			.then(res => {
 				if (res.data.length === 0) {
-					warningToast('Fant ingen offsets tilhørende konsumeren for topicen');
+					warningToast('Fant ingen offsets tilhørende konsumeren for topicen')
 				} else {
-					setTopicPartitionOffsets(res.data);
+					setTopicPartitionOffsets(res.data)
 				}
 			})
-			.catch(() => errorToast('Klarte ikke å hente consumer offsets'));
+			.catch(() => errorToast('Klarte ikke å hente consumer offsets'))
 	}
 
 	return (
@@ -110,34 +115,34 @@ function ConsumerOffsetsCard(props: { selectedTopic: string | null }) {
 							<li key={idx}>
 								Partition={tpo.topicPartition} Offset={tpo.offset}
 							</li>
-						);
+						)
 					})}
 				</ul>
 			)}
 		</Card>
-	);
+	)
 }
 
 function LastRecordOffsetCard(props: { selectedTopic: string | null }) {
-	const [topicPartition, setTopicPartition] = useState('0');
-	const [lastRecordOffset, setLastRecordOffset] = useState<number | null>(null);
+	const [topicPartition, setTopicPartition] = useState('0')
+	const [lastRecordOffset, setLastRecordOffset] = useState<number | null>(null)
 
 	function handleHentLastRecordOffset() {
 		if (props.selectedTopic == null) {
-			errorToast('Please select a topic from the sidebar');
-			return;
+			errorToast('Please select a topic from the sidebar')
+			return
 		}
 
 		const request: GetLastRecordOffsetRequest = {
 			topicName: props.selectedTopic,
 			topicPartition: parseInt(topicPartition, 10)
-		};
+		}
 
 		getLastRecordOffset(request)
 			.then(res => {
-				setLastRecordOffset(res.data.latestRecordOffset);
+				setLastRecordOffset(res.data.latestRecordOffset)
 			})
-			.catch(() => errorToast('Klarte ikke å hente siste record offset'));
+			.catch(() => errorToast('Klarte ikke å hente siste record offset'))
 	}
 
 	return (
@@ -161,18 +166,18 @@ function LastRecordOffsetCard(props: { selectedTopic: string | null }) {
 				</BodyShort>
 			) : null}
 		</Card>
-	);
+	)
 }
 
 function SetConsumerOffsetCard(props: { selectedTopic: string | null }) {
-	const [groupIdField, setGroupIdField] = useState('');
-	const [topicPartitionField, setTopicPartitionField] = useState('0');
-	const [offsetField, setOffsetField] = useState('0');
+	const [groupIdField, setGroupIdField] = useState('')
+	const [topicPartitionField, setTopicPartitionField] = useState('0')
+	const [offsetField, setOffsetField] = useState('0')
 
 	function handleSetConsumerOffset() {
 		if (props.selectedTopic == null) {
-			errorToast('Please select a topic from the sidebar');
-			return;
+			errorToast('Please select a topic from the sidebar')
+			return
 		}
 
 		const request: SetConsumerOffsetRequest = {
@@ -180,11 +185,11 @@ function SetConsumerOffsetCard(props: { selectedTopic: string | null }) {
 			topicPartition: parseInt(topicPartitionField, 10),
 			offset: parseInt(offsetField, 10),
 			groupId: groupIdField
-		};
+		}
 
 		setConsumerOffset(request)
 			.then(() => successToast('Consumer offset har blitt endret'))
-			.catch(() => errorToast('Klarte ikke å sette consumer offset'));
+			.catch(() => errorToast('Klarte ikke å sette consumer offset'))
 	}
 
 	return (
@@ -214,56 +219,56 @@ function SetConsumerOffsetCard(props: { selectedTopic: string | null }) {
 				Set offset
 			</Button>
 		</Card>
-	);
+	)
 }
 
 function ReadFromTopicCard(props: { selectedTopic: string | null }) {
-	const [isLoading, setIsLoading] = useState<boolean>(false);
-	const [partitionMode, setPartitionMode] = useState<'all' | 'specific'>('all');
-	const [topicPartitionField, setTopicPartitionField] = useState('0');
-	const [fetchFromField, setFetchFromField] = useState<'BEGINNING' | 'END' | 'OFFSET'>('END');
-	const [fromOffsetField, setFromOffsetField] = useState('0');
-	const [maxRecordsField, setMaxRecordsField] = useState('50');
-	const [keyValueFilterField, setKeyValueFilterField] = useState('');
+	const [isLoading, setIsLoading] = useState<boolean>(false)
+	const [partitionMode, setPartitionMode] = useState<'all' | 'specific'>('all')
+	const [topicPartitionField, setTopicPartitionField] = useState('0')
+	const [fetchFromField, setFetchFromField] = useState<'BEGINNING' | 'END' | 'OFFSET'>('END')
+	const [fromOffsetField, setFromOffsetField] = useState('0')
+	const [maxRecordsField, setMaxRecordsField] = useState('50')
+	const [keyValueFilterField, setKeyValueFilterField] = useState('')
 
-	const [clickedRecord, setClickedRecord] = useState<KafkaRecord | null>(null);
-	const [recordsFromTopic, setRecordsFromTopic] = useState<KafkaRecord[]>([]);
+	const [clickedRecord, setClickedRecord] = useState<KafkaRecord | null>(null)
+	const [recordsFromTopic, setRecordsFromTopic] = useState<KafkaRecord[]>([])
 
-	const [startTimeMs, setStartTimeMs] = useState<number | null>(null);
-	const [timeTakenMs, setTimeTakenMs] = useState<number>(0);
-	const timerRef = useRef<number | null>(null);
+	const [startTimeMs, setStartTimeMs] = useState<number | null>(null)
+	const [timeTakenMs, setTimeTakenMs] = useState<number>(0)
+	const timerRef = useRef<number | null>(null)
 
 	async function handleReadFromTopic() {
 		if (props.selectedTopic == null) {
-			errorToast('Please select a topic from the sidebar');
-			return;
+			errorToast('Please select a topic from the sidebar')
+			return
 		}
 
-		const topicPartition = parseInt(topicPartitionField, 10);
-		const maxRecords = parseInt(maxRecordsField, 10);
+		const topicPartition = parseInt(topicPartitionField, 10)
+		const maxRecords = parseInt(maxRecordsField, 10)
 
-		setRecordsFromTopic([]);
-		setStartTimeMs(Date.now());
-		setIsLoading(true);
+		setRecordsFromTopic([])
+		setStartTimeMs(Date.now())
+		setIsLoading(true)
 
-		let fetchFromOffset;
+		let fetchFromOffset
 
 		if (fetchFromField === 'BEGINNING') {
-			fetchFromOffset = 0;
+			fetchFromOffset = 0
 		} else if (fetchFromField === 'END') {
 			try {
 				const lastRecordOffset = (await getLastRecordOffset({ topicName: props.selectedTopic, topicPartition }))
-					.data.latestRecordOffset;
+					.data.latestRecordOffset
 
-				fetchFromOffset = lastRecordOffset - maxRecords;
-			} catch (e) {
-				setStartTimeMs(null);
-				setIsLoading(false);
-				errorToast('Klarte ikke å hente siste record offset');
-				return;
+				fetchFromOffset = lastRecordOffset - maxRecords
+			} catch {
+				setStartTimeMs(null)
+				setIsLoading(false)
+				errorToast('Klarte ikke å hente siste record offset')
+				return
 			}
 		} else {
-			fetchFromOffset = parseInt(fromOffsetField, 10);
+			fetchFromOffset = parseInt(fromOffsetField, 10)
 		}
 
 		const request: ReadFromTopicRequest = {
@@ -273,34 +278,34 @@ function ReadFromTopicCard(props: { selectedTopic: string | null }) {
 			fromOffset: fetchFromOffset,
 			maxRecords,
 			filterText: keyValueFilterField
-		};
+		}
 
 		readFromTopic(request)
 			.then(res => {
 				if (res.data.length === 0) {
-					warningToast('Could not find any records in the topic+partition for the given offset');
+					warningToast('Could not find any records in the topic+partition for the given offset')
 				} else {
-					setRecordsFromTopic(res.data);
+					setRecordsFromTopic(res.data)
 				}
 			})
-			.catch(() => errorToast('Klarte ikke å hente siste record offset'))
+			.catch(() => errorToast('Klarte ikke å lese meldinger fra valgt topic'))
 			.finally(() => {
-				setStartTimeMs(null);
-				setIsLoading(false);
-			});
+				setStartTimeMs(null)
+				setIsLoading(false)
+			})
 	}
 
 	useEffect(() => {
 		if (startTimeMs != null) {
-			timerRef.current = setInterval(() => setTimeTakenMs(Date.now() - startTimeMs), 100) as unknown as number;
+			timerRef.current = setInterval(() => setTimeTakenMs(Date.now() - startTimeMs), 100) as unknown as number
 		}
 
 		if (startTimeMs == null && timerRef.current != null) {
-			clearInterval(timerRef.current);
-			timerRef.current = null;
-			setTimeTakenMs(0);
+			clearInterval(timerRef.current)
+			timerRef.current = null
+			setTimeTakenMs(0)
 		}
-	}, [startTimeMs]);
+	}, [startTimeMs])
 
 	return (
 		<Card
@@ -391,6 +396,7 @@ function ReadFromTopicCard(props: { selectedTopic: string | null }) {
 							<th>Offset</th>
 							<th>Key</th>
 							<th>Value</th>
+							<th>Details</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -398,17 +404,22 @@ function ReadFromTopicCard(props: { selectedTopic: string | null }) {
 							.sort((r1, r2) => r1.offset - r2.offset)
 							.map(record => {
 								return (
-									<tr
-										key={`${record.partition}-${record.offset}`}
-										onClick={() => setClickedRecord(record)}
-										className="kafka-record-row"
-									>
+									<tr key={`${record.partition}-${record.offset}`}>
 										<td>{record.partition}</td>
 										<td>{record.offset}</td>
 										<td>{record.key || 'NO_KEY'}</td>
 										<td className="kafka-record-value">{record.value}</td>
+										<td>
+											<Button
+												variant="tertiary"
+												onClick={() => setClickedRecord(record)}
+												aria-label={`View record at partition ${record.partition}, offset ${record.offset}`}
+											>
+												View
+											</Button>
+										</td>
 									</tr>
-								);
+								)
 							})}
 					</tbody>
 				</table>
@@ -419,9 +430,13 @@ function ReadFromTopicCard(props: { selectedTopic: string | null }) {
 				aria-label="kafka record content"
 			>
 				<Modal.Body>
-					<KafkaRecordModalContent record={clickedRecord} />
+					{clickedRecord && (
+						<Suspense fallback={<PageSpinner />}>
+							<KafkaRecordModalContent record={clickedRecord} />
+						</Suspense>
+					)}
 				</Modal.Body>
 			</Modal>
 		</Card>
-	);
+	)
 }
