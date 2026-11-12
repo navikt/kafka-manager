@@ -28,7 +28,7 @@ dependencyManagement {
     dependencies {
         dependency("org.apache.commons:commons-compress:1.28.0")
         dependency("org.xerial.snappy:snappy-java:1.1.10.12")
-        dependency("at.yawk.lz4:lz4-java:1.12.1")
+        dependency("at.yawk.lz4:lz4-java:1.13.0")
         dependency("com.google.guava:guava:33.8.0-jre")
         dependency("ch.qos.logback:logback-classic:1.6.6")
         dependency("ch.qos.logback:logback-core:1.6.6")
