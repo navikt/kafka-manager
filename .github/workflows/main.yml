@@ -78,6 +78,19 @@ jobs:
           team: poao
           tag: ${{ env.IMAGE_TAG }}
 
+      - name: Tag image as latest
+        env:
+          IMAGE_REF: ${{ steps.docker.outputs.image }}
+        run: |
+          set -euo pipefail
+
+          image="${IMAGE_REF%@*}"
+          image="${image%:*}"
+          docker buildx imagetools create \
+            --prefer-index=false \
+            --tag "${image}:latest" \
+            "${IMAGE_REF}"
+
       - name: Create GitHub release
         uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3.0.4
         with:
