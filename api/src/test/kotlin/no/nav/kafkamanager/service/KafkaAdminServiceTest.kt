@@ -88,6 +88,18 @@ class KafkaAdminServiceTest {
             }
 
         assertEquals(HttpStatus.NOT_IMPLEMENTED, exception.statusCode)
+        assertEquals("Kafka admin operations are not supported for this topic", exception.reason)
+    }
+
+    @Test
+    fun `consumer group lookup should use operation-neutral error for on-prem topics`() {
+        val exception =
+            assertThrows(ResponseStatusException::class.java) {
+                kafkaAdminService.getConsumerGroups(KafkaAdminController.GetConsumerGroupsRequest("on-prem-topic"))
+            }
+
+        assertEquals(HttpStatus.NOT_IMPLEMENTED, exception.statusCode)
+        assertEquals("Kafka admin operations are not supported for this topic", exception.reason)
     }
 
     private companion object {

@@ -78,7 +78,7 @@ class KafkaAdminControllerTest
             every { kafkaAdminService.deleteRecords("on-prem-topic", 0, 42) } throws
                 ResponseStatusException(
                     HttpStatus.NOT_IMPLEMENTED,
-                    "Record deletion is not supported for this topic",
+                    "Kafka admin operations are not supported for this topic",
                 )
 
             mockMvc

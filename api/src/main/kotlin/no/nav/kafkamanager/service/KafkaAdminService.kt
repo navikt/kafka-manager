@@ -253,7 +253,7 @@ class KafkaAdminService(
         if (!topicConfig.supportsRecordDeletion) {
             throw ResponseStatusException(
                 HttpStatus.NOT_IMPLEMENTED,
-                "Record deletion is not supported for this topic",
+                "Kafka admin operations are not supported for this topic",
             )
         }
 
