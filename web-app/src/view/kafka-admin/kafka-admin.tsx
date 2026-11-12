@@ -1,7 +1,17 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { errorToast, successToast, warningToast } from '../../utils/toast-utils'
 import { Card } from '../../component/card/card'
-import { BodyShort, Button, Label, Loader, Modal, TextField, ToggleGroup, UNSAFE_Combobox } from '@navikt/ds-react'
+import {
+	BodyShort,
+	Button,
+	Label,
+	Loader,
+	Modal,
+	TextField,
+	ToggleGroup,
+	UNSAFE_Combobox,
+	VStack
+} from '@navikt/ds-react'
 import {
 	AvailableTopic,
 	getAvailableTopics,
@@ -109,14 +119,20 @@ function ConsumerOffsetsCard(props: { selectedTopic: string | null }) {
 				Henter siste commitet offset for alle partisjoner tilhørende en consumer gruppe for en gitt topic
 			</BodyShort>
 			<SelectedTopic selectedTopic={props.selectedTopic} />
-			<TextField label="Consumer group id" value={groupIdField} onChange={e => setGroupIdField(e.target.value)} />
-			<Button
-				onClick={handleHentConsumerOffsets}
-				variant="tertiary"
-				disabled={!props.selectedTopic || groupIdField.trim().length === 0}
-			>
-				Fetch
-			</Button>
+			<VStack gap="space-12">
+				<TextField
+					label="Consumer group id"
+					value={groupIdField}
+					onChange={e => setGroupIdField(e.target.value)}
+				/>
+				<Button
+					onClick={handleHentConsumerOffsets}
+					variant="tertiary"
+					disabled={!props.selectedTopic || groupIdField.trim().length === 0}
+				>
+					Fetch
+				</Button>
+			</VStack>
 			{topicPartitionOffsets.length > 0 && (
 				<ul>
 					{topicPartitionOffsets.map((tpo, idx) => {
@@ -160,15 +176,17 @@ function LastRecordOffsetCard(props: { selectedTopic: string | null }) {
 				Henter offset til siste record(melding på kafka) som ligger på en topic+partisjon
 			</BodyShort>
 			<SelectedTopic selectedTopic={props.selectedTopic} />
-			<TextField
-				label="Topic partition (first partition starts at 0)"
-				type="number"
-				value={topicPartition}
-				onChange={e => setTopicPartition(e.target.value)}
-			/>
-			<Button onClick={handleHentLastRecordOffset} variant="tertiary" disabled={!props.selectedTopic}>
-				Fetch
-			</Button>
+			<VStack gap="space-12">
+				<TextField
+					label="Topic partition (first partition starts at 0)"
+					type="number"
+					value={topicPartition}
+					onChange={e => setTopicPartition(e.target.value)}
+				/>
+				<Button onClick={handleHentLastRecordOffset} variant="tertiary" disabled={!props.selectedTopic}>
+					Fetch
+				</Button>
+			</VStack>
 			{lastRecordOffset != null ? (
 				<BodyShort style={{ marginTop: '2rem' }}>
 					Offset til siste record: <strong>{lastRecordOffset}</strong>
@@ -217,20 +235,21 @@ function SetConsumerOffsetCard(props: { selectedTopic: string | null }) {
 				onChange={e => setTopicPartitionField(e.target.value)}
 			/>
 			<TextField label="Consumer group id" value={groupIdField} onChange={e => setGroupIdField(e.target.value)} />
-			<TextField
-				label="Offset"
-				type="number"
-				value={offsetField}
-				onChange={e => setOffsetField(e.target.value)}
-			/>
-
-			<Button
-				onClick={handleSetConsumerOffset}
-				variant="tertiary"
-				disabled={!props.selectedTopic || groupIdField.trim().length === 0}
-			>
-				Set offset
-			</Button>
+			<VStack gap="space-12">
+				<TextField
+					label="Offset"
+					type="number"
+					value={offsetField}
+					onChange={e => setOffsetField(e.target.value)}
+				/>
+				<Button
+					onClick={handleSetConsumerOffset}
+					variant="tertiary"
+					disabled={!props.selectedTopic || groupIdField.trim().length === 0}
+				>
+					Set offset
+				</Button>
+			</VStack>
 		</Card>
 	)
 }
@@ -384,15 +403,16 @@ function ReadFromTopicCard(props: { selectedTopic: string | null }) {
 				onChange={e => setMaxRecordsField(e.target.value)}
 			/>
 
-			<TextField
-				label="Key/value filter (tip: max=1 can be used to reduce waiting)"
-				value={keyValueFilterField}
-				onChange={e => setKeyValueFilterField(e.target.value)}
-			/>
-
-			<Button onClick={handleReadFromTopic} variant="tertiary" disabled={!props.selectedTopic}>
-				Fetch
-			</Button>
+			<VStack gap="space-12">
+				<TextField
+					label="Key/value filter (tip: max=1 can be used to reduce waiting)"
+					value={keyValueFilterField}
+					onChange={e => setKeyValueFilterField(e.target.value)}
+				/>
+				<Button onClick={handleReadFromTopic} variant="tertiary" disabled={!props.selectedTopic}>
+					Fetch
+				</Button>
+			</VStack>
 
 			{isLoading && recordsFromTopic.length === 0 ? (
 				<div className="read-from-topic-card__loader">
