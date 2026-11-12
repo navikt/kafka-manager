@@ -7,6 +7,7 @@ import {
 	Label,
 	Loader,
 	Modal,
+	Table,
 	TextField,
 	ToggleGroup,
 	UNSAFE_Combobox,
@@ -230,15 +231,24 @@ function ConsumerOffsetsCard(props: ConsumerGroupCardProps) {
 				</Button>
 			</VStack>
 			{topicPartitionOffsets.length > 0 && (
-				<ul>
-					{topicPartitionOffsets.map((tpo, idx) => {
-						return (
-							<li key={idx}>
-								Partition={tpo.topicPartition} Offset={tpo.offset}
-							</li>
-						)
-					})}
-				</ul>
+				<Table size="small">
+					<Table.Header>
+						<Table.Row>
+							<Table.HeaderCell scope="col">Partition</Table.HeaderCell>
+							<Table.HeaderCell scope="col">Offset</Table.HeaderCell>
+						</Table.Row>
+					</Table.Header>
+					<Table.Body>
+						{[...topicPartitionOffsets]
+							.sort((a, b) => a.topicPartition - b.topicPartition)
+							.map(offset => (
+								<Table.Row key={offset.topicPartition}>
+									<Table.HeaderCell scope="row">{offset.topicPartition}</Table.HeaderCell>
+									<Table.DataCell>{offset.offset}</Table.DataCell>
+								</Table.Row>
+							))}
+					</Table.Body>
+				</Table>
 			)}
 		</Card>
 	)
