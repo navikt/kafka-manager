@@ -1,14 +1,14 @@
 import { delay, http, HttpResponse, RequestHandler } from 'msw'
-import { KafkaRecord, LastRecordOffsetResponse, TopicPartitionOffset } from '../api'
+import { AvailableTopic, KafkaRecord, LastRecordOffsetResponse, TopicPartitionOffset } from '../api'
 
-const availableTopics = [
-	'test-topic-b',
-	'test-topic-a',
-	'test-topic-c',
-	'test-topic-d',
-	'test-topic-e',
-	'test-topic-f',
-	'test-topic-h'
+const availableTopics: AvailableTopic[] = [
+	{ name: 'test-topic-b', supportsRecordDeletion: false },
+	{ name: 'test-topic-a', supportsRecordDeletion: true },
+	{ name: 'test-topic-c', supportsRecordDeletion: true },
+	{ name: 'test-topic-d', supportsRecordDeletion: true },
+	{ name: 'test-topic-e', supportsRecordDeletion: true },
+	{ name: 'test-topic-f', supportsRecordDeletion: true },
+	{ name: 'test-topic-h', supportsRecordDeletion: true }
 ]
 
 const kafkaRecords: KafkaRecord[] = []

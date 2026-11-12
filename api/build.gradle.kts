@@ -63,10 +63,13 @@ dependencies {
 
     // Tests
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.springframework.boot:spring-boot-webmvc-test")
+    testImplementation("com.ninja-squad:springmockk:5.0.1")
 }
 
 tasks.named<Test>("test") {
     useJUnitPlatform()
+    jvmArgs("-Xshare:off", "-XX:+EnableDynamicAgentLoading")
 }
 
 // Spring Boot-apper kjøres via bootJar, ikke den vanlige jar-tasken.

@@ -6,7 +6,7 @@ import { SelectedTopic } from './SelectedTopic'
 import { Card } from '../../component/card/card'
 import { parseNonNegativeSafeInteger } from '../../utils'
 
-export function DeleteRecordsCard(props: { selectedTopic: string | null }) {
+export function DeleteRecordsCard(props: { selectedTopic: string | null; supportsRecordDeletion: boolean }) {
 	const [partitionField, setPartitionField] = useState('0')
 	const [offsetField, setOffsetField] = useState('0')
 	const [isLoading, setIsLoading] = useState(false)
@@ -15,6 +15,10 @@ export function DeleteRecordsCard(props: { selectedTopic: string | null }) {
 	function handleDeleteRecords() {
 		if (props.selectedTopic == null) {
 			errorToast('Please select a topic from the sidebar')
+			return
+		}
+		if (!props.supportsRecordDeletion) {
+			errorToast('Record deletion is only supported for Aiven topics')
 			return
 		}
 		const topicPartition = parseNonNegativeSafeInteger(partitionField)
@@ -51,12 +55,22 @@ export function DeleteRecordsCard(props: { selectedTopic: string | null }) {
 		<Card title="Delete records from topic" innholdClassName="delete-records-card card__content">
 			<LocalAlert status={'warning'}>
 				<LocalAlert.Header>
-					<LocalAlert.Title>Danger zone</LocalAlert.Title>
+					<LocalAlert.Title>
+						{props.supportsRecordDeletion ? 'Danger zone' : 'Record deletion unavailable'}
+					</LocalAlert.Title>
 				</LocalAlert.Header>
 				<LocalAlert.Content>
-					This operation will permanently delete all records in the selected topic{' '}
-					<strong>{props.selectedTopic ?? '(none selected)'}</strong> partition before the specified offset.
-					This cannot be undone!
+					{props.supportsRecordDeletion ? (
+						<>
+							This operation will permanently delete all records in the selected topic{' '}
+							<strong>{props.selectedTopic ?? '(none selected)'}</strong> partition before the specified
+							offset. This cannot be undone!
+						</>
+					) : props.selectedTopic ? (
+						'Record deletion is only supported for Aiven topics.'
+					) : (
+						'Select an Aiven topic to enable record deletion.'
+					)}
 				</LocalAlert.Content>
 			</LocalAlert>
 			<SelectedTopic selectedTopic={props.selectedTopic} />
@@ -65,20 +79,20 @@ export function DeleteRecordsCard(props: { selectedTopic: string | null }) {
 				type="number"
 				value={partitionField}
 				onChange={e => setPartitionField(e.target.value)}
-				disabled={!props.selectedTopic}
+				disabled={!props.selectedTopic || !props.supportsRecordDeletion}
 			/>
 			<TextField
 				label="Delete all records before offset"
 				type="number"
 				value={offsetField}
 				onChange={e => setOffsetField(e.target.value)}
-				disabled={!props.selectedTopic}
+				disabled={!props.selectedTopic || !props.supportsRecordDeletion}
 			/>
 			<Button
 				onClick={handleDeleteClick}
 				variant="danger"
 				loading={isLoading}
-				disabled={!props.selectedTopic || isLoading}
+				disabled={!props.selectedTopic || !props.supportsRecordDeletion || isLoading}
 				style={{ marginTop: '1rem' }}
 			>
 				Delete records

@@ -1,5 +1,6 @@
 package no.nav.kafkamanager.controller
 
+import no.nav.kafkamanager.domain.AvailableTopic
 import no.nav.kafkamanager.domain.KafkaRecord
 import no.nav.kafkamanager.service.KafkaAdminService
 import no.nav.kafkamanager.utils.DTOMappers.toTopicWithOffset
@@ -18,7 +19,7 @@ class KafkaAdminController(
     val kafkaAdminService: KafkaAdminService,
 ) {
     @GetMapping("/available-topics")
-    fun availableTopics(): List<String> = kafkaAdminService.getAvailableTopics()
+    fun availableTopics(): List<AvailableTopic> = kafkaAdminService.getAvailableTopics()
 
     @PostMapping("/read-topic")
     fun readTopic(
@@ -33,7 +34,10 @@ class KafkaAdminController(
         @RequestBody request: GetConsumerOffsetsRequest,
     ): List<TopicWithOffset> =
         kafkaAdminService.getConsumerOffsets(request).entries.map {
-            toTopicWithOffset(it.key, it.value)
+            toTopicWithOffset(
+                topicPartition = it.key,
+                offsetAndMetadata = it.value,
+            )
         }
 
     @PostMapping("/get-last-record-offset")
@@ -58,7 +62,11 @@ class KafkaAdminController(
     fun deleteRecords(
         @RequestBody request: DeleteRecordsRequest,
     ) {
-        kafkaAdminService.deleteRecords(request.topicName, request.topicPartition, request.beforeOffset)
+        kafkaAdminService.deleteRecords(
+            topicName = request.topicName,
+            partition = request.topicPartition,
+            beforeOffset = request.beforeOffset,
+        )
     }
 
     private fun validateReadTopicRequestDTO(readTopicRequest: ReadTopicRequest) {
