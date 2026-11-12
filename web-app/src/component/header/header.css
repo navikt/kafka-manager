@@ -1,11 +1,18 @@
 .header {
   display: flex;
   align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0 1rem;
   padding: 0 2rem;
   background-color: white;
   box-shadow: 0 3px 3px 0 rgba(183, 177, 169, 0.5);
 }
 .header__title {
-  padding: 1rem;
-  margin: 0 auto;
+  margin: 0;
+  padding: 1rem 0;
+}
+.header__version {
+  margin: 0;
+  overflow-wrap: anywhere;
 }

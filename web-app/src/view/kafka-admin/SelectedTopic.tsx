@@ -1,4 +1,4 @@
-import { BodyShort } from '@navikt/ds-react';
+import { BodyShort } from '@navikt/ds-react'
 
 export const SelectedTopic = (props: { selectedTopic: string | null }) => {
 	return props.selectedTopic ? (
@@ -9,5 +9,5 @@ export const SelectedTopic = (props: { selectedTopic: string | null }) => {
 		<BodyShort size="small" className="no-topic-selected-indicator">
 			Topic: <strong>No topic selected</strong>
 		</BodyShort>
-	);
-};
+	)
+}

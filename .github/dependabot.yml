@@ -1,17 +1,8 @@
 version: 2
 
-registries:
-  npm-github:
-    type: npm-registry
-    url: https://npm.pkg.github.com
-    token: ${{secrets.READER_TOKEN}}
-    replaces-base: false
-
 updates:
   - package-ecosystem: "npm"
     directory: "/web-app"
-    registries:
-      - npm-github
     schedule:
       interval: "weekly"
     cooldown:

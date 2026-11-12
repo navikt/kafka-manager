@@ -1,13 +1,13 @@
-import React from 'react';
-import cls from 'classnames';
-import './card.css';
-import { Heading } from '@navikt/ds-react';
+import type { ReactNode } from 'react'
+import cls from 'classnames'
+import './card.css'
+import { Heading } from '@navikt/ds-react'
 
 interface CardProps {
-	title?: string;
-	children: any;
-	className?: string;
-	innholdClassName?: string;
+	title?: string
+	children: ReactNode
+	className?: string
+	innholdClassName?: string
 }
 
 export function Card(props: CardProps) {
@@ -20,5 +20,5 @@ export function Card(props: CardProps) {
 			)}
 			<div className={props.innholdClassName}>{props.children}</div>
 		</div>
-	);
+	)
 }

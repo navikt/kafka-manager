@@ -1,9 +1,8 @@
-import React from 'react';
-import { ToastContainer } from 'react-toastify';
-import './app.css';
-import 'react-toastify/dist/ReactToastify.css';
-import { KafkaAdmin } from './view/kafka-admin/kafka-admin';
-import { Header } from './component/header/header';
+import { ToastContainer } from 'react-toastify'
+import './app.css'
+import 'react-toastify/dist/ReactToastify.css'
+import { KafkaAdmin } from './view/kafka-admin/kafka-admin'
+import { Header } from './component/header/header'
 
 function App() {
 	return (
@@ -14,7 +13,7 @@ function App() {
 			</main>
 			<ToastContainer />
 		</div>
-	);
+	)
 }
 
-export default App;
+export default App

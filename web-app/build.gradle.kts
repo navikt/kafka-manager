@@ -1,5 +1,5 @@
-import com.github.gradle.node.npm.task.NpmInstallTask
-import com.github.gradle.node.npm.task.NpmTask
+import com.github.gradle.node.pnpm.task.PnpmInstallTask
+import com.github.gradle.node.pnpm.task.PnpmTask
 
 plugins {
     base
@@ -8,45 +8,72 @@ plugins {
 
 node {
     version.set("24.22.2")
+    pnpmVersion.set("12.15.0")
     download.set(true)
     distBaseUrl.set(null)
-    npmInstallCommand.set("ci")
     nodeProjectDir.set(projectDir)
     workDir.set(layout.buildDirectory.dir("nodejs"))
-    npmWorkDir.set(layout.buildDirectory.dir("npm"))
+    pnpmWorkDir.set(layout.buildDirectory.dir("pnpm"))
 }
 
-tasks.named<NpmInstallTask>("npmInstall") {
-    args.set(listOf("--ignore-scripts", "--min-release-age=7"))
+tasks.named<PnpmInstallTask>("pnpmInstall") {
+    args.set(listOf("--frozen-lockfile", "--ignore-scripts"))
+    inputs.files(file("pnpm-workspace.yaml"), file(".npmrc"))
 }
 
 val testFrontend =
-    tasks.register<NpmTask>("testFrontend") {
+    tasks.register<PnpmTask>("testFrontend") {
         description = "Runs the frontend tests."
-        dependsOn(tasks.named("npmInstall"))
-        npmCommand.set(listOf("run", "test"))
-        inputs.files(fileTree("src"), file("package.json"), file("package-lock.json"), file("index.html"))
-        inputs.files(file("vite.config.ts"), file("tsconfig.json"))
+        dependsOn(tasks.named("pnpmInstall"))
+        pnpmCommand.set(listOf("run", "test"))
+        inputs.files(
+            fileTree("src"),
+            file("package.json"),
+            file("pnpm-lock.yaml"),
+            file("pnpm-workspace.yaml"),
+            file(".npmrc"),
+            file("index.html"),
+        )
+        inputs.files(file("vite.config.mts"), file("tsconfig.json"))
+    }
+
+val lintFrontend =
+    tasks.register<PnpmTask>("lintFrontend") {
+        description = "Lints the frontend sources."
+        dependsOn(tasks.named("pnpmInstall"))
+        pnpmCommand.set(listOf("run", "lint"))
+        inputs.files(
+            fileTree("src"),
+            file("package.json"),
+            file("pnpm-lock.yaml"),
+            file("pnpm-workspace.yaml"),
+            file(".npmrc"),
+            file("eslint.config.mjs"),
+        )
+        inputs.files(file("tsconfig.json"))
     }
 
 val assembleFrontend =
-    tasks.register<NpmTask>("assembleFrontend") {
+    tasks.register<PnpmTask>("assembleFrontend") {
         description = "Builds the frontend assets."
-        dependsOn(tasks.named("npmInstall"))
-        npmCommand.set(listOf("run", "build"))
+        dependsOn(tasks.named("pnpmInstall"))
+        pnpmCommand.set(listOf("run", "build"))
         inputs.files(
             fileTree("src"),
             fileTree("public"),
             file("package.json"),
-            file("package-lock.json"),
+            file("pnpm-lock.yaml"),
+            file("pnpm-workspace.yaml"),
+            file(".npmrc"),
             file("index.html"),
         )
-        inputs.files(file("vite.config.ts"), file("tsconfig.json"))
+        inputs.files(file("vite.config.mts"), file("tsconfig.json"))
+        inputs.property("viteAppVersion", providers.environmentVariable("VITE_APP_VERSION").orElse(""))
         outputs.dir(layout.projectDirectory.dir("dist"))
     }
 
 tasks.named("check") {
-    dependsOn(testFrontend)
+    dependsOn(testFrontend, lintFrontend)
 }
 
 tasks.named("assemble") {

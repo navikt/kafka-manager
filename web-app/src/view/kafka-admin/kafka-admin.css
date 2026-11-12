@@ -29,8 +29,8 @@
 /* Selected Topic Indicator */
 .selected-topic-indicator {
   padding: 0.5rem 0.75rem;
-  background-color: var(--ax-info-100);
-  border-left: 3px solid var(--ax-info-700);
+  background-color: var(--ax-bg-info-soft);
+  border-left: 3px solid var(--ax-border-info);
   border-radius: 4px;
   margin-bottom: 1rem;
 }
@@ -38,8 +38,8 @@
 /* Selected Topic Indicator */
 .no-topic-selected-indicator {
     padding: 0.5rem 0.75rem;
-    background-color: var(--ax-warning-100);
-    border-left: 3px solid var(--ax-warning-700);
+    background-color: var(--ax-bg-warning-soft);
+    border-left: 3px solid var(--ax-border-warning);
     border-radius: 4px;
     margin-bottom: 1rem;
 }
@@ -76,14 +76,6 @@
   align-items: center;
   margin: 2rem auto;
 }
-.kafka-record-row {
-  cursor: pointer;
-  transition: transform 0.1s;
-}
-.kafka-record-row:hover {
-  transform: scale(1.02);
-  background: rgba(0, 0, 0, 0.12);
-}
 .read-from-topic-card__loader-timer {
   color: var(--ax-neutral-900);
 }
@@ -96,7 +88,7 @@
   border-bottom: solid 1px black;
 }
 .tabell tr:nth-child(even) {
-  background-color: var(--ax-neutral-100);
+  background-color: var(--ax-bg-neutral-soft);
 }
 .tabell td, .tabell th {
   padding: 0.5rem;
