@@ -1,9 +1,42 @@
-import axios, { AxiosPromise } from 'axios'
+async function fetchApi(url: string, options: RequestInit = {}): Promise<Response> {
+	const headers = new Headers(options.headers)
+	headers.set('Nav-Consumer-Id', 'kafka-manager')
 
-export const axiosInstance = axios.create({
-	withCredentials: true,
-	headers: { 'Nav-Consumer-Id': 'kafka-manager' }
-})
+	const response = await fetch(url, {
+		...options,
+		// Behold cookie-autentiseringa som Axios withCredentials ga.
+		credentials: 'include',
+		headers
+	})
+
+	// Fetch godtar HTTP-feil, så vi må avvise promise-et selv.
+	if (!response.ok) {
+		throw new Error(`Request failed with status ${response.status}`)
+	}
+
+	return response
+}
+
+async function requestJson<T>(url: string, options?: RequestInit): Promise<T> {
+	const response = await fetchApi(url, options)
+	return response.json()
+}
+
+function postJson<T>(url: string, body: object): Promise<T> {
+	return requestJson<T>(url, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify(body)
+	})
+}
+
+async function postVoid(url: string, body: object): Promise<void> {
+	await fetchApi(url, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify(body)
+	})
+}
 
 export interface ReadFromTopicRequest {
 	topicName: string
@@ -63,12 +96,12 @@ export interface LastRecordOffsetResponse {
 	latestRecordOffset: number
 }
 
-export function getAvailableTopics(): AxiosPromise<AvailableTopic[]> {
-	return axiosInstance.get('/api/kafka/available-topics')
+export function getAvailableTopics(): Promise<AvailableTopic[]> {
+	return requestJson('/api/kafka/available-topics')
 }
 
-export function readFromTopic(request: ReadFromTopicRequest): AxiosPromise<KafkaRecord[]> {
-	return axiosInstance.post('/api/kafka/read-topic', {
+export function readFromTopic(request: ReadFromTopicRequest): Promise<KafkaRecord[]> {
+	return postJson('/api/kafka/read-topic', {
 		topicName: request.topicName,
 		topicPartition: request.topicPartition,
 		topicAllPartitions: request.topicAllPartitions,
@@ -80,34 +113,34 @@ export function readFromTopic(request: ReadFromTopicRequest): AxiosPromise<Kafka
 	})
 }
 
-export function getConsumerOffsets(request: GetConsumerOffsetsRequest): AxiosPromise<TopicPartitionOffset[]> {
-	return axiosInstance.post('/api/kafka/get-consumer-offsets', {
+export function getConsumerOffsets(request: GetConsumerOffsetsRequest): Promise<TopicPartitionOffset[]> {
+	return postJson('/api/kafka/get-consumer-offsets', {
 		topicName: request.topicName,
 		groupId: request.groupId
 	})
 }
 
-export function getConsumerGroups(request: GetConsumerGroupsRequest): AxiosPromise<string[]> {
-	return axiosInstance.post('/api/kafka/get-consumer-groups', {
+export function getConsumerGroups(request: GetConsumerGroupsRequest): Promise<string[]> {
+	return postJson('/api/kafka/get-consumer-groups', {
 		topicName: request.topicName
 	})
 }
 
-export function getLastRecordOffset(request: GetLastRecordOffsetRequest): AxiosPromise<LastRecordOffsetResponse> {
-	return axiosInstance.post('/api/kafka/get-last-record-offset', {
+export function getLastRecordOffset(request: GetLastRecordOffsetRequest): Promise<LastRecordOffsetResponse> {
+	return postJson('/api/kafka/get-last-record-offset', {
 		topicName: request.topicName,
 		topicPartition: request.topicPartition
 	})
 }
 
-export function getLastRecordOffsets(request: GetLastRecordOffsetsRequest): AxiosPromise<TopicPartitionOffset[]> {
-	return axiosInstance.post('/api/kafka/get-last-record-offsets', {
+export function getLastRecordOffsets(request: GetLastRecordOffsetsRequest): Promise<TopicPartitionOffset[]> {
+	return postJson('/api/kafka/get-last-record-offsets', {
 		topicName: request.topicName
 	})
 }
 
-export function setConsumerOffset(request: SetConsumerOffsetRequest): AxiosPromise {
-	return axiosInstance.post('/api/kafka/set-consumer-offset', {
+export function setConsumerOffset(request: SetConsumerOffsetRequest): Promise<void> {
+	return postVoid('/api/kafka/set-consumer-offset', {
 		topicName: request.topicName,
 		topicPartition: request.topicPartition,
 		offset: request.offset,
@@ -121,8 +154,8 @@ export interface DeleteRecordsRequest {
 	beforeOffset: number
 }
 
-export function deleteConsumerRecords(request: DeleteRecordsRequest): AxiosPromise<void> {
-	return axiosInstance.post('/api/kafka/delete-records', {
+export function deleteConsumerRecords(request: DeleteRecordsRequest): Promise<void> {
+	return postVoid('/api/kafka/delete-records', {
 		topicName: request.topicName,
 		topicPartition: request.topicPartition,
 		beforeOffset: request.beforeOffset
