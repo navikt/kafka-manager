@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
+import { ExclamationmarkTriangleIcon } from '@navikt/aksel-icons'
 import { errorToast, successToast, warningToast } from '../../utils/toast-utils'
 import { Card } from '../../component/card/card'
 import {
@@ -34,6 +35,7 @@ import { PageSpinner } from '../../component/page-spinner/page-spinner'
 import { toTimerStr } from '../../utils/date-utils'
 import { DeleteRecordsCard } from './DeleteRecordsCard'
 import { SelectedTopic } from './SelectedTopic'
+import { findLaggingPartitions } from './consumer-offsets'
 
 const KafkaRecordModalContent = lazy(() =>
 	import('./kafka-record-modal-content').then(({ KafkaRecordModalContent }) => ({
@@ -185,10 +187,22 @@ interface ConsumerGroupCardProps {
 function ConsumerOffsetsCard(props: ConsumerGroupCardProps) {
 	const [groupIdField, setGroupIdField] = useState('')
 	const [topicPartitionOffsets, setTopicPartitionOffsets] = useState<TopicPartitionOffset[]>([])
+	const [lastRecordOffsets, setLastRecordOffsets] = useState<TopicPartitionOffset[]>([])
+	const requestId = useRef(0)
 
 	useEffect(() => {
+		requestId.current += 1
 		setGroupIdField('')
+		setTopicPartitionOffsets([])
+		setLastRecordOffsets([])
 	}, [props.selectedTopic])
+
+	function handleGroupIdChange(groupId: string) {
+		requestId.current += 1
+		setGroupIdField(groupId)
+		setTopicPartitionOffsets([])
+		setLastRecordOffsets([])
+	}
 
 	function handleHentConsumerOffsets() {
 		if (props.selectedTopic == null) {
@@ -197,17 +211,34 @@ function ConsumerOffsetsCard(props: ConsumerGroupCardProps) {
 		}
 
 		const request: GetConsumerOffsetsRequest = { groupId: groupIdField, topicName: props.selectedTopic }
+		const lastRecordOffsetsRequest: GetLastRecordOffsetsRequest = { topicName: props.selectedTopic }
+		// Topic- eller gruppebytte gjør svar fra tidligere forespørsler ugyldige.
+		const currentRequestId = ++requestId.current
+		setTopicPartitionOffsets([])
+		setLastRecordOffsets([])
 
-		getConsumerOffsets(request)
-			.then(res => {
-				if (res.data.length === 0) {
+		// Vi trenger både consumerens offset og topicens log-end offset for å finne lag.
+		Promise.all([getConsumerOffsets(request), getLastRecordOffsets(lastRecordOffsetsRequest)])
+			.then(([consumerOffsetsResponse, lastRecordOffsetsResponse]) => {
+				if (currentRequestId !== requestId.current) {
+					return
+				}
+
+				if (consumerOffsetsResponse.data.length === 0) {
 					warningToast('Fant ingen offsets tilhørende konsumeren for topicen')
 				} else {
-					setTopicPartitionOffsets(res.data)
+					setTopicPartitionOffsets(consumerOffsetsResponse.data)
+					setLastRecordOffsets(lastRecordOffsetsResponse.data)
 				}
 			})
-			.catch(() => errorToast('Klarte ikke å hente consumer offsets'))
+			.catch(() => {
+				if (currentRequestId === requestId.current) {
+					errorToast('Klarte ikke å hente consumer offsets')
+				}
+			})
 	}
+
+	const laggingPartitions = findLaggingPartitions(topicPartitionOffsets, lastRecordOffsets)
 
 	return (
 		<Card title="Get consumer offsets" className="consumer-offset-card" innholdClassName="card__content">
@@ -218,7 +249,7 @@ function ConsumerOffsetsCard(props: ConsumerGroupCardProps) {
 			<VStack gap="space-12">
 				<ConsumerGroupField
 					groupId={groupIdField}
-					onGroupIdChange={setGroupIdField}
+					onGroupIdChange={handleGroupIdChange}
 					consumerGroups={props.consumerGroups}
 					consumerGroupsLoading={props.consumerGroupsLoading}
 					supportsConsumerGroupLookup={props.supportsConsumerGroupLookup}
@@ -245,7 +276,17 @@ function ConsumerOffsetsCard(props: ConsumerGroupCardProps) {
 							.map(offset => (
 								<Table.Row key={offset.topicPartition}>
 									<Table.HeaderCell scope="row">{offset.topicPartition}</Table.HeaderCell>
-									<Table.DataCell>{offset.offset}</Table.DataCell>
+									<Table.DataCell>
+										<span className="kafka-admin__offset-value">
+											{offset.offset}
+											{laggingPartitions.has(offset.topicPartition) && (
+												<ExclamationmarkTriangleIcon
+													className="kafka-admin__lag-indicator"
+													title="Consumer offset is behind the log end"
+												/>
+											)}
+										</span>
+									</Table.DataCell>
 								</Table.Row>
 							))}
 					</Table.Body>

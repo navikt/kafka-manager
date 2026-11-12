@@ -45,14 +45,24 @@ const lastRecordOffsets: TopicPartitionOffset[] = [
 
 const topicPartitionOffsets: TopicPartitionOffset[] = [
 	{
-		topicName: 'test-topic',
+		topicName: 'test-topic-a',
 		topicPartition: 0,
-		offset: 4567
+		offset: 1799
 	},
 	{
-		topicName: 'test-topic',
+		topicName: 'test-topic-a',
 		topicPartition: 1,
-		offset: 4570
+		offset: 1781
+	},
+	{
+		topicName: 'test-topic-a',
+		topicPartition: 2,
+		offset: 1725
+	},
+	{
+		topicName: 'test-topic-a',
+		topicPartition: 3,
+		offset: 1865
 	}
 ]
 
