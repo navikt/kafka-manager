@@ -20,7 +20,8 @@ import {
 	getConsumerOffsets,
 	GetConsumerOffsetsRequest,
 	getLastRecordOffset,
-	GetLastRecordOffsetRequest,
+	getLastRecordOffsets,
+	GetLastRecordOffsetsRequest,
 	KafkaRecord,
 	readFromTopic,
 	ReadFromTopicRequest,
@@ -231,7 +232,7 @@ function ConsumerOffsetsCard(props: ConsumerGroupCardProps) {
 				</Button>
 			</VStack>
 			{topicPartitionOffsets.length > 0 && (
-				<Table size="small">
+				<Table size="small" className="kafka-admin__offset-table">
 					<Table.Header>
 						<Table.Row>
 							<Table.HeaderCell scope="col">Partition</Table.HeaderCell>
@@ -255,49 +256,56 @@ function ConsumerOffsetsCard(props: ConsumerGroupCardProps) {
 }
 
 function LastRecordOffsetCard(props: { selectedTopic: string | null }) {
-	const [topicPartition, setTopicPartition] = useState('0')
-	const [lastRecordOffset, setLastRecordOffset] = useState<number | null>(null)
+	const [lastRecordOffsets, setLastRecordOffsets] = useState<TopicPartitionOffset[]>([])
 
-	function handleHentLastRecordOffset() {
+	useEffect(() => {
+		setLastRecordOffsets([])
+	}, [props.selectedTopic])
+
+	function handleFetchLastRecordOffsets() {
 		if (props.selectedTopic == null) {
 			errorToast('Please select a topic from the sidebar')
 			return
 		}
 
-		const request: GetLastRecordOffsetRequest = {
-			topicName: props.selectedTopic,
-			topicPartition: parseInt(topicPartition, 10)
-		}
+		const request: GetLastRecordOffsetsRequest = { topicName: props.selectedTopic }
 
-		getLastRecordOffset(request)
+		getLastRecordOffsets(request)
 			.then(res => {
-				setLastRecordOffset(res.data.latestRecordOffset)
+				setLastRecordOffsets(res.data)
 			})
 			.catch(() => errorToast('Klarte ikke å hente siste record offset'))
 	}
 
 	return (
-		<Card title="Last record offset" className="last-record-offset-card" innholdClassName="card__content">
-			<BodyShort spacing>
-				Henter offset til siste record(melding på kafka) som ligger på en topic+partisjon
-			</BodyShort>
+		<Card title="Last record offsets" className="last-record-offset-card" innholdClassName="card__content">
+			<BodyShort spacing>Henter offset for alle partisjoner i valgt topic</BodyShort>
 			<SelectedTopic selectedTopic={props.selectedTopic} />
 			<VStack gap="space-12">
-				<TextField
-					label="Topic partition (first partition starts at 0)"
-					type="number"
-					value={topicPartition}
-					onChange={e => setTopicPartition(e.target.value)}
-				/>
-				<Button onClick={handleHentLastRecordOffset} variant="tertiary" disabled={!props.selectedTopic}>
+				<Button onClick={handleFetchLastRecordOffsets} variant="tertiary" disabled={!props.selectedTopic}>
 					Fetch
 				</Button>
+				{lastRecordOffsets.length > 0 && (
+					<Table size="small" className="kafka-admin__offset-table">
+						<Table.Header>
+							<Table.Row>
+								<Table.HeaderCell scope="col">Partition</Table.HeaderCell>
+								<Table.HeaderCell scope="col">Offset</Table.HeaderCell>
+							</Table.Row>
+						</Table.Header>
+						<Table.Body>
+							{[...lastRecordOffsets]
+								.sort((a, b) => a.topicPartition - b.topicPartition)
+								.map(offset => (
+									<Table.Row key={offset.topicPartition}>
+										<Table.HeaderCell scope="row">{offset.topicPartition}</Table.HeaderCell>
+										<Table.DataCell>{offset.offset}</Table.DataCell>
+									</Table.Row>
+								))}
+						</Table.Body>
+					</Table>
+				)}
 			</VStack>
-			{lastRecordOffset != null ? (
-				<BodyShort style={{ marginTop: '2rem' }}>
-					Offset til siste record: <strong>{lastRecordOffset}</strong>
-				</BodyShort>
-			) : null}
 		</Card>
 	)
 }

@@ -45,6 +45,11 @@ class KafkaAdminController(
         @RequestBody request: GetLastRecordOffsetRequest,
     ): GetLastRecordOffsetResponse = GetLastRecordOffsetResponse(kafkaAdminService.getLastRecordOffset(request))
 
+    @PostMapping("/get-last-record-offsets")
+    fun getLastRecordOffsets(
+        @RequestBody request: GetLastRecordOffsetsRequest,
+    ): List<TopicWithOffset> = kafkaAdminService.getLastRecordOffsets(request)
+
     @PostMapping("/set-consumer-offset")
     fun setConsumerOffset(
         @RequestBody request: SetConsumerOffsetRequest,
@@ -95,6 +100,10 @@ class KafkaAdminController(
     data class GetLastRecordOffsetRequest(
         val topicName: String,
         val topicPartition: Int,
+    )
+
+    data class GetLastRecordOffsetsRequest(
+        val topicName: String,
     )
 
     data class GetLastRecordOffsetResponse(

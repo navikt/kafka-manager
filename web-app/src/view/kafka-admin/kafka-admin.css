@@ -69,6 +69,10 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.kafka-admin__offset-table {
+  width: 100%;
+  table-layout: fixed;
+}
 .read-from-topic-card__loader {
   display: flex;
   flex-direction: column;

@@ -36,12 +36,13 @@ class KafkaAdminService(
     private val appConfig: AppConfig,
     private val systemUserCredentialsSupplier: Supplier<Credentials>,
 ) {
-    fun getAvailableTopics(): List<AvailableTopic> = appConfig.topics.map { topic ->
-        AvailableTopic(
-            name = topic.name,
-            supportsRecordDeletion = topic.supportsRecordDeletion,
-        )
-    }
+    fun getAvailableTopics(): List<AvailableTopic> =
+        appConfig.topics.map { topic ->
+            AvailableTopic(
+                name = topic.name,
+                supportsRecordDeletion = topic.supportsRecordDeletion,
+            )
+        }
 
     fun getConsumerGroups(request: KafkaAdminController.GetConsumerGroupsRequest): List<String> {
         val adminClient = createKafkaAdminClientForTopic(request.topicName)
@@ -52,32 +53,35 @@ class KafkaAdminService(
             val consumerGroupIds = consumerGroups.map { it.groupId() }
 
             // For each consumer group, check if it has committed offsets for the topic
-            val groupsForTopic = consumerGroupIds.filter { groupId ->
-                try {
-                    val topicPartitions = admin
-                        .listConsumerGroupOffsets(groupId)
-                        .partitionsToOffsetAndMetadata()
-                        .get()
-                        .keys
-                        .map { it.topic() }
-                        .toSet()
+            val groupsForTopic =
+                consumerGroupIds.filter { groupId ->
+                    try {
+                        val topicPartitions =
+                            admin
+                                .listConsumerGroupOffsets(groupId)
+                                .partitionsToOffsetAndMetadata()
+                                .get()
+                                .keys
+                                .map { it.topic() }
+                                .toSet()
 
-                    topicPartitions.contains(request.topicName)
-                } catch (_: Exception) {
-                    // Skip groups that we can't describe (e.g., permission issues)
-                    false
+                        topicPartitions.contains(request.topicName)
+                    } catch (_: Exception) {
+                        // Skip groups that we can't describe (e.g., permission issues)
+                        false
+                    }
                 }
-            }
 
             return groupsForTopic.sorted()
         }
     }
 
     fun readTopic(request: KafkaAdminController.ReadTopicRequest): List<KafkaRecord> {
-        val kafkaConsumer = createKafkaConsumerForTopic(
-            consumerGroupId = null,
-            topicName = request.topicName
-        )
+        val kafkaConsumer =
+            createKafkaConsumerForTopic(
+                consumerGroupId = null,
+                topicName = request.topicName,
+            )
 
         val kafkaRecords = ArrayList<KafkaRecord>()
 
@@ -104,15 +108,17 @@ class KafkaAdminService(
                     break
                 }
 
-                val kafkaRecordsBatch = consumerRecords.records(request.topicName).map {
-                    val stringRecord = ConsumerRecordMapper.mapConsumerRecord(it)
-                    toKafkaRecordHeader(stringRecord)
-                }
+                val kafkaRecordsBatch =
+                    consumerRecords.records(request.topicName).map {
+                        val stringRecord = ConsumerRecordMapper.mapConsumerRecord(it)
+                        toKafkaRecordHeader(stringRecord)
+                    }
 
-                val filteredRecords = filterRecords(
-                    filter = request.filter,
-                    records = kafkaRecordsBatch
-                )
+                val filteredRecords =
+                    filterRecords(
+                        filter = request.filter,
+                        records = kafkaRecordsBatch,
+                    )
 
                 kafkaRecords.addAll(filteredRecords)
             }
@@ -133,17 +139,44 @@ class KafkaAdminService(
         }
     }
 
-    fun getConsumerOffsets(request: KafkaAdminController.GetConsumerOffsetsRequest): Map<TopicPartition, OffsetAndMetadata> {
-        val kafkaConsumer = createKafkaConsumerForTopic(
-            consumerGroupId = request.groupId,
-            topicName = request.topicName
-        )
+    fun getLastRecordOffsets(request: KafkaAdminController.GetLastRecordOffsetsRequest): List<KafkaAdminController.TopicWithOffset> {
+        val kafkaConsumer = createKafkaConsumerForTopic(null, request.topicName)
 
         kafkaConsumer.use { consumer ->
-            val topicPartitions = consumer
-                .partitionsFor(request.topicName)
-                .map { TopicPartition(it.topic(), it.partition()) }
-                .toSet()
+            val topicPartitions =
+                consumer.partitionsFor(request.topicName).map {
+                    TopicPartition(it.topic(), it.partition())
+                }
+
+            if (topicPartitions.isEmpty()) {
+                return emptyList()
+            }
+
+            return consumer
+                .endOffsets(topicPartitions)
+                .map { (topicPartition, offset) ->
+                    KafkaAdminController.TopicWithOffset(
+                        topicName = topicPartition.topic(),
+                        topicPartition = topicPartition.partition(),
+                        offset = offset,
+                    )
+                }.sortedBy { it.topicPartition }
+        }
+    }
+
+    fun getConsumerOffsets(request: KafkaAdminController.GetConsumerOffsetsRequest): Map<TopicPartition, OffsetAndMetadata> {
+        val kafkaConsumer =
+            createKafkaConsumerForTopic(
+                consumerGroupId = request.groupId,
+                topicName = request.topicName,
+            )
+
+        kafkaConsumer.use { consumer ->
+            val topicPartitions =
+                consumer
+                    .partitionsFor(request.topicName)
+                    .map { TopicPartition(it.topic(), it.partition()) }
+                    .toSet()
 
             val committed = consumer.committed(topicPartitions)
 
@@ -155,10 +188,11 @@ class KafkaAdminService(
 
     fun setConsumerOffset(request: KafkaAdminController.SetConsumerOffsetRequest) {
         val topicPartition = TopicPartition(request.topicName, request.topicPartition)
-        val kafkaConsumer = createKafkaConsumerForTopic(
-            consumerGroupId = request.groupId,
-            topicName = request.topicName
-        )
+        val kafkaConsumer =
+            createKafkaConsumerForTopic(
+                consumerGroupId = request.groupId,
+                topicName = request.topicName,
+            )
 
         kafkaConsumer.use { consumer ->
             consumer.assign(listOf(topicPartition))
@@ -225,22 +259,27 @@ class KafkaAdminService(
         val valueDesType = topicConfig.valueDeserializerType
         val isolationLevel = topicConfig.isolationLevel ?: DEFAULT_ISOLATION_LEVEL
 
-        val properties = when (topicConfig.location) {
-            TopicLocation.ON_PREM -> createOnPremConsumerProperties(
-                kafkaBrokerUrl = environmentProperties.onPremKafkaBrokersUrl,
-                credentials = systemUserCredentialsSupplier.get(),
-                schemaRegistryUrl = environmentProperties.onPremSchemaRegistryUrl,
-                keyDeserializerType = keyDesType,
-                valueDeserializerType = valueDesType,
-                isolationLevel = isolationLevel,
-            )
+        val properties =
+            when (topicConfig.location) {
+                TopicLocation.ON_PREM -> {
+                    createOnPremConsumerProperties(
+                        kafkaBrokerUrl = environmentProperties.onPremKafkaBrokersUrl,
+                        credentials = systemUserCredentialsSupplier.get(),
+                        schemaRegistryUrl = environmentProperties.onPremSchemaRegistryUrl,
+                        keyDeserializerType = keyDesType,
+                        valueDeserializerType = valueDesType,
+                        isolationLevel = isolationLevel,
+                    )
+                }
 
-            TopicLocation.AIVEN -> createAivenConsumerProperties(
-                keyDeserializerType = keyDesType,
-                valueDeserializerType = valueDesType,
-                isolationLevel = isolationLevel
-            )
-        }
+                TopicLocation.AIVEN -> {
+                    createAivenConsumerProperties(
+                        keyDeserializerType = keyDesType,
+                        valueDeserializerType = valueDesType,
+                        isolationLevel = isolationLevel,
+                    )
+                }
+            }
 
         if (consumerGroupId != null) {
             properties[ConsumerConfig.GROUP_ID_CONFIG] = consumerGroupId

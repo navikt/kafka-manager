@@ -28,6 +28,10 @@ export interface GetLastRecordOffsetRequest {
 	topicPartition: number
 }
 
+export interface GetLastRecordOffsetsRequest {
+	topicName: string
+}
+
 export interface SetConsumerOffsetRequest {
 	topicName: string
 	topicPartition: number
@@ -93,6 +97,12 @@ export function getLastRecordOffset(request: GetLastRecordOffsetRequest): AxiosP
 	return axiosInstance.post('/api/kafka/get-last-record-offset', {
 		topicName: request.topicName,
 		topicPartition: request.topicPartition
+	})
+}
+
+export function getLastRecordOffsets(request: GetLastRecordOffsetsRequest): AxiosPromise<TopicPartitionOffset[]> {
+	return axiosInstance.post('/api/kafka/get-last-record-offsets', {
+		topicName: request.topicName
 	})
 }
 

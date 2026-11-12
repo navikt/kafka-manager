@@ -36,6 +36,13 @@ const lastRecordOffsetResponse: LastRecordOffsetResponse = {
 	latestRecordOffset: 1234
 }
 
+const lastRecordOffsets: TopicPartitionOffset[] = [
+	{ topicName: 'test-topic-a', topicPartition: 0, offset: 1801 },
+	{ topicName: 'test-topic-a', topicPartition: 1, offset: 1781 },
+	{ topicName: 'test-topic-a', topicPartition: 2, offset: 1730 },
+	{ topicName: 'test-topic-a', topicPartition: 3, offset: 1865 }
+]
+
 const topicPartitionOffsets: TopicPartitionOffset[] = [
 	{
 		topicName: 'test-topic',
@@ -78,6 +85,10 @@ export const handlers: RequestHandler[] = [
 	http.post('/api/kafka/get-last-record-offset', async () => {
 		await delay(500)
 		return HttpResponse.json(lastRecordOffsetResponse)
+	}),
+	http.post('/api/kafka/get-last-record-offsets', async () => {
+		await delay(500)
+		return HttpResponse.json(lastRecordOffsets)
 	}),
 	http.post('/api/kafka/set-consumer-offset', async () => {
 		await delay(500)

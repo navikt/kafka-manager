@@ -89,4 +89,32 @@ class KafkaAdminControllerTest
 
             verify(exactly = 1) { kafkaAdminService.deleteRecords("on-prem-topic", 0, 42) }
         }
+
+        @Test
+        fun `get last record offsets returns offsets for all partitions`() {
+            val offsets =
+                listOf(
+                    KafkaAdminController.TopicWithOffset("aiven-topic", 0, 42),
+                    KafkaAdminController.TopicWithOffset("aiven-topic", 1, 84),
+                )
+            every {
+                kafkaAdminService.getLastRecordOffsets(KafkaAdminController.GetLastRecordOffsetsRequest("aiven-topic"))
+            } returns offsets
+
+            mockMvc
+                .perform(
+                    post("/api/kafka/get-last-record-offsets")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""{"topicName":"aiven-topic"}"""),
+                ).andExpect(status().isOk)
+                .andExpect(
+                    content().json(
+                        """[{"topicName":"aiven-topic","topicPartition":0,"offset":42},{"topicName":"aiven-topic","topicPartition":1,"offset":84}]""",
+                    ),
+                )
+
+            verify(exactly = 1) {
+                kafkaAdminService.getLastRecordOffsets(KafkaAdminController.GetLastRecordOffsetsRequest("aiven-topic"))
+            }
+        }
     }
