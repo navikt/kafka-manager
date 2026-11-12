@@ -51,9 +51,7 @@ export function KafkaAdmin() {
 
 	useEffect(() => {
 		getAvailableTopics()
-			.then(res => {
-				setAvailableTopics(res.data)
-			})
+			.then(topics => setAvailableTopics(topics))
 			.catch(() => {
 				errorToast('Unable to load available topics')
 				setAvailableTopics([])
@@ -72,9 +70,9 @@ export function KafkaAdmin() {
 		setConsumerGroups(null)
 		setLoadingConsumerGroupsTopic(topic.name)
 		getConsumerGroups({ topicName: topic.name })
-			.then(response => {
+			.then(groups => {
 				if (isCurrentRequest) {
-					setConsumerGroups({ topicName: topic.name, groups: response.data })
+					setConsumerGroups({ topicName: topic.name, groups })
 				}
 			})
 			.catch(() => {
@@ -219,16 +217,16 @@ function ConsumerOffsetsCard(props: ConsumerGroupCardProps) {
 
 		// Vi trenger både consumerens offset og topicens log-end offset for å finne lag.
 		Promise.all([getConsumerOffsets(request), getLastRecordOffsets(lastRecordOffsetsRequest)])
-			.then(([consumerOffsetsResponse, lastRecordOffsetsResponse]) => {
+			.then(([consumerOffsets, lastRecordOffsets]) => {
 				if (currentRequestId !== requestId.current) {
 					return
 				}
 
-				if (consumerOffsetsResponse.data.length === 0) {
+				if (consumerOffsets.length === 0) {
 					warningToast('Fant ingen offsets tilhørende konsumeren for topicen')
 				} else {
-					setTopicPartitionOffsets(consumerOffsetsResponse.data)
-					setLastRecordOffsets(lastRecordOffsetsResponse.data)
+					setTopicPartitionOffsets(consumerOffsets)
+					setLastRecordOffsets(lastRecordOffsets)
 				}
 			})
 			.catch(() => {
@@ -312,9 +310,7 @@ function LastRecordOffsetCard(props: { selectedTopic: string | null }) {
 		const request: GetLastRecordOffsetsRequest = { topicName: props.selectedTopic }
 
 		getLastRecordOffsets(request)
-			.then(res => {
-				setLastRecordOffsets(res.data)
-			})
+			.then(offsets => setLastRecordOffsets(offsets))
 			.catch(() => errorToast('Klarte ikke å hente siste record offset'))
 	}
 
@@ -455,7 +451,7 @@ function ReadFromTopicCard(props: { selectedTopic: string | null }) {
 		} else if (fetchFromField === 'END') {
 			try {
 				const lastRecordOffset = (await getLastRecordOffset({ topicName: props.selectedTopic, topicPartition }))
-					.data.latestRecordOffset
+					.latestRecordOffset
 
 				fetchFromOffset = lastRecordOffset - maxRecords
 			} catch {
@@ -478,11 +474,11 @@ function ReadFromTopicCard(props: { selectedTopic: string | null }) {
 		}
 
 		readFromTopic(request)
-			.then(res => {
-				if (res.data.length === 0) {
+			.then(records => {
+				if (records.length === 0) {
 					warningToast('Could not find any records in the topic+partition for the given offset')
 				} else {
-					setRecordsFromTopic(res.data)
+					setRecordsFromTopic(records)
 				}
 			})
 			.catch(() => errorToast('Klarte ikke å lese meldinger fra valgt topic'))
