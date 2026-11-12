@@ -3,6 +3,7 @@ import { errorToast, successToast, warningToast } from '../../utils/toast-utils'
 import { Card } from '../../component/card/card'
 import { BodyShort, Button, Label, Loader, Modal, TextField, ToggleGroup, UNSAFE_Combobox } from '@navikt/ds-react'
 import {
+	AvailableTopic,
 	getAvailableTopics,
 	getConsumerOffsets,
 	GetConsumerOffsetsRequest,
@@ -28,7 +29,7 @@ const KafkaRecordModalContent = lazy(() =>
 )
 
 export function KafkaAdmin() {
-	const [availableTopics, setAvailableTopics] = useState<string[] | null>(null)
+	const [availableTopics, setAvailableTopics] = useState<AvailableTopic[] | null>(null)
 	const [selectedTopic, setSelectedTopic] = useState<string | null>(null)
 
 	useEffect(() => {
@@ -46,14 +47,15 @@ export function KafkaAdmin() {
 		return <PageSpinner />
 	}
 
-	const sortedTopics = availableTopics.sort()
+	const sortedTopics = [...availableTopics].sort((a, b) => a.name.localeCompare(b.name))
+	const selectedTopicDetails = availableTopics.find(topic => topic.name === selectedTopic)
 
 	return (
 		<div className="view kafka-admin">
 			<div className="kafka-admin__topic-selector">
 				<UNSAFE_Combobox
 					label="Select Kafka Topic"
-					options={sortedTopics.map(topic => topic)}
+					options={sortedTopics.map(topic => topic.name)}
 					onToggleSelected={option => setSelectedTopic(option)}
 					selectedOptions={selectedTopic ? [selectedTopic] : []}
 					isMultiSelect={false}
@@ -68,7 +70,10 @@ export function KafkaAdmin() {
 				</div>
 				<div>
 					<ReadFromTopicCard selectedTopic={selectedTopic} />
-					<DeleteRecordsCard selectedTopic={selectedTopic} />
+					<DeleteRecordsCard
+						selectedTopic={selectedTopic}
+						supportsRecordDeletion={selectedTopicDetails?.supportsRecordDeletion ?? false}
+					/>
 				</div>
 			</div>
 		</div>

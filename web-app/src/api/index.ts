@@ -46,11 +46,16 @@ export interface TopicPartitionOffset {
 	offset: number
 }
 
+export interface AvailableTopic {
+	name: string
+	supportsRecordDeletion: boolean
+}
+
 export interface LastRecordOffsetResponse {
 	latestRecordOffset: number
 }
 
-export function getAvailableTopics(): AxiosPromise<string[]> {
+export function getAvailableTopics(): AxiosPromise<AvailableTopic[]> {
 	return axiosInstance.get('/api/kafka/available-topics')
 }
 
