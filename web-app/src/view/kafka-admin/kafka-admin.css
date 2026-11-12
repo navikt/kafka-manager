@@ -73,6 +73,15 @@
   width: 100%;
   table-layout: fixed;
 }
+.kafka-admin__offset-value {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ax-space-4);
+}
+.kafka-admin__lag-indicator {
+  color: var(--ax-text-warning-decoration);
+  font-size: 1.25rem;
+}
 .read-from-topic-card__loader {
   display: flex;
   flex-direction: column;

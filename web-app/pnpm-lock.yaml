@@ -172,6 +172,9 @@ importers:
       '@microlink/react-json-view':
         specifier: 1.31.47
         version: 1.31.47(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+      '@navikt/aksel-icons':
+        specifier: 8.22.1
+        version: 8.22.1
       '@navikt/ds-css':
         specifier: 8.22.1
         version: 8.22.1
