@@ -110,7 +110,11 @@ function ConsumerOffsetsCard(props: { selectedTopic: string | null }) {
 			</BodyShort>
 			<SelectedTopic selectedTopic={props.selectedTopic} />
 			<TextField label="Consumer group id" value={groupIdField} onChange={e => setGroupIdField(e.target.value)} />
-			<Button onClick={handleHentConsumerOffsets} variant="tertiary" disabled={!props.selectedTopic}>
+			<Button
+				onClick={handleHentConsumerOffsets}
+				variant="tertiary"
+				disabled={!props.selectedTopic || groupIdField.trim().length === 0}
+			>
 				Fetch
 			</Button>
 			{topicPartitionOffsets.length > 0 && (
@@ -220,7 +224,11 @@ function SetConsumerOffsetCard(props: { selectedTopic: string | null }) {
 				onChange={e => setOffsetField(e.target.value)}
 			/>
 
-			<Button onClick={handleSetConsumerOffset} variant="tertiary" disabled={!props.selectedTopic}>
+			<Button
+				onClick={handleSetConsumerOffset}
+				variant="tertiary"
+				disabled={!props.selectedTopic || groupIdField.trim().length === 0}
+			>
 				Set offset
 			</Button>
 		</Card>
