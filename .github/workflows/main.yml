@@ -40,12 +40,10 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
 
-      - name: Configure GitHub Packages authentication
-        run: printf '%s\n' '//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}' >> "$HOME/.npmrc"
+      - name: Allow pnpm install scripts
+        run: printf '%s\n' 'allow-scripts=pnpm' >> "$HOME/.npmrc"
 
       - run: ./gradlew :web-app:check
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.READER_TOKEN }}
 
   build-and-push:
     name: Build and push (main)
@@ -69,12 +67,11 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
 
-      - name: Configure GitHub Packages authentication
-        run: printf '%s\n' '//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}' >> "$HOME/.npmrc"
+      - name: Allow pnpm install scripts
+        run: printf '%s\n' 'allow-scripts=pnpm' >> "$HOME/.npmrc"
 
       - run: ./gradlew build
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.READER_TOKEN }}
           VITE_APP_VERSION: ${{ env.IMAGE_TAG }}
 
       - name: Build and push image
