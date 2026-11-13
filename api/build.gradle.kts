@@ -48,7 +48,6 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-logging")
     implementation("io.micrometer:micrometer-registry-prometheus")
     implementation("tools.jackson.module:jackson-module-kotlin")
-    implementation(kotlin("reflect"))
 
     // Kafka and Avro
     implementation("org.apache.avro:avro:1.12.2")
@@ -62,6 +61,8 @@ dependencies {
 
     // Tests
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.springframework.boot:spring-boot-restclient-test")
+    testImplementation("org.springframework.boot:spring-boot-resttestclient")
     testImplementation("org.springframework.boot:spring-boot-webmvc-test")
     testImplementation("com.ninja-squad:springmockk:5.0.1")
 }

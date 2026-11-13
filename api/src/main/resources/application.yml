@@ -10,7 +10,7 @@ spring:
             client-id: "${AZURE_APP_CLIENT_ID:}"
             client-secret: "${AZURE_APP_CLIENT_SECRET:}"
             authorization-grant-type: authorization_code
-            redirect-uri: "{baseUrl}/oauth2/callback"
+            redirect-uri: "{baseUrl}${app.oauth2.callback-path}"
             scope:
               - openid
               - profile
@@ -52,6 +52,8 @@ management:
         enabled: true
 
 app:
+  oauth2:
+    callback-path: /oauth2/callback
   env:
     app-config-json: "${APP_CONFIG_JSON:}"
     on-prem-kafka-brokers-url: "${ON_PREM_KAFKA_BROKERS_URL:}"
