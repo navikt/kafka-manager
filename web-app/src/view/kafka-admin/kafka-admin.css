@@ -35,13 +35,12 @@
   margin-bottom: 1rem;
 }
 
-/* Selected Topic Indicator */
 .no-topic-selected-indicator {
-    padding: 0.5rem 0.75rem;
-    background-color: var(--ax-bg-warning-soft);
-    border-left: 3px solid var(--ax-border-warning);
-    border-radius: 4px;
-    margin-bottom: 1rem;
+  padding: 0.5rem 0.75rem;
+  background-color: var(--ax-bg-warning-soft);
+  border-left: 3px solid var(--ax-border-warning);
+  border-radius: 4px;
+  margin-bottom: 1rem;
 }
 
 /* Toggle Group Layout */

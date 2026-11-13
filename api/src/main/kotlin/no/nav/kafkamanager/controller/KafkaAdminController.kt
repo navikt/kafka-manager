@@ -3,7 +3,7 @@ package no.nav.kafkamanager.controller
 import no.nav.kafkamanager.domain.AvailableTopic
 import no.nav.kafkamanager.domain.KafkaRecord
 import no.nav.kafkamanager.service.KafkaAdminService
-import no.nav.kafkamanager.utils.DTOMappers.toTopicWithOffset
+import no.nav.kafkamanager.utils.DtoMappers.toTopicWithOffset
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
@@ -32,13 +32,12 @@ class KafkaAdminController(
     @PostMapping("/get-consumer-offsets")
     fun getOffsets(
         @RequestBody request: GetConsumerOffsetsRequest,
-    ): List<TopicWithOffset> =
-        kafkaAdminService.getConsumerOffsets(request).entries.map {
-            toTopicWithOffset(
-                topicPartition = it.key,
-                offsetAndMetadata = it.value,
-            )
-        }
+    ): List<TopicWithOffset> = kafkaAdminService.getConsumerOffsets(request).entries.map {
+        toTopicWithOffset(
+            topicPartition = it.key,
+            offsetAndMetadata = it.value,
+        )
+    }
 
     @PostMapping("/get-last-record-offset")
     fun getLastRecordOffset(

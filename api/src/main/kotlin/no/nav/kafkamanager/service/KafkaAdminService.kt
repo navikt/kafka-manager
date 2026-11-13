@@ -1,6 +1,7 @@
 package no.nav.kafkamanager.service
 
 import no.nav.common.utils.Credentials
+import no.nav.common.utils.NaisUtils
 import no.nav.kafkamanager.config.EnvironmentProperties
 import no.nav.kafkamanager.controller.KafkaAdminController
 import no.nav.kafkamanager.domain.AppConfig
@@ -9,7 +10,7 @@ import no.nav.kafkamanager.domain.KafkaRecord
 import no.nav.kafkamanager.domain.TopicConfig
 import no.nav.kafkamanager.domain.TopicLocation
 import no.nav.kafkamanager.utils.ConsumerRecordMapper
-import no.nav.kafkamanager.utils.DTOMappers.toKafkaRecordHeader
+import no.nav.kafkamanager.utils.DtoMappers.toKafkaRecordHeader
 import no.nav.kafkamanager.utils.KafkaPropertiesFactory.createAivenAdminProperties
 import no.nav.kafkamanager.utils.KafkaPropertiesFactory.createAivenConsumerProperties
 import no.nav.kafkamanager.utils.KafkaPropertiesFactory.createOnPremConsumerProperties
@@ -27,22 +28,19 @@ import java.time.Duration
 import java.util.Collections.singleton
 import java.util.Locale
 import java.util.Properties
-import java.util.function.Supplier
 import kotlin.math.max
 
 @Service
 class KafkaAdminService(
     private val environmentProperties: EnvironmentProperties,
     private val appConfig: AppConfig,
-    private val systemUserCredentialsSupplier: Supplier<Credentials>,
 ) {
-    fun getAvailableTopics(): List<AvailableTopic> =
-        appConfig.topics.map { topic ->
-            AvailableTopic(
-                name = topic.name,
-                supportsRecordDeletion = topic.supportsRecordDeletion,
-            )
-        }
+    fun getAvailableTopics(): List<AvailableTopic> = appConfig.topics.map { topic ->
+        AvailableTopic(
+            name = topic.name,
+            supportsRecordDeletion = topic.supportsRecordDeletion,
+        )
+    }
 
     fun getConsumerGroups(request: KafkaAdminController.GetConsumerGroupsRequest): List<String> {
         val adminClient = createKafkaAdminClientForTopic(request.topicName)
@@ -90,6 +88,7 @@ class KafkaAdminService(
             } else {
                 listOf(TopicPartition(request.topicName, request.topicPartition))
             }
+
             val fromOffset = max(0, request.fromOffset)
             val maxRecords = request.maxRecords
 
@@ -237,9 +236,19 @@ class KafkaAdminService(
         return AdminClient.create(properties)
     }
 
-    private fun findTopicConfigOrThrow(topicName: String): TopicConfig =
-        appConfig.topics.find { it.name == topicName }
-            ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Could not find config for topic")
+    private fun findTopicConfigOrThrow(topicName: String): TopicConfig = appConfig.topics.find { it.name == topicName }
+        ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Could not find config for topic")
+
+    private fun systemUserCredentials(): Credentials = if (environmentProperties.serviceUserName.isNotBlank() &&
+        environmentProperties.serviceUserPassword.isNotBlank()
+    ) {
+        Credentials(
+            environmentProperties.serviceUserName,
+            environmentProperties.serviceUserPassword,
+        )
+    } else {
+        NaisUtils.getCredentials("service_user")
+    }
 
     private fun createPropertiesForTopic(
         consumerGroupId: String?,
@@ -253,7 +262,7 @@ class KafkaAdminService(
             TopicLocation.ON_PREM -> {
                 createOnPremConsumerProperties(
                     kafkaBrokerUrl = environmentProperties.onPremKafkaBrokersUrl,
-                    credentials = systemUserCredentialsSupplier.get(),
+                    credentials = systemUserCredentials(),
                     schemaRegistryUrl = environmentProperties.onPremSchemaRegistryUrl,
                     keyDeserializerType = keyDesType,
                     valueDeserializerType = valueDesType,
@@ -313,10 +322,9 @@ class KafkaAdminService(
             }
         }
 
-        private fun insensitiveText(str: String): String =
-            str
-                .lowercase(Locale.getDefault())
-                .replace(" ", "")
-                .replace("\n", "")
+        private fun insensitiveText(str: String): String = str
+            .lowercase(Locale.getDefault())
+            .replace(" ", "")
+            .replace("\n", "")
     }
 }

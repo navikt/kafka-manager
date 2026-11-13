@@ -43,11 +43,14 @@ object KafkaPropertiesFactory {
                 .withProp(KEY_DESERIALIZER_CLASS_CONFIG, findDeserializer(keyDeserializerType).name)
                 .withProp(VALUE_DESERIALIZER_CLASS_CONFIG, findDeserializer(valueDeserializerType).name)
 
-        if (schemaRegistryUrl != null) {
-            if (schemaRegistryUrl.isNotBlank()) {
-                builder.withProp(KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG, schemaRegistryUrl)
+        schemaRegistryUrl
+            ?.takeIf { it.isNotBlank() }
+            ?.let {
+                builder.withProp(
+                    KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG,
+                    it,
+                )
             }
-        }
 
         return builder.build()
     }
@@ -80,26 +83,24 @@ object KafkaPropertiesFactory {
         keyDeserializerType: DeserializerType,
         valueDeserializerType: DeserializerType,
         isolationLevel: String,
-    ): Properties =
-        KafkaPropertiesBuilder
-            .consumerBuilder()
-            .withBaseProperties()
-            .withAivenBrokerUrl()
-            .withAivenAuth()
-            .withProp(ISOLATION_LEVEL_CONFIG, isolationLevel)
-            .withProp(KEY_DESERIALIZER_CLASS_CONFIG, findDeserializer(keyDeserializerType).name)
-            .withProp(VALUE_DESERIALIZER_CLASS_CONFIG, findDeserializer(valueDeserializerType).name)
-            .build()
+    ): Properties = KafkaPropertiesBuilder
+        .consumerBuilder()
+        .withBaseProperties()
+        .withAivenBrokerUrl()
+        .withAivenAuth()
+        .withProp(ISOLATION_LEVEL_CONFIG, isolationLevel)
+        .withProp(KEY_DESERIALIZER_CLASS_CONFIG, findDeserializer(keyDeserializerType).name)
+        .withProp(VALUE_DESERIALIZER_CLASS_CONFIG, findDeserializer(valueDeserializerType).name)
+        .build()
 
-    private fun findDeserializer(deserializerType: DeserializerType): Class<*> =
-        when (deserializerType) {
-            DeserializerType.STRING -> StringDeserializer::class.java
-            DeserializerType.DOUBLE -> DoubleDeserializer::class.java
-            DeserializerType.FLOAT -> FloatDeserializer::class.java
-            DeserializerType.INTEGER -> IntegerDeserializer::class.java
-            DeserializerType.LONG -> LongDeserializer::class.java
-            DeserializerType.SHORT -> ShortDeserializer::class.java
-            DeserializerType.UUID -> UUIDDeserializer::class.java
-            DeserializerType.AVRO -> KafkaAvroDeserializer::class.java
-        }
+    private fun findDeserializer(deserializerType: DeserializerType): Class<*> = when (deserializerType) {
+        DeserializerType.STRING -> StringDeserializer::class.java
+        DeserializerType.DOUBLE -> DoubleDeserializer::class.java
+        DeserializerType.FLOAT -> FloatDeserializer::class.java
+        DeserializerType.INTEGER -> IntegerDeserializer::class.java
+        DeserializerType.LONG -> LongDeserializer::class.java
+        DeserializerType.SHORT -> ShortDeserializer::class.java
+        DeserializerType.UUID -> UUIDDeserializer::class.java
+        DeserializerType.AVRO -> KafkaAvroDeserializer::class.java
+    }
 }

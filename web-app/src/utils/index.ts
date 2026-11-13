@@ -1,5 +1,3 @@
-export const NO_OP = () => {}
-
 export const isJson = (maybeJson: string): boolean => {
 	try {
 		JSON.parse(maybeJson)
