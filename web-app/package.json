@@ -19,7 +19,7 @@
 		"not op_mini all"
 	],
 	"dependencies": {
-		"@microlink/react-json-view": "1.31.47",
+		"@microlink/react-json-view": "1.31.48",
 		"@navikt/aksel-icons": "8.22.1",
 		"@navikt/ds-css": "8.22.1",
 		"@navikt/ds-react": "8.22.1",
@@ -38,7 +38,7 @@
 		"eslint": "10.14.0",
 		"eslint-config-prettier": "10.1.8",
 		"globals": "17.14.0",
-		"msw": "^3.0.3",
+		"msw": "^3.0.4",
 		"prettier": "3.9.10",
 		"typescript": "6.0.3",
 		"typescript-eslint": "8.72.1",
