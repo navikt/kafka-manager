@@ -1,4 +1,4 @@
-package no.nav.kafkamanager.utils
+package no.nav.kafkamanager.service
 
 import io.confluent.kafka.serializers.KafkaAvroDeserializer
 import io.confluent.kafka.serializers.KafkaAvroSerializerConfig
@@ -7,7 +7,6 @@ import no.nav.common.kafka.util.KafkaEnvironmentVariables.KAFKA_SCHEMA_REGISTRY_
 import no.nav.common.kafka.util.KafkaEnvironmentVariables.KAFKA_SCHEMA_REGISTRY_USER
 import no.nav.common.kafka.util.KafkaPropertiesBuilder
 import no.nav.common.utils.Credentials
-import no.nav.common.utils.EnvironmentUtils.getRequiredProperty
 import no.nav.kafkamanager.controller.KafkaAdminController
 import no.nav.kafkamanager.domain.DeserializerType
 import org.apache.kafka.clients.consumer.ConsumerConfig.ISOLATION_LEVEL_CONFIG
@@ -21,9 +20,14 @@ import org.apache.kafka.common.serialization.LongDeserializer
 import org.apache.kafka.common.serialization.ShortDeserializer
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.apache.kafka.common.serialization.UUIDDeserializer
+import org.springframework.core.env.Environment
+import org.springframework.stereotype.Component
 import java.util.Properties
 
-object KafkaPropertiesFactory {
+@Component
+class KafkaPropertiesFactory(
+    private val environment: Environment,
+) {
     fun createOnPremConsumerProperties(
         kafkaBrokerUrl: String,
         credentials: Credentials,
@@ -32,16 +36,15 @@ object KafkaPropertiesFactory {
         valueDeserializerType: DeserializerType,
         isolationLevel: String,
     ): Properties {
-        val builder =
-            KafkaPropertiesBuilder
-                .consumerBuilder()
-                .withBaseProperties()
-                .withProp(ISOLATION_LEVEL_CONFIG, isolationLevel)
-                .withProp(MAX_POLL_RECORDS_CONFIG, KafkaAdminController.MAX_KAFKA_RECORDS)
-                .withBrokerUrl(kafkaBrokerUrl)
-                .withOnPremAuth(credentials.username, credentials.password)
-                .withProp(KEY_DESERIALIZER_CLASS_CONFIG, findDeserializer(keyDeserializerType).name)
-                .withProp(VALUE_DESERIALIZER_CLASS_CONFIG, findDeserializer(valueDeserializerType).name)
+        val builder = KafkaPropertiesBuilder
+            .consumerBuilder()
+            .withBaseProperties()
+            .withProp(ISOLATION_LEVEL_CONFIG, isolationLevel)
+            .withProp(MAX_POLL_RECORDS_CONFIG, KafkaAdminController.MAX_KAFKA_RECORDS)
+            .withBrokerUrl(kafkaBrokerUrl)
+            .withOnPremAuth(credentials.username, credentials.password)
+            .withProp(KEY_DESERIALIZER_CLASS_CONFIG, findDeserializer(keyDeserializerType).name)
+            .withProp(VALUE_DESERIALIZER_CLASS_CONFIG, findDeserializer(valueDeserializerType).name)
 
         schemaRegistryUrl
             ?.takeIf { it.isNotBlank() }
@@ -60,9 +63,9 @@ object KafkaPropertiesFactory {
         valueDeserializerType: DeserializerType,
         isolationLevel: String,
     ): Properties {
-        val schemaRegistryUrl = getRequiredProperty(KAFKA_SCHEMA_REGISTRY)
-        val schemaRegistryUsername = getRequiredProperty(KAFKA_SCHEMA_REGISTRY_USER)
-        val schemaRegistryPassword = getRequiredProperty(KAFKA_SCHEMA_REGISTRY_PASSWORD)
+        val schemaRegistryUrl = environment.getRequiredProperty(KAFKA_SCHEMA_REGISTRY)
+        val schemaRegistryUsername = environment.getRequiredProperty(KAFKA_SCHEMA_REGISTRY_USER)
+        val schemaRegistryPassword = environment.getRequiredProperty(KAFKA_SCHEMA_REGISTRY_PASSWORD)
 
         return KafkaPropertiesBuilder
             .consumerBuilder()

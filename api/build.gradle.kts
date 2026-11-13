@@ -38,7 +38,6 @@ dependencyManagement {
 
 dependencies {
     // Spring Boot and Kotlin
-    implementation("org.springframework.boot:spring-boot-starter")
     implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-web") {
