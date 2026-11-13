@@ -6,33 +6,32 @@ import org.apache.kafka.clients.consumer.ConsumerRecord
 import java.util.UUID
 
 object ConsumerRecordMapper {
-    fun mapConsumerRecord(consumerRecord: ConsumerRecord<Any?, Any?>): ConsumerRecord<String, String> =
-        ConsumerRecord(
-            consumerRecord.topic(),
-            consumerRecord.partition(),
-            consumerRecord.offset(),
-            consumerRecord.timestamp(),
-            consumerRecord.timestampType(),
-            consumerRecord.serializedKeySize(),
-            consumerRecord.serializedValueSize(),
-            convertToString(consumerRecord.key()),
-            convertToString(consumerRecord.value()),
-            consumerRecord.headers(),
-            null,
-        )
+    fun mapConsumerRecord(consumerRecord: ConsumerRecord<Any?, Any?>): ConsumerRecord<String?, String?> = ConsumerRecord(
+        consumerRecord.topic(),
+        consumerRecord.partition(),
+        consumerRecord.offset(),
+        consumerRecord.timestamp(),
+        consumerRecord.timestampType(),
+        consumerRecord.serializedKeySize(),
+        consumerRecord.serializedValueSize(),
+        convertToString(consumerRecord.key()),
+        convertToString(consumerRecord.value()),
+        consumerRecord.headers(),
+        null,
+    )
 
-    private fun convertToString(keyOrValue: Any?): String =
-        when (keyOrValue) {
-            is String -> keyOrValue
-            is Double -> keyOrValue.toString()
-            is Float -> keyOrValue.toString()
-            is Int -> keyOrValue.toString()
-            is Long -> keyOrValue.toString()
-            is Short -> keyOrValue.toString()
-            is UUID -> keyOrValue.toString()
-            is GenericRecord -> JsonUtils.toJson(getRecordKeyValues(keyOrValue))
-            else -> keyOrValue.toString()
-        }
+    private fun convertToString(keyOrValue: Any?): String? = when (keyOrValue) {
+        null -> null
+        is String -> keyOrValue
+        is Double -> keyOrValue.toString()
+        is Float -> keyOrValue.toString()
+        is Int -> keyOrValue.toString()
+        is Long -> keyOrValue.toString()
+        is Short -> keyOrValue.toString()
+        is UUID -> keyOrValue.toString()
+        is GenericRecord -> JsonUtils.toJson(getRecordKeyValues(keyOrValue))
+        else -> keyOrValue.toString()
+    }
 
     private fun getRecordKeyValues(genericRecord: GenericRecord): Map<String, String> =
         genericRecord.schema.fields.fold(emptyMap()) { m, field ->

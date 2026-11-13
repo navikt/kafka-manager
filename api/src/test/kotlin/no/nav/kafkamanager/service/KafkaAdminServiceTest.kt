@@ -1,6 +1,5 @@
 package no.nav.kafkamanager.service
 
-import no.nav.common.utils.Credentials
 import no.nav.kafkamanager.config.EnvironmentProperties
 import no.nav.kafkamanager.controller.KafkaAdminController
 import no.nav.kafkamanager.domain.AppConfig
@@ -125,7 +124,7 @@ class KafkaAdminServiceTest {
                             ),
                         ),
                 ),
-            ) { Credentials("", "") }
+            )
 
         val records =
             listOf(
