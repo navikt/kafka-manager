@@ -1,7 +1,7 @@
 package no.nav.kafkamanager.security
 
-import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Bean
 import org.springframework.security.oauth2.client.registration.ClientRegistration
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository
@@ -18,7 +18,7 @@ class OAuthTestClientConfiguration {
      */
     @Bean
     fun clientRegistrationRepository(
-        @Value("\${app.oauth2.callback-path}") callbackPath: String,
+        @Value($$"${app.oauth2.callback-path}") callbackPath: String,
     ): ClientRegistrationRepository {
         val registration = ClientRegistration
             .withRegistrationId("azure")
