@@ -34,10 +34,6 @@ class SecurityConfig(
             // OAuth2-filtrene håndterer innlogging og callback før AuthorizationFilter.
             oauth2Login {
                 redirectionEndpoint { baseUri = oauth2CallbackPath }
-                defaultSuccessUrl(
-                    defaultSuccessUrl = "/index.html",
-                    alwaysUse = false, // default-verdi i org.springframework.security.config.annotation.web.configurers#defaultSuccessUrl
-                )
             }
             // Innloggingsrutene trenger derfor ikke egne permitAll-regler.
             authorizeHttpRequests {
