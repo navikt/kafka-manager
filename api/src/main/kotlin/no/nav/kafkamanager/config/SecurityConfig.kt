@@ -37,7 +37,7 @@ class SecurityConfig(
             }
             // Innloggingsrutene trenger derfor ikke egne permitAll-regler.
             authorizeHttpRequests {
-                // Bevarer opprinnelig feilrespons når et internt kall uten bearer-token redispatches til /error.
+                // Tillater interne ERROR-dispatcher, slik at tilgangskontrollen ikke erstatter feilresponsen.
                 authorize(DispatcherTypeRequestMatcher(DispatcherType.ERROR), permitAll)
                 authorize(
                     EndpointRequest.to(
