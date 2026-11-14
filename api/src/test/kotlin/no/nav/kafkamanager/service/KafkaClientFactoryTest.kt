@@ -26,8 +26,8 @@ class KafkaClientFactoryTest {
     /** Tester opprettelse av consumer-klienter for konfigurerte Kafka-topics. */
     @Nested
     inner class ConsumerCreation {
-    @Test
-    fun `Oppretter consumer for et tillatt on-prem Kafka-topic og bruker oppgitt gruppe-ID`() {
+        @Test
+        fun `Oppretter consumer for et tillatt on-prem Kafka-topic og bruker oppgitt gruppe-ID`() {
             // Arrange
             var receivedCredentials: Credentials? = null
             var receivedProperties: Properties? = null
@@ -103,8 +103,8 @@ class KafkaClientFactoryTest {
     /** Tester opprettelse og tilgangskontroll for administrasjonsklienter. */
     @Nested
     inner class AdminClientCreation {
-    @Test
-    fun `Oppretter administrasjonsklient for et tillatt Kafka-topic med støtte for sletting`() {
+        @Test
+        fun `Oppretter administrasjonsklient for et tillatt Kafka-topic med støtte for sletting`() {
             // Arrange
             val propertiesFactory = object : KafkaPropertiesFactory(StandardEnvironment()) {
                 override fun createAivenAdminProperties(
@@ -160,8 +160,8 @@ class KafkaClientFactoryTest {
     /** Tester reglene for legitimasjon til on-prem consumers. */
     @Nested
     inner class OnPremCredentials {
-    @Test
-    fun `Bruker begge miljøverdiene når de er satt uten å kalle reserveoppslaget`() {
+        @Test
+        fun `Bruker begge miljøverdiene når de er satt uten å kalle reserveoppslaget`() {
             // Arrange
             var fallbackCalled = false
 

@@ -24,8 +24,8 @@ class KafkaRecordReaderServiceTest {
     /** Tester leseløpet og livssyklusen til consumeren. */
     @Nested
     inner class TopicReading {
-    @Test
-    fun `Leser valgt partisjon fra ikke-negativ offset og begrenser antall poster`() {
+        @Test
+        fun `Leser valgt partisjon fra ikke-negativ offset og begrenser antall poster`() {
             // Arrange
             val consumer = mockk<KafkaConsumer<Any?, Any?>>(relaxed = true)
             val factory = mockk<KafkaClientFactory>()
@@ -197,8 +197,8 @@ class KafkaRecordReaderServiceTest {
     /** Tester tekstmatching på nøkkel og verdi. */
     @Nested
     inner class RecordFiltering {
-    @Test
-    fun `Matcher filtertekst i nøkkel uten å skille mellom store bokstaver og mellomrom`() {
+        @Test
+        fun `Matcher filtertekst i nøkkel uten å skille mellom store bokstaver og mellomrom`() {
             // Arrange
             val records = sampleRecords
 
