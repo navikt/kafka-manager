@@ -122,7 +122,7 @@ class KafkaConsumerGroupServiceTest {
             )
             val existingPartition = TopicPartition("events", 0)
             val missingPartition = TopicPartition("events", 1)
-            val committed = mutableMapOf<TopicPartition, OffsetAndMetadata?>(
+            val committed = mutableMapOf(
                 existingPartition to OffsetAndMetadata(17),
                 missingPartition to null,
             )

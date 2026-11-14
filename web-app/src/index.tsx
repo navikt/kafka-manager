@@ -2,10 +2,13 @@ import { createRoot } from 'react-dom/client'
 import App from './app'
 import dayjs from 'dayjs'
 import 'dayjs/locale/nb'
+import { initializeMockCsrfCookie } from './mock/csrf'
 
 dayjs.locale('nb')
 
 if (import.meta.env.DEV) {
+	initializeMockCsrfCookie()
+
 	// Siden registrering av MSW service-workers er en asynkron operasjon
 	// kan det oppstå en race-condition der applikasjonen klarer å sende
 	// avgårde requester før MSW er klar til å håndtere de.
