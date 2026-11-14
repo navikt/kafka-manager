@@ -4,7 +4,9 @@ updates:
   - package-ecosystem: "npm"
     directory: "/web-app"
     schedule:
-      interval: "weekly"
+      interval: "daily"
+      time: "03:00"
+      timezone: "Europe/Oslo"
     cooldown:
       default-days: 7
     open-pull-requests-limit: 10
@@ -12,29 +14,47 @@ updates:
       - dependency-name: "typescript"
         update-types: ["version-update:semver-major"]
     groups:
-      major:
+      major-updates:
         update-types:
-          - 'major'
-      minor-and-patch:
-        update-types:
-          - 'patch'
-          - 'minor'
+          - "major"
+      nav-dependencies:
+        patterns:
+          - "@navikt/*"
+          - "@nais/*"
+      development-dependencies:
+        dependency-type: "development"
+      production-dependencies:
+        dependency-type: "production"
 
   - package-ecosystem: "gradle"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "daily"
+      time: "03:00"
+      timezone: "Europe/Oslo"
     open-pull-requests-limit: 10
     cooldown:
       default-days: 7
+    groups:
+      major-updates:
+        update-types:
+          - "major"
+      nav-dependencies:
+        patterns:
+          - "no.nav*"
+      other-dependencies:
+        patterns:
+          - "*"
 
   - package-ecosystem: "github-actions"
-    directory: ".github/workflows"
+    directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "daily"
+      time: "03:00"
+      timezone: "Europe/Oslo"
     cooldown:
       default-days: 7
     groups:
       workflow-updates:
         patterns:
-          - '*'
+          - "*"
