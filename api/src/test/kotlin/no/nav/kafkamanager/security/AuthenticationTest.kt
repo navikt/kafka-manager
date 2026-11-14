@@ -7,6 +7,8 @@ import no.nav.kafkamanager.service.KafkaConsumerGroupService
 import no.nav.kafkamanager.service.KafkaRecordReaderService
 import no.nav.kafkamanager.service.KafkaTopicOperationsService
 import org.hamcrest.Matchers.startsWith
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
@@ -58,7 +60,18 @@ class AuthenticationTest
             path: String,
         ) {
             // Arrange
-            val securedRequest = request(HttpMethod.valueOf(method), path)
+            val csrfCookie = if (method.equals(HttpMethod.POST.name(), ignoreCase = true)) {
+                getCsrfCookie()
+            } else {
+                null
+            }
+
+            val securedRequest = request(HttpMethod.valueOf(method), path).apply {
+                csrfCookie?.let {
+                    cookie(it)
+                    header("X-XSRF-TOKEN", it.value)
+                }
+            }
 
             // Act
             val result = mockMvc.perform(securedRequest)
@@ -67,6 +80,25 @@ class AuthenticationTest
             result
                 .andExpect(status().is3xxRedirection)
                 .andExpect(redirectedUrl("/oauth2/authorization/azure"))
+        }
+
+        @ParameterizedTest(name = "Avviser {0} uten CSRF-token")
+        @CsvSource(
+            "/api/kafka/set-consumer-offset",
+            "/api/kafka/delete-records",
+        )
+        fun `Avviser POST-kall uten CSRF-token`(path: String) {
+            mockMvc
+                .perform(request(HttpMethod.POST, path))
+                .andExpect(status().isForbidden)
+        }
+
+        @Test
+        fun `Eksponerer CSRF-cookie som frontend kan lese`() {
+            val csrfCookie = getCsrfCookie()
+
+            assertFalse(csrfCookie.isHttpOnly)
+            assertTrue(csrfCookie.value.isNotBlank())
         }
 
         @Test
@@ -82,4 +114,12 @@ class AuthenticationTest
                 .andExpect(status().is3xxRedirection)
                 .andExpect(header().string("Location", startsWith("https://idp.invalid/authorize")))
         }
+
+        private fun getCsrfCookie() = requireNotNull(
+            mockMvc
+                .perform(get("/api/kafka/available-topics"))
+                .andReturn()
+                .response
+                .getCookie("XSRF-TOKEN"),
+        )
     }

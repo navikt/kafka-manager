@@ -1,10 +1,30 @@
+const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS', 'TRACE'])
+
+function getCookieValue(name: string): string | undefined {
+	const prefix = `${name}=`
+	const cookie = document.cookie
+		.split(';')
+		.map((part) => part.trim())
+		.find((part) => part.startsWith(prefix))
+
+	return cookie ? decodeURIComponent(cookie.slice(prefix.length)) : undefined
+}
+
 async function fetchApi(url: string, options: RequestInit = {}): Promise<Response> {
 	const headers = new Headers(options.headers)
 	headers.set('Nav-Consumer-Id', 'kafka-manager')
+	const method = (options.method ?? 'GET').toUpperCase()
+
+	if (!SAFE_METHODS.has(method)) {
+		const csrfToken = getCookieValue('XSRF-TOKEN')
+		if (!csrfToken) {
+			throw new Error('CSRF token cookie is missing')
+		}
+		headers.set('X-XSRF-TOKEN', csrfToken)
+	}
 
 	const response = await fetch(url, {
 		...options,
-		// Behold cookie-autentiseringa som Axios withCredentials ga.
 		credentials: 'include',
 		headers
 	})

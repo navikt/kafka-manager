@@ -29,8 +29,8 @@ class SecurityConfig(
      */
     @Bean
     fun filterChain(http: HttpSecurity): SecurityFilterChain {
+        http.csrf { csrf -> csrf.spa() }
         http {
-            csrf { disable() }
             // OAuth2-filtrene håndterer innlogging og callback før AuthorizationFilter.
             oauth2Login {
                 redirectionEndpoint { baseUri = oauth2CallbackPath }
