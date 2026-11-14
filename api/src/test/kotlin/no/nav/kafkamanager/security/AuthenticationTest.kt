@@ -1,6 +1,9 @@
 package no.nav.kafkamanager.security
 
 import com.ninjasquad.springmockk.MockkBean
+import io.mockk.justRun
+import io.mockk.verify
+import jakarta.servlet.http.Cookie
 import no.nav.kafkamanager.config.SecurityConfig
 import no.nav.kafkamanager.controller.KafkaAdminController
 import no.nav.kafkamanager.service.KafkaConsumerGroupService
@@ -16,8 +19,15 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest
 import org.springframework.context.annotation.Import
 import org.springframework.http.HttpMethod
+import org.springframework.http.MediaType
+import org.springframework.mock.web.MockHttpSession
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
+import org.springframework.security.core.authority.SimpleGrantedAuthority
+import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.request
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.header
@@ -94,6 +104,41 @@ class AuthenticationTest
         }
 
         @Test
+        fun `Godtar offset-endring med gyldig CSRF-cookie og header`() {
+            val csrfCookie = getCsrfCookie()
+            val offsetRequest = KafkaAdminController.SetConsumerOffsetRequest("test-group", "test-topic", 0, 42)
+            justRun { kafkaConsumerGroupService.setConsumerOffset(offsetRequest) }
+
+            mockMvc
+                .perform(setOffsetRequest(csrfCookie, csrfCookie.value))
+                .andExpect(status().isOk)
+
+            verify(exactly = 1) { kafkaConsumerGroupService.setConsumerOffset(offsetRequest) }
+        }
+
+        @Test
+        fun `Avviser autentisert offset-endring uten CSRF-header`() {
+            val csrfCookie = getCsrfCookie()
+
+            mockMvc
+                .perform(setOffsetRequest(csrfCookie, null))
+                .andExpect(status().isForbidden)
+
+            verify(exactly = 0) { kafkaConsumerGroupService.setConsumerOffset(any()) }
+        }
+
+        @Test
+        fun `Avviser autentisert offset-endring med feil CSRF-header`() {
+            val csrfCookie = getCsrfCookie()
+
+            mockMvc
+                .perform(setOffsetRequest(csrfCookie, "not-the-cookie-token"))
+                .andExpect(status().isForbidden)
+
+            verify(exactly = 0) { kafkaConsumerGroupService.setConsumerOffset(any()) }
+        }
+
+        @Test
         fun `Eksponerer CSRF-cookie som frontend kan lese`() {
             val csrfCookie = getCsrfCookie()
 
@@ -115,11 +160,34 @@ class AuthenticationTest
                 .andExpect(header().string("Location", startsWith("https://idp.invalid/authorize")))
         }
 
-        private fun getCsrfCookie() = requireNotNull(
+        private fun getCsrfCookie(): Cookie = requireNotNull(
             mockMvc
                 .perform(get("/api/kafka/available-topics"))
                 .andReturn()
                 .response
                 .getCookie("XSRF-TOKEN"),
         )
+
+        private fun setOffsetRequest(
+            csrfCookie: Cookie,
+            csrfHeader: String?,
+        ): MockHttpServletRequestBuilder = request(HttpMethod.POST, "/api/kafka/set-consumer-offset")
+            .session(authenticatedSession())
+            .cookie(csrfCookie)
+            .apply {
+                csrfHeader?.let { header("X-XSRF-TOKEN", it) }
+            }.contentType(MediaType.APPLICATION_JSON)
+            .content("""{"groupId":"test-group","topicName":"test-topic","topicPartition":0,"offset":42}""")
+
+        private fun authenticatedSession(): MockHttpSession {
+            val securityContext = SecurityContextHolder.createEmptyContext()
+            securityContext.authentication = UsernamePasswordAuthenticationToken(
+                "test-user",
+                "test-credentials",
+                listOf(SimpleGrantedAuthority("ROLE_USER")),
+            )
+            return MockHttpSession().apply {
+                setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, securityContext)
+            }
+        }
     }
