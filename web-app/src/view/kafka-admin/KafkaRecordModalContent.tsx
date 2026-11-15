@@ -5,7 +5,7 @@ import {toTimestamp} from '../../utils/date-utils'
 import ReactJson from '@microlink/react-json-view'
 import {KafkaRecord} from '../../api'
 
-export function KafkaRecordModalContent(props: { record: KafkaRecord | null }) {
+export const KafkaRecordModalContent = (props: { record: KafkaRecord | null }) => {
     if (props.record == null) {
         return null
     }

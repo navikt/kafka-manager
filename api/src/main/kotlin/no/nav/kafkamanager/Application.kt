@@ -16,7 +16,7 @@ class Application {
         @Value($$"${app.version:unknown}") appVersion: String,
     ) = ApplicationRunner {
         logger.info(
-            "Starting kafka-manager version={}",
+            "Started kafka-manager version {}",
             appVersion,
         )
     }
