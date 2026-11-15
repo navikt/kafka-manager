@@ -80,6 +80,8 @@ jobs:
         with:
           team: poao
           tag: ${{ env.IMAGE_TAG }}
+          build_args: |
+            APP_VERSION=${{ env.IMAGE_TAG }}
 
       - name: Tag image as latest
         env:

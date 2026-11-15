@@ -38,6 +38,8 @@ jobs:
           tag: ${{ env.IMAGE_TAG }}
           team: poao
           image_suffix: 'temp'
+          build_args: |
+            APP_VERSION=${{ env.IMAGE_TAG }}
 
 
       - name: Create release
