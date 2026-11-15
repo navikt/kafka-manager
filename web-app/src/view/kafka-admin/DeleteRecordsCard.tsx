@@ -6,13 +6,13 @@ import { SelectedTopic } from './SelectedTopic'
 import { Card } from '../../component/card/card'
 import { parseNonNegativeSafeInteger } from '../../utils'
 
-export function DeleteRecordsCard(props: { selectedTopic: string | null; supportsRecordDeletion: boolean }) {
+export const DeleteRecordsCard = (props: { selectedTopic: string | null; supportsRecordDeletion: boolean }) => {
 	const [partitionField, setPartitionField] = useState('0')
 	const [offsetField, setOffsetField] = useState('0')
 	const [isLoading, setIsLoading] = useState(false)
 	const [showConfirm, setShowConfirm] = useState(false)
 
-	function handleDeleteRecords() {
+	const handleDeleteRecords = () => {
 		if (props.selectedTopic == null) {
 			errorToast('Please select a topic from the sidebar')
 			return
@@ -38,16 +38,16 @@ export function DeleteRecordsCard(props: { selectedTopic: string | null; support
 			.finally(() => setIsLoading(false))
 	}
 
-	function handleDeleteClick() {
+	const handleDeleteClick = () => {
 		setShowConfirm(true)
 	}
 
-	function handleConfirm() {
+	const handleConfirm = () => {
 		setShowConfirm(false)
 		handleDeleteRecords()
 	}
 
-	function handleCancel() {
+	const handleCancel = () => {
 		setShowConfirm(false)
 	}
 
