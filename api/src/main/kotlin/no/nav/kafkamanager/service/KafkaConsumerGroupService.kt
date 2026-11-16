@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service
 @Service
 class KafkaConsumerGroupService(
     private val kafkaClientFactory: KafkaClientFactory,
+    private val kafkaConsumerGroupCache: KafkaConsumerGroupCache,
 ) {
     /**
      * Henter sorterte ID-er for consumer-grupper som har committed offsets for Kafka-topicet.
@@ -28,8 +29,7 @@ class KafkaConsumerGroupService(
         val adminClient = kafkaClientFactory.createKafkaAdminClientForTopic(request.topicName)
 
         adminClient.use { admin ->
-            val consumerGroups = admin.listGroups().all().get()
-            val consumerGroupIds = consumerGroups.map { it.groupId() }
+            val consumerGroupIds = kafkaConsumerGroupCache.getAivenGroupIds(admin)
 
             val groupsForTopic = consumerGroupIds.filter { groupId ->
                 val topicPartitions = admin

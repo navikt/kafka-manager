@@ -56,7 +56,7 @@ class KafkaConsumerGroupServiceTest {
                 every { offsetsResult.partitionsToOffsetAndMetadata() } returns
                     KafkaFuture.completedFuture(offsets)
             }
-            val service = KafkaConsumerGroupService(factory)
+            val service = KafkaConsumerGroupService(factory, KafkaConsumerGroupCache())
 
             // Act
             val groups = service.getConsumerGroups(KafkaAdminController.GetConsumerGroupsRequest("events"))
@@ -72,7 +72,7 @@ class KafkaConsumerGroupServiceTest {
             val factory = mockk<KafkaClientFactory>()
             every { factory.createKafkaAdminClientForTopic("unknown-topic") } throws
                 ResponseStatusException(HttpStatus.BAD_REQUEST, "Could not find config for topic")
-            val service = KafkaConsumerGroupService(factory)
+            val service = KafkaConsumerGroupService(factory, KafkaConsumerGroupCache())
 
             // Act
             val exception = assertThrows(ResponseStatusException::class.java) {
@@ -93,7 +93,7 @@ class KafkaConsumerGroupServiceTest {
                     HttpStatus.NOT_IMPLEMENTED,
                     "Kafka admin operations are not supported for this topic",
                 )
-            val service = KafkaConsumerGroupService(factory)
+            val service = KafkaConsumerGroupService(factory, KafkaConsumerGroupCache())
 
             // Act
             val exception = assertThrows(ResponseStatusException::class.java) {
@@ -111,42 +111,62 @@ class KafkaConsumerGroupServiceTest {
     inner class CachedConsumerGroupLookup {
         @Test
         fun `Cacher consumer-grupper separat per topic`() {
+            // Arrange
             val factory = mockk<KafkaClientFactory>()
             val eventsAdmin = adminWithNoGroups()
             val anotherTopicAdmin = adminWithNoGroups()
             every { factory.createKafkaAdminClientForTopic("events") } returns eventsAdmin
             every { factory.createKafkaAdminClientForTopic("another-topic") } returns anotherTopicAdmin
+            val listing = mockk<GroupListing> {
+                every { groupId() } returns "group-a"
+            }
+            every { eventsAdmin.listGroups().all() } returns KafkaFuture.completedFuture(listOf(listing))
+            listOf(eventsAdmin, anotherTopicAdmin).forEach { admin ->
+                val offsetsResult = mockk<ListConsumerGroupOffsetsResult>()
+                every { admin.listConsumerGroupOffsets("group-a") } returns offsetsResult
+                every { offsetsResult.partitionsToOffsetAndMetadata() } returns
+                    KafkaFuture.completedFuture(
+                        mapOf(TopicPartition("events", 0) to OffsetAndMetadata(4)),
+                    )
+            }
 
             val context = AnnotationConfigApplicationContext()
             context.register(TestCachingConfiguration::class.java)
             context.beanFactory.registerSingleton(
                 "cacheManager",
-                ConcurrentMapCacheManager("consumer-groups"),
+                ConcurrentMapCacheManager("consumer-groups", "consumer-group-ids"),
             )
             context.beanFactory.registerSingleton("kafkaClientFactory", factory)
-            context.registerBean(KafkaConsumerGroupService::class.java, factory)
+            context.register(KafkaConsumerGroupCache::class.java, KafkaConsumerGroupService::class.java)
             context.refresh()
 
             context.use {
                 val service = it.getBean(KafkaConsumerGroupService::class.java)
                 val eventsRequest = KafkaAdminController.GetConsumerGroupsRequest("events")
 
-                assertEquals(emptyList<String>(), service.getConsumerGroups(eventsRequest))
-                assertEquals(emptyList<String>(), service.getConsumerGroups(eventsRequest))
-                assertEquals(
-                    emptyList<String>(),
-                    service.getConsumerGroups(
-                        KafkaAdminController.GetConsumerGroupsRequest("another-topic"),
-                    ),
+                // Act
+                val groups = service.getConsumerGroups(eventsRequest)
+                val cachedGroups = service.getConsumerGroups(eventsRequest)
+                val groupsForAnotherTopic = service.getConsumerGroups(
+                    KafkaAdminController.GetConsumerGroupsRequest("another-topic"),
                 )
 
+                // Assert
+                assertEquals(listOf("group-a"), groups)
+                assertEquals(groups, cachedGroups)
+                assertEquals(emptyList<String>(), groupsForAnotherTopic)
                 verify(exactly = 1) { factory.createKafkaAdminClientForTopic("events") }
                 verify(exactly = 1) { factory.createKafkaAdminClientForTopic("another-topic") }
+                verify(exactly = 1) { eventsAdmin.listGroups() }
+                verify(exactly = 0) { anotherTopicAdmin.listGroups() }
+                verify(exactly = 1) { eventsAdmin.listConsumerGroupOffsets("group-a") }
+                verify(exactly = 1) { anotherTopicAdmin.listConsumerGroupOffsets("group-a") }
             }
         }
 
         @Test
         fun `Cacher ikke resultatet hvis oppslag av committed offsets feiler`() {
+            // Arrange
             val admin = mockk<AdminClient>(relaxed = true)
             val factory = mockk<KafkaClientFactory>()
             every { factory.createKafkaAdminClientForTopic("events") } returns admin
@@ -173,22 +193,27 @@ class KafkaConsumerGroupServiceTest {
             context.register(TestCachingConfiguration::class.java)
             context.beanFactory.registerSingleton(
                 "cacheManager",
-                ConcurrentMapCacheManager("consumer-groups"),
+                ConcurrentMapCacheManager("consumer-groups", "consumer-group-ids"),
             )
             context.beanFactory.registerSingleton("kafkaClientFactory", factory)
-            context.registerBean(KafkaConsumerGroupService::class.java, factory)
+            context.register(KafkaConsumerGroupCache::class.java, KafkaConsumerGroupService::class.java)
             context.refresh()
 
             context.use {
                 val service = it.getBean(KafkaConsumerGroupService::class.java)
                 val request = KafkaAdminController.GetConsumerGroupsRequest("events")
 
-                assertThrows(IllegalStateException::class.java) {
+                // Act
+                val exception = assertThrows(IllegalStateException::class.java) {
                     service.getConsumerGroups(request)
                 }
-                assertEquals(listOf("group-a"), service.getConsumerGroups(request))
+                val groups = service.getConsumerGroups(request)
 
+                // Assert
+                assertEquals("synthetic lookup failure", exception.message)
+                assertEquals(listOf("group-a"), groups)
                 verify(exactly = 2) { factory.createKafkaAdminClientForTopic("events") }
+                verify(exactly = 1) { admin.listGroups() }
                 verify(exactly = 2) { admin.listConsumerGroupOffsets("group-a") }
             }
         }
@@ -226,7 +251,7 @@ class KafkaConsumerGroupServiceTest {
                 missingPartition to null,
             )
             every { consumer.committed(setOf(existingPartition, missingPartition)) } returns committed
-            val service = KafkaConsumerGroupService(factory)
+            val service = KafkaConsumerGroupService(factory, KafkaConsumerGroupCache())
 
             // Act
             val offsets = service.getConsumerOffsets(
@@ -249,7 +274,7 @@ class KafkaConsumerGroupServiceTest {
             val factory = mockk<KafkaClientFactory>()
             every { factory.createKafkaConsumerForTopic("group-a", "events") } returns consumer
             val partition = TopicPartition("events", 3)
-            val service = KafkaConsumerGroupService(factory)
+            val service = KafkaConsumerGroupService(factory, KafkaConsumerGroupCache())
 
             // Act
             service.setConsumerOffset(
