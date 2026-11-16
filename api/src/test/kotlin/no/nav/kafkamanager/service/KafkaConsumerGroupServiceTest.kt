@@ -19,6 +19,10 @@ import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.springframework.boot.test.context.TestConfiguration
+import org.springframework.cache.concurrent.ConcurrentMapCacheManager
+import org.springframework.cache.annotation.EnableCaching
+import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.http.HttpStatus
 import org.springframework.web.server.ResponseStatusException
 
@@ -106,6 +110,58 @@ class KafkaConsumerGroupServiceTest {
             assertFalse(exception.reason.isNullOrBlank())
         }
     }
+
+    /** Tester caching av consumer-grupper per Kafka-topic. */
+    @Nested
+    inner class CachedConsumerGroupLookup {
+        @Test
+        fun `Cacher consumer-grupper separat per topic`() {
+            val factory = mockk<KafkaClientFactory>()
+            val eventsAdmin = adminWithNoGroups()
+            val anotherTopicAdmin = adminWithNoGroups()
+            every { factory.createKafkaAdminClientForTopic("events") } returns eventsAdmin
+            every { factory.createKafkaAdminClientForTopic("another-topic") } returns anotherTopicAdmin
+
+            val context = AnnotationConfigApplicationContext()
+            context.register(TestCachingConfiguration::class.java)
+            context.beanFactory.registerSingleton(
+                "cacheManager",
+                ConcurrentMapCacheManager("consumer-groups"),
+            )
+            context.beanFactory.registerSingleton("kafkaClientFactory", factory)
+            context.registerBean(KafkaConsumerGroupService::class.java, factory)
+            context.refresh()
+
+            context.use {
+                val service = it.getBean(KafkaConsumerGroupService::class.java)
+                val eventsRequest = KafkaAdminController.GetConsumerGroupsRequest("events")
+
+                assertEquals(emptyList<String>(), service.getConsumerGroups(eventsRequest))
+                assertEquals(emptyList<String>(), service.getConsumerGroups(eventsRequest))
+                assertEquals(
+                    emptyList<String>(),
+                    service.getConsumerGroups(
+                        KafkaAdminController.GetConsumerGroupsRequest("another-topic"),
+                    ),
+                )
+
+                verify(exactly = 1) { factory.createKafkaAdminClientForTopic("events") }
+                verify(exactly = 1) { factory.createKafkaAdminClientForTopic("another-topic") }
+            }
+        }
+
+        private fun adminWithNoGroups(): AdminClient {
+            val admin = mockk<AdminClient>(relaxed = true)
+            val result = mockk<ListGroupsResult>()
+            every { admin.listGroups() } returns result
+            every { result.all() } returns KafkaFuture.completedFuture(emptyList())
+            return admin
+        }
+    }
+
+    @TestConfiguration(proxyBeanMethods = false)
+    @EnableCaching
+    class TestCachingConfiguration
 
     /** Tester oppslag av committed offsets for partisjonene i et Kafka-topic. */
     @Nested
