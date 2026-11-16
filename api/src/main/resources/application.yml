@@ -1,6 +1,10 @@
 spring:
   main:
     banner-mode: "off"
+  cache:
+    type: caffeine
+    caffeine:
+      spec: expireAfterWrite=${CONSUMER_GROUP_CACHE_TTL:1h}
   security:
     oauth2:
       client:

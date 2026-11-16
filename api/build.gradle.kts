@@ -40,6 +40,7 @@ dependencies {
     // Spring Boot and Kotlin
     implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("org.springframework.boot:spring-boot-starter-cache")
     implementation("org.springframework.boot:spring-boot-starter-web") {
         exclude(group = "org.springframework.boot", module = "spring-boot-starter-tomcat")
     }
@@ -48,6 +49,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-logging")
     implementation("io.micrometer:micrometer-registry-prometheus")
     implementation("tools.jackson.module:jackson-module-kotlin")
+    implementation("com.github.ben-manes.caffeine:caffeine")
 
     // Kafka and Avro
     implementation("org.apache.avro:avro:1.12.2")
