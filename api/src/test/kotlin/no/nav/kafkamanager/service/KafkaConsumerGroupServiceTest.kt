@@ -32,12 +32,12 @@ class KafkaConsumerGroupServiceTest {
     @Nested
     inner class ConsumerGroupLookup {
         @Test
-        fun `Filtrerer på Kafka-topicet sorterer treffene og utelater grupper med offset-feil`() {
+        fun `Filtrerer på Kafka-topicet og sorterer treffene`() {
             // Arrange
             val admin = mockk<AdminClient>(relaxed = true)
             val factory = mockk<KafkaClientFactory>()
             every { factory.createKafkaAdminClientForTopic("events") } returns admin
-            val listings = listOf("zeta", "other", "alpha", "broken").map { id ->
+            val listings = listOf("zeta", "other", "alpha").map { id ->
                 mockk<GroupListing> {
                     every { groupId() } returns id
                 }
@@ -55,11 +55,6 @@ class KafkaConsumerGroupServiceTest {
                 every { admin.listConsumerGroupOffsets(group) } returns offsetsResult
                 every { offsetsResult.partitionsToOffsetAndMetadata() } returns
                     KafkaFuture.completedFuture(offsets)
-            }
-            val failedResult = mockk<ListConsumerGroupOffsetsResult>()
-            every { admin.listConsumerGroupOffsets("broken") } returns failedResult
-            every { failedResult.partitionsToOffsetAndMetadata() } returns mockk {
-                every { get() } throws IllegalStateException("synthetic lookup failure")
             }
             val service = KafkaConsumerGroupService(factory)
 
@@ -147,6 +142,54 @@ class KafkaConsumerGroupServiceTest {
 
                 verify(exactly = 1) { factory.createKafkaAdminClientForTopic("events") }
                 verify(exactly = 1) { factory.createKafkaAdminClientForTopic("another-topic") }
+            }
+        }
+
+        @Test
+        fun `Cacher ikke resultatet hvis oppslag av committed offsets feiler`() {
+            val admin = mockk<AdminClient>(relaxed = true)
+            val factory = mockk<KafkaClientFactory>()
+            every { factory.createKafkaAdminClientForTopic("events") } returns admin
+            val listing = mockk<GroupListing> {
+                every { groupId() } returns "group-a"
+            }
+            val listGroupsResult = mockk<ListGroupsResult>()
+            every { admin.listGroups() } returns listGroupsResult
+            every { listGroupsResult.all() } returns KafkaFuture.completedFuture(listOf(listing))
+
+            val failedOffsetsResult = mockk<ListConsumerGroupOffsetsResult>()
+            every { failedOffsetsResult.partitionsToOffsetAndMetadata() } returns mockk {
+                every { get() } throws IllegalStateException("synthetic lookup failure")
+            }
+            val successfulOffsetsResult = mockk<ListConsumerGroupOffsetsResult>()
+            every { successfulOffsetsResult.partitionsToOffsetAndMetadata() } returns
+                KafkaFuture.completedFuture(
+                    mapOf(TopicPartition("events", 0) to OffsetAndMetadata(4)),
+                )
+            every { admin.listConsumerGroupOffsets("group-a") } returnsMany
+                listOf(failedOffsetsResult, successfulOffsetsResult)
+
+            val context = AnnotationConfigApplicationContext()
+            context.register(TestCachingConfiguration::class.java)
+            context.beanFactory.registerSingleton(
+                "cacheManager",
+                ConcurrentMapCacheManager("consumer-groups"),
+            )
+            context.beanFactory.registerSingleton("kafkaClientFactory", factory)
+            context.registerBean(KafkaConsumerGroupService::class.java, factory)
+            context.refresh()
+
+            context.use {
+                val service = it.getBean(KafkaConsumerGroupService::class.java)
+                val request = KafkaAdminController.GetConsumerGroupsRequest("events")
+
+                assertThrows(IllegalStateException::class.java) {
+                    service.getConsumerGroups(request)
+                }
+                assertEquals(listOf("group-a"), service.getConsumerGroups(request))
+
+                verify(exactly = 2) { factory.createKafkaAdminClientForTopic("events") }
+                verify(exactly = 2) { admin.listConsumerGroupOffsets("group-a") }
             }
         }
 

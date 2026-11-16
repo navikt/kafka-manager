@@ -18,7 +18,7 @@ class KafkaConsumerGroupService(
     /**
      * Henter sorterte ID-er for consumer-grupper som har committed offsets for Kafka-topicet.
      *
-     * Grupper det ikke er mulig å hente committed offsets for, utelates fra resultatet.
+     * Hvis det ikke er mulig å hente committed offsets for en gruppe, feiler oppslaget.
      *
      * @param request inneholder navnet på Kafka-topicet som skal undersøkes.
      * @return sorterte ID-er for consumer-gruppene som har committed offsets for Kafka-topicet.
@@ -32,19 +32,15 @@ class KafkaConsumerGroupService(
             val consumerGroupIds = consumerGroups.map { it.groupId() }
 
             val groupsForTopic = consumerGroupIds.filter { groupId ->
-                try {
-                    val topicPartitions = admin
-                        .listConsumerGroupOffsets(groupId)
-                        .partitionsToOffsetAndMetadata()
-                        .get()
-                        .keys
-                        .map { it.topic() }
-                        .toSet()
+                val topicPartitions = admin
+                    .listConsumerGroupOffsets(groupId)
+                    .partitionsToOffsetAndMetadata()
+                    .get()
+                    .keys
+                    .map { it.topic() }
+                    .toSet()
 
-                    topicPartitions.contains(request.topicName)
-                } catch (_: Exception) {
-                    false
-                }
+                topicPartitions.contains(request.topicName)
             }
 
             return groupsForTopic.sorted()
