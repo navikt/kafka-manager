@@ -3,7 +3,6 @@ package no.nav.kafkamanager.service
 import no.nav.kafkamanager.controller.KafkaAdminController
 import org.apache.kafka.clients.consumer.OffsetAndMetadata
 import org.apache.kafka.common.TopicPartition
-import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Service
 
 /**
@@ -19,31 +18,16 @@ class KafkaConsumerGroupService(
     /**
      * Henter sorterte ID-er for consumer-grupper som har committed offsets for Kafka-topicet.
      *
-     * Hvis det ikke er mulig å hente committed offsets for en gruppe, feiler oppslaget.
+     * Grupper slettet under oppslaget utelates. Andre feil ved henting av committed offsets propageres.
      *
      * @param request inneholder navnet på Kafka-topicet som skal undersøkes.
      * @return sorterte ID-er for consumer-gruppene som har committed offsets for Kafka-topicet.
      */
-    @Cacheable(cacheNames = ["consumer-groups"], key = "#request.topicName")
     fun getConsumerGroups(request: KafkaAdminController.GetConsumerGroupsRequest): List<String> {
         val adminClient = kafkaClientFactory.createKafkaAdminClientForTopic(request.topicName)
 
         adminClient.use { admin ->
-            val consumerGroupIds = kafkaConsumerGroupCache.getAivenGroupIds(admin)
-
-            val groupsForTopic = consumerGroupIds.filter { groupId ->
-                val topicPartitions = admin
-                    .listConsumerGroupOffsets(groupId)
-                    .partitionsToOffsetAndMetadata()
-                    .get()
-                    .keys
-                    .map { it.topic() }
-                    .toSet()
-
-                topicPartitions.contains(request.topicName)
-            }
-
-            return groupsForTopic.sorted()
+            return kafkaConsumerGroupCache.getAivenGroupsByTopic(admin)[request.topicName].orEmpty()
         }
     }
 
