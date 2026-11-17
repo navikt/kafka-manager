@@ -8,7 +8,7 @@ updates:
       time: "03:00"
       timezone: "Europe/Oslo"
     cooldown:
-      default-days: 7
+      default-days: 4
     open-pull-requests-limit: 10
     ignore:
       - dependency-name: "typescript"
@@ -34,7 +34,7 @@ updates:
       timezone: "Europe/Oslo"
     open-pull-requests-limit: 10
     cooldown:
-      default-days: 7
+      default-days: 4
     groups:
       major-updates:
         update-types:
@@ -53,7 +53,7 @@ updates:
       time: "03:00"
       timezone: "Europe/Oslo"
     cooldown:
-      default-days: 7
+      default-days: 4
     groups:
       workflow-updates:
         patterns:
