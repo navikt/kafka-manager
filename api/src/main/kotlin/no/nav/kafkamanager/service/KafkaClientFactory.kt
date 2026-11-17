@@ -51,13 +51,38 @@ class KafkaClientFactory(
      *
      * @param topicName navnet på det konfigurerte Kafka-topicet.
      * @return en Kafka-administrasjonsklient for Kafka-topicet.
-     * @throws ResponseStatusException hvis Kafka-topicet ikke finnes eller ikke støtter sletting av poster.
+     * @throws ResponseStatusException hvis Kafka-topicet ikke finnes eller ikke ligger i Aiven.
      */
     fun createKafkaAdminClientForTopic(topicName: String): AdminClient {
-        val topicConfig = findTopicConfigOrThrow(topicName)
-        val properties = createAdminPropertiesForTopic(topicConfig)
+        validateKafkaAdminTopic(topicName)
+        return createAivenAdminClient()
+    }
 
-        return AdminClient.create(properties)
+    /**
+     * Oppretter en administrasjonsklient for Aiven-clusteret uten topic-spesifikk konfigurasjon.
+     * Kalleren må lukke klienten etter bruk.
+     *
+     * @return en Kafka-administrasjonsklient med broker-adresse og autentisering fra Aiven-miljøet.
+     */
+    fun createAivenAdminClient(): AdminClient = AdminClient.create(kafkaPropertiesFactory.createAivenAdminProperties())
+
+    /**
+     * Validerer at topicet er konfigurert og ligger i Aiven, uten å opprette en Kafka-klient.
+     *
+     * @param topicName navnet på Kafka-topicet som skal valideres.
+     * @return konfigurasjonen for det validerte topicet.
+     * @throws ResponseStatusException med status 400 hvis topicet ikke er konfigurert,
+     * eller 501 hvis det ikke ligger i Aiven.
+     */
+    fun validateKafkaAdminTopic(topicName: String): TopicConfig {
+        val topicConfig = findTopicConfigOrThrow(topicName)
+        if (topicConfig.location != TopicLocation.AIVEN) {
+            throw ResponseStatusException(
+                HttpStatus.NOT_IMPLEMENTED,
+                "Kafka admin operations are not supported for this topic",
+            )
+        }
+        return topicConfig
     }
 
     /**
@@ -110,32 +135,6 @@ class KafkaClientFactory(
         serviceUserPassword = environmentProperties.serviceUserPassword,
     ) {
         NaisUtils.getCredentials("service_user")
-    }
-
-    /**
-     * Lager administrasjonsegenskaper for et Kafka-topic som støtter sletting av poster.
-     *
-     * @param topicConfig konfigurasjonen for Kafka-topicet.
-     * @return egenskapene som brukes når Kafka-administrasjonsklienten opprettes.
-     * @throws ResponseStatusException hvis Kafka-topicet ikke støtter sletting av poster.
-     */
-    private fun createAdminPropertiesForTopic(topicConfig: TopicConfig): Properties {
-        if (!topicConfig.supportsRecordDeletion) {
-            throw ResponseStatusException(
-                HttpStatus.NOT_IMPLEMENTED,
-                "Kafka admin operations are not supported for this topic",
-            )
-        }
-
-        val keyDesType = topicConfig.keyDeserializerType
-        val valueDesType = topicConfig.valueDeserializerType
-        val isolationLevel = topicConfig.isolationLevel ?: DEFAULT_ISOLATION_LEVEL
-
-        return kafkaPropertiesFactory.createAivenAdminProperties(
-            keyDeserializerType = keyDesType,
-            valueDeserializerType = valueDesType,
-            isolationLevel = isolationLevel,
-        )
     }
 
     /**

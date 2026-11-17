@@ -48,8 +48,8 @@ class AuthenticationTest
     @Autowired
     constructor(
         private val mockMvc: MockMvc,
+        @MockkBean private val kafkaConsumerGroupService: KafkaConsumerGroupService,
         @Suppress("UNUSED_PARAMETER") @MockkBean private val kafkaTopicOperationsService: KafkaTopicOperationsService,
-        @Suppress("UNUSED_PARAMETER") @MockkBean private val kafkaConsumerGroupService: KafkaConsumerGroupService,
         @Suppress("UNUSED_PARAMETER") @MockkBean private val kafkaRecordReaderService: KafkaRecordReaderService,
     ) {
         @ParameterizedTest(name = "{0} {1} krever OAuth2-login")

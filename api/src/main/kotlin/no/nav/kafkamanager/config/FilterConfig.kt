@@ -1,7 +1,6 @@
 package no.nav.kafkamanager.config
 
 import no.nav.common.rest.filter.LogRequestFilter
-import no.nav.common.rest.filter.SetStandardHttpHeadersFilter
 import no.nav.common.utils.EnvironmentUtils
 import org.springframework.boot.web.servlet.FilterRegistrationBean
 import org.springframework.context.annotation.Bean
@@ -19,13 +18,6 @@ class FilterConfig {
             ),
         )
         order = 1
-        addUrlPatterns("/api/*")
-    }
-
-    @Bean
-    fun setStandardHeadersFilterRegistrationBean() = FilterRegistrationBean<SetStandardHttpHeadersFilter>().apply {
-        setFilter(SetStandardHttpHeadersFilter())
-        order = 2
         addUrlPatterns("/api/*")
     }
 

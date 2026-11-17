@@ -18,10 +18,10 @@ import org.apache.kafka.common.KafkaFuture
 import org.apache.kafka.common.PartitionInfo
 import org.apache.kafka.common.TopicPartition
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.springframework.http.HttpStatus
 import org.springframework.web.server.ResponseStatusException
 
@@ -137,7 +137,7 @@ class KafkaTopicOperationsServiceTest {
             val service = service(factory)
 
             // Act
-            val exception = assertThrows(ResponseStatusException::class.java) {
+            val exception = assertThrows<ResponseStatusException> {
                 service.getLastRecordOffset(KafkaAdminController.GetLastRecordOffsetRequest("unknown-topic", 0))
             }
 
@@ -187,7 +187,7 @@ class KafkaTopicOperationsServiceTest {
             val service = service(factory)
 
             // Act
-            val exception = assertThrows(ResponseStatusException::class.java) {
+            val exception = assertThrows<ResponseStatusException> {
                 service.deleteRecords("aiven-topic", 2, 25)
             }
 
@@ -208,7 +208,7 @@ class KafkaTopicOperationsServiceTest {
             val service = service(factory)
 
             // Act
-            val exception = assertThrows(ResponseStatusException::class.java) {
+            val exception = assertThrows<ResponseStatusException> {
                 service.deleteRecords("on-prem-topic", 0, 1)
             }
 

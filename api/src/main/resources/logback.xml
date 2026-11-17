@@ -1,5 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
     <statusListener class="ch.qos.logback.core.status.NopStatusListener"/>
-    <include resource="no/nav/common/log/logback-stdout-json.xml"/>
+    <appender name="consoleAppender" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
+    </appender>
+
+    <appender name="stdout_json_masked" class="no.nav.common.log.MaskingAppender">
+        <appender-ref ref="consoleAppender"/>
+    </appender>
+
+    <root level="${ROOT_LOG_LEVEL:-INFO}">
+        <appender-ref ref="stdout_json_masked"/>
+    </root>
+
+    <logger name="org.apache.tomcat.util.http.parser.Cookie" level="OFF"/>
+    <logger name="org.apache" level="INFO"/>
+    <logger name="org.apache.cxf" level="ERROR"/>
+    <logger name="no.nav.common.cxf" level="ERROR"/>
+    <logger name="org.apache.http.client.protocol.ResponseProcessCookies" level="ERROR"/>
+    <logger name="org.apache.wss4j.common.crypto.CryptoBase" level="ERROR"/>
+    <logger name="no.nav.common.rest.client.LogRequestInterceptor" level="DEBUG"/>
+    <logger name="no.nav.common.rest.filter.LogRequestFilter" level="DEBUG"/>
 </configuration>
