@@ -11,7 +11,7 @@ import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.PartitionInfo
 import org.apache.kafka.common.TopicPartition
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertThrows
+import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -140,7 +140,7 @@ class KafkaRecordReaderServiceTest {
             val service = KafkaRecordReaderService(factory)
 
             // Act
-            val exception = assertThrows(ResponseStatusException::class.java) {
+            val exception = assertThrows<ResponseStatusException> {
                 service.readTopic(
                     KafkaAdminController.ReadTopicRequest(
                         "unknown-topic",

@@ -4,7 +4,7 @@ spring:
   cache:
     type: caffeine
     caffeine:
-      spec: expireAfterWrite=${CONSUMER_GROUP_CACHE_TTL:5m}
+      spec: expireAfterWrite=${CONSUMER_GROUP_CACHE_TTL:15m}
   security:
     oauth2:
       client:

@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service
 @Service
 class KafkaConsumerGroupService(
     private val kafkaClientFactory: KafkaClientFactory,
-    private val kafkaConsumerGroupCache: KafkaConsumerGroupCache,
+    private val kafkaConsumerGroupLookupService: KafkaConsumerGroupLookupService,
 ) {
     /**
      * Henter sorterte ID-er for consumer-grupper som har committed offsets for Kafka-topicet.
@@ -24,11 +24,10 @@ class KafkaConsumerGroupService(
      * @return sorterte ID-er for consumer-gruppene som har committed offsets for Kafka-topicet.
      */
     fun getConsumerGroups(request: KafkaAdminController.GetConsumerGroupsRequest): List<String> {
-        val adminClient = kafkaClientFactory.createKafkaAdminClientForTopic(request.topicName)
-
-        adminClient.use { admin ->
-            return kafkaConsumerGroupCache.getAivenGroupsByTopic(admin)[request.topicName].orEmpty()
-        }
+        kafkaClientFactory.validateKafkaAdminTopic(request.topicName)
+        return kafkaConsumerGroupLookupService
+            .getAivenGroupsByTopic()[request.topicName]
+            .orEmpty()
     }
 
     /**

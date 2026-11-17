@@ -12,12 +12,13 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertSame
-import org.junit.jupiter.api.Assertions.assertThrows
+import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.core.env.StandardEnvironment
 import org.springframework.http.HttpStatus
+import org.springframework.mock.env.MockEnvironment
 import org.springframework.web.server.ResponseStatusException
 import java.util.Properties
 
@@ -91,7 +92,7 @@ class KafkaClientFactoryTest {
             val factory = createFactory(topics = emptyList())
 
             // Act
-            val exception = assertThrows(ResponseStatusException::class.java) {
+            val exception = assertThrows<ResponseStatusException> {
                 factory.createKafkaConsumerForTopic(null, "unknown-topic")
             }
 
@@ -104,14 +105,84 @@ class KafkaClientFactoryTest {
     @Nested
     inner class AdminClientCreation {
         @Test
+        fun `Bygger Aiven-administrasjonsegenskaper uten deserialisering`() {
+            // Arrange
+            val environment = MockEnvironment()
+                .withProperty("KAFKA_BROKERS", "localhost:9092")
+                .withProperty("KAFKA_KEYSTORE_PATH", "/test/client.keystore.p12")
+                .withProperty("KAFKA_TRUSTSTORE_PATH", "/test/client.truststore.jks")
+                .withProperty("KAFKA_CREDSTORE_PASSWORD", "test-only")
+
+            val factory = KafkaPropertiesFactory(environment)
+
+            val expected = Properties().apply {
+                put("bootstrap.servers", "localhost:9092")
+                put("security.protocol", "SSL")
+                put("ssl.keystore.location", "/test/client.keystore.p12")
+                put("ssl.keystore.password", "test-only")
+                put("ssl.truststore.location", "/test/client.truststore.jks")
+                put("ssl.truststore.password", "test-only")
+            }
+
+            // Act
+            val properties = factory.createAivenAdminProperties()
+
+            // Assert
+            assertEquals(expected, properties)
+        }
+
+        @Test
+        fun `Oppretter Aiven-administrasjonsklient uten topic-konfigurasjon`() {
+            // Arrange
+            val propertiesFactory = object : KafkaPropertiesFactory(StandardEnvironment()) {
+                override fun createAivenAdminProperties(): Properties = Properties().apply {
+                    put("bootstrap.servers", "localhost:9092")
+                }
+            }
+            val factory = KafkaClientFactory(
+                EnvironmentProperties(),
+                AppConfig(topics = emptyList()),
+                propertiesFactory,
+            )
+
+            // Act
+            factory.createAivenAdminClient().use { admin ->
+                // Assert
+                assertNotNull(admin)
+            }
+        }
+
+        @Test
+        fun `Validerer administrasjonsstøtte uten å opprette en klient`() {
+            // Arrange
+            val aivenTopic = topicConfig("aiven-topic", TopicLocation.AIVEN)
+            val factory = createFactory(
+                listOf(
+                    aivenTopic,
+                    topicConfig("on-prem-topic", TopicLocation.ON_PREM),
+                ),
+            )
+
+            // Act
+            val validatedTopic = factory.validateKafkaAdminTopic("aiven-topic")
+            val unknownTopic = assertThrows<ResponseStatusException> {
+                factory.validateKafkaAdminTopic("unknown-topic")
+            }
+            val unsupportedTopic = assertThrows<ResponseStatusException> {
+                factory.validateKafkaAdminTopic("on-prem-topic")
+            }
+
+            // Assert
+            assertSame(aivenTopic, validatedTopic)
+            assertEquals(HttpStatus.BAD_REQUEST, unknownTopic.statusCode)
+            assertEquals(HttpStatus.NOT_IMPLEMENTED, unsupportedTopic.statusCode)
+        }
+
+        @Test
         fun `Oppretter administrasjonsklient for et tillatt Kafka-topic med støtte for sletting`() {
             // Arrange
             val propertiesFactory = object : KafkaPropertiesFactory(StandardEnvironment()) {
-                override fun createAivenAdminProperties(
-                    keyDeserializerType: DeserializerType,
-                    valueDeserializerType: DeserializerType,
-                    isolationLevel: String,
-                ): Properties = consumerProperties()
+                override fun createAivenAdminProperties(): Properties = consumerProperties()
             }
             val factory = KafkaClientFactory(
                 EnvironmentProperties(),
@@ -133,7 +204,7 @@ class KafkaClientFactoryTest {
             val factory = createFactory(listOf(topicConfig("on-prem-topic", TopicLocation.ON_PREM)))
 
             // Act
-            val exception = assertThrows(ResponseStatusException::class.java) {
+            val exception = assertThrows<ResponseStatusException> {
                 factory.createKafkaAdminClientForTopic("on-prem-topic")
             }
 
@@ -148,7 +219,7 @@ class KafkaClientFactoryTest {
             val factory = createFactory(emptyList())
 
             // Act
-            val exception = assertThrows(ResponseStatusException::class.java) {
+            val exception = assertThrows<ResponseStatusException> {
                 factory.createKafkaAdminClientForTopic("unknown-topic")
             }
 
@@ -201,7 +272,7 @@ class KafkaClientFactoryTest {
             var fallbackCalled = false
 
             // Act
-            val exception = assertThrows(IllegalStateException::class.java) {
+            val exception = assertThrows<IllegalStateException> {
                 resolveServiceUserCredentials(syntheticCanary, "") {
                     fallbackCalled = true
                     Credentials("mounted-user", "mounted-password")
@@ -224,7 +295,7 @@ class KafkaClientFactoryTest {
             var fallbackCalled = false
 
             // Act
-            val exception = assertThrows(IllegalStateException::class.java) {
+            val exception = assertThrows<IllegalStateException> {
                 resolveServiceUserCredentials("", syntheticCanary) {
                     fallbackCalled = true
                     Credentials("mounted-user", "mounted-password")

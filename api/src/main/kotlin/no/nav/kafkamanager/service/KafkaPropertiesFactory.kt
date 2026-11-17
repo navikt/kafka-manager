@@ -2,17 +2,27 @@ package no.nav.kafkamanager.service
 
 import io.confluent.kafka.serializers.KafkaAvroDeserializer
 import io.confluent.kafka.serializers.KafkaAvroSerializerConfig
+import no.nav.common.kafka.util.KafkaEnvironmentVariables.KAFKA_BROKERS
+import no.nav.common.kafka.util.KafkaEnvironmentVariables.KAFKA_CREDSTORE_PASSWORD
+import no.nav.common.kafka.util.KafkaEnvironmentVariables.KAFKA_KEYSTORE_PATH
 import no.nav.common.kafka.util.KafkaEnvironmentVariables.KAFKA_SCHEMA_REGISTRY
 import no.nav.common.kafka.util.KafkaEnvironmentVariables.KAFKA_SCHEMA_REGISTRY_PASSWORD
 import no.nav.common.kafka.util.KafkaEnvironmentVariables.KAFKA_SCHEMA_REGISTRY_USER
+import no.nav.common.kafka.util.KafkaEnvironmentVariables.KAFKA_TRUSTSTORE_PATH
 import no.nav.common.kafka.util.KafkaPropertiesBuilder
 import no.nav.common.utils.Credentials
 import no.nav.kafkamanager.controller.KafkaAdminController
 import no.nav.kafkamanager.domain.DeserializerType
+import org.apache.kafka.clients.CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG
+import org.apache.kafka.clients.CommonClientConfigs.SECURITY_PROTOCOL_CONFIG
 import org.apache.kafka.clients.consumer.ConsumerConfig.ISOLATION_LEVEL_CONFIG
 import org.apache.kafka.clients.consumer.ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG
 import org.apache.kafka.clients.consumer.ConsumerConfig.MAX_POLL_RECORDS_CONFIG
 import org.apache.kafka.clients.consumer.ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG
+import org.apache.kafka.common.config.SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG
+import org.apache.kafka.common.config.SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG
+import org.apache.kafka.common.config.SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG
+import org.apache.kafka.common.config.SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG
 import org.apache.kafka.common.serialization.DoubleDeserializer
 import org.apache.kafka.common.serialization.FloatDeserializer
 import org.apache.kafka.common.serialization.IntegerDeserializer
@@ -82,19 +92,17 @@ class KafkaPropertiesFactory(
             .build()
     }
 
-    fun createAivenAdminProperties(
-        keyDeserializerType: DeserializerType,
-        valueDeserializerType: DeserializerType,
-        isolationLevel: String,
-    ): Properties = KafkaPropertiesBuilder
-        .consumerBuilder()
-        .withBaseProperties()
-        .withAivenBrokerUrl()
-        .withAivenAuth()
-        .withProp(ISOLATION_LEVEL_CONFIG, isolationLevel)
-        .withProp(KEY_DESERIALIZER_CLASS_CONFIG, findDeserializer(keyDeserializerType).name)
-        .withProp(VALUE_DESERIALIZER_CLASS_CONFIG, findDeserializer(valueDeserializerType).name)
-        .build()
+    fun createAivenAdminProperties(): Properties {
+        val credstorePassword = environment.getRequiredProperty(KAFKA_CREDSTORE_PASSWORD)
+        return Properties().apply {
+            put(BOOTSTRAP_SERVERS_CONFIG, environment.getRequiredProperty(KAFKA_BROKERS))
+            put(SECURITY_PROTOCOL_CONFIG, "SSL")
+            put(SSL_KEYSTORE_LOCATION_CONFIG, environment.getRequiredProperty(KAFKA_KEYSTORE_PATH))
+            put(SSL_KEYSTORE_PASSWORD_CONFIG, credstorePassword)
+            put(SSL_TRUSTSTORE_LOCATION_CONFIG, environment.getRequiredProperty(KAFKA_TRUSTSTORE_PATH))
+            put(SSL_TRUSTSTORE_PASSWORD_CONFIG, credstorePassword)
+        }
+    }
 
     private fun findDeserializer(deserializerType: DeserializerType): Class<*> = when (deserializerType) {
         DeserializerType.STRING -> StringDeserializer::class.java

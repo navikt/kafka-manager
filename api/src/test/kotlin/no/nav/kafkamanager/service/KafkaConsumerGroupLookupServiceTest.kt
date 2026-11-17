@@ -1,10 +1,12 @@
 package no.nav.kafkamanager.service
 
 import com.github.benmanes.caffeine.cache.Caffeine
+import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.apache.kafka.clients.admin.Admin
+import org.apache.kafka.clients.admin.AdminClient
 import org.apache.kafka.clients.admin.GroupListing
 import org.apache.kafka.clients.admin.ListConsumerGroupOffsetsResult
 import org.apache.kafka.clients.admin.ListConsumerGroupOffsetsSpec
@@ -17,9 +19,9 @@ import org.apache.kafka.common.errors.GroupIdNotFoundException
 import org.apache.kafka.common.errors.TimeoutException
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertSame
-import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.cache.annotation.EnableCaching
@@ -34,25 +36,26 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicLong
 
-@SpringJUnitConfig(KafkaConsumerGroupCacheTest.TestCachingConfiguration::class)
-class KafkaConsumerGroupCacheTest
+@SpringJUnitConfig(KafkaConsumerGroupLookupServiceTest.TestCachingConfiguration::class)
+class KafkaConsumerGroupLookupServiceTest
     @Autowired
     constructor(
-        private val cache: KafkaConsumerGroupCache,
+        private val sut: KafkaConsumerGroupLookupService,
         private val cacheManager: CaffeineCacheManager,
         private val ticker: AtomicLong,
+        private val factory: KafkaClientFactory,
     ) {
         @BeforeEach
         fun resetCache() {
             requireNotNull(cacheManager.getCache("consumer-groups")).clear()
             ticker.set(0)
+            clearMocks(factory)
         }
 
         @Test
         fun `Cacher sorterte grupper per topic på tvers av administrasjonsklienter`() {
             // Arrange
-            val admin = mockk<Admin>()
-            val anotherAdmin = mockk<Admin>()
+            val admin = adminForTopic()
             val result = mockk<ListGroupsResult>()
             every { admin.listGroups() } returns result
             every { result.all() } returns KafkaFuture.completedFuture(groupListings("group-a", "group-b"))
@@ -69,9 +72,9 @@ class KafkaConsumerGroupCacheTest
             )
 
             // Act
-            val groups = cache.getAivenGroupsByTopic(admin)
-            val cachedGroups = cache.getAivenGroupsByTopic(admin)
-            val groupsFromAnotherAdmin = cache.getAivenGroupsByTopic(anotherAdmin)
+            val groups = sut.getAivenGroupsByTopic()
+            val cachedGroups = sut.getAivenGroupsByTopic()
+            val groupsFromAnotherAdmin = sut.getAivenGroupsByTopic()
 
             // Assert
             assertEquals(
@@ -81,21 +84,22 @@ class KafkaConsumerGroupCacheTest
             assertEquals(groups, cachedGroups)
             assertEquals(groups, groupsFromAnotherAdmin)
             verify(exactly = 1) { admin.listGroups() }
-            verify(exactly = 0) { anotherAdmin.listGroups() }
+            verify(exactly = 1) { factory.createAivenAdminClient() }
+            verify(exactly = 1) { admin.close() }
             verify(exactly = 1) { admin.listConsumerGroupOffsets(any<Map<String, ListConsumerGroupOffsetsSpec>>()) }
         }
 
         @Test
         fun `Cacher en tom gruppeliste`() {
             // Arrange
-            val admin = mockk<Admin>()
+            val admin = adminForTopic()
             val result = mockk<ListGroupsResult>()
             every { admin.listGroups() } returns result
             every { result.all() } returns KafkaFuture.completedFuture(emptyList())
 
             // Act
-            val groups = cache.getAivenGroupsByTopic(admin)
-            val cachedGroups = cache.getAivenGroupsByTopic(admin)
+            val groups = sut.getAivenGroupsByTopic()
+            val cachedGroups = sut.getAivenGroupsByTopic()
 
             // Assert
             assertEquals(emptyMap<String, List<String>>(), groups)
@@ -107,7 +111,7 @@ class KafkaConsumerGroupCacheTest
         @Test
         fun `Propagerer oppslagsfeil uten å cache dem`() {
             // Arrange
-            val admin = mockk<Admin>()
+            val admin = adminForTopic()
             val result = mockk<ListGroupsResult>()
             val failedFuture = mockk<KafkaFuture<Collection<GroupListing>>>()
             val failure = IllegalStateException("synthetic lookup failure")
@@ -120,23 +124,25 @@ class KafkaConsumerGroupCacheTest
             mockOffsets(admin, mapOf("group-a" to mapOf(TopicPartition("events", 0) to OffsetAndMetadata(4))))
 
             // Act
-            val exception = assertThrows(IllegalStateException::class.java) {
-                cache.getAivenGroupsByTopic(admin)
+            val exception = assertThrows<IllegalStateException> {
+                sut.getAivenGroupsByTopic()
             }
-            val groups = cache.getAivenGroupsByTopic(admin)
-            val cachedGroups = cache.getAivenGroupsByTopic(admin)
+            val groups = sut.getAivenGroupsByTopic()
+            val cachedGroups = sut.getAivenGroupsByTopic()
 
             // Assert
             assertSame(failure, exception)
             assertEquals(mapOf("events" to listOf("group-a")), groups)
             assertEquals(groups, cachedGroups)
             verify(exactly = 2) { admin.listGroups() }
+            verify(exactly = 2) { factory.createAivenAdminClient() }
+            verify(exactly = 2) { admin.close() }
         }
 
         @Test
-        fun `Henter både grupper og offsets på nytt etter fem minutter`() {
+        fun `Henter både grupper og offsets på nytt etter femten minutter`() {
             // Arrange
-            val admin = mockk<Admin>()
+            val admin = adminForTopic()
             val result = mockk<ListGroupsResult>()
             every { admin.listGroups() } returns result
             every { result.all() } returnsMany listOf(
@@ -152,11 +158,11 @@ class KafkaConsumerGroupCacheTest
             )
 
             // Act
-            val groups = cache.getAivenGroupsByTopic(admin)
-            ticker.set(Duration.ofMinutes(5).toNanos() - 1)
-            val groupsBeforeExpiry = cache.getAivenGroupsByTopic(admin)
+            val groups = sut.getAivenGroupsByTopic()
+            ticker.set(Duration.ofMinutes(15).toNanos() - 1)
+            val groupsBeforeExpiry = sut.getAivenGroupsByTopic()
             ticker.incrementAndGet()
-            val groupsAfterExpiry = cache.getAivenGroupsByTopic(admin)
+            val groupsAfterExpiry = sut.getAivenGroupsByTopic()
 
             // Assert
             assertEquals(mapOf("events" to listOf("group-a")), groups)
@@ -164,11 +170,14 @@ class KafkaConsumerGroupCacheTest
             assertEquals(mapOf("events" to listOf("group-a", "group-b")), groupsAfterExpiry)
             verify(exactly = 2) { admin.listGroups() }
             verify(exactly = 2) { admin.listConsumerGroupOffsets(any<Map<String, ListConsumerGroupOffsetsSpec>>()) }
+            verify(exactly = 2) { factory.createAivenAdminClient() }
+            verify(exactly = 2) { admin.close() }
         }
 
         @Test
         fun `Utelater grupper slettet under offset-oppslaget`() {
-            val admin = mockk<Admin>()
+            // Arrange
+            val admin = adminForTopic()
             val result = mockk<ListGroupsResult>()
             every { admin.listGroups() } returns result
             every { result.all() } returns KafkaFuture.completedFuture(groupListings("deleted", "group-a"))
@@ -183,9 +192,11 @@ class KafkaConsumerGroupCacheTest
                 every { get() } throws ExecutionException(GroupIdNotFoundException("deleted"))
             }
 
-            val groups = cache.getAivenGroupsByTopic(admin)
-            val cachedGroups = cache.getAivenGroupsByTopic(admin)
+            // Act
+            val groups = sut.getAivenGroupsByTopic()
+            val cachedGroups = sut.getAivenGroupsByTopic()
 
+            // Assert
             assertEquals(mapOf("events" to listOf("group-a")), groups)
             assertEquals(groups, cachedGroups)
             verify(exactly = 1) { admin.listGroups() }
@@ -194,8 +205,9 @@ class KafkaConsumerGroupCacheTest
         @Test
         fun `Propagerer tilgangsfeil og tidsavbrudd uten å cache delvise resultater`() {
             for (cause in listOf(GroupAuthorizationException("synthetic group"), TimeoutException("synthetic timeout"))) {
+                // Arrange
                 resetCache()
-                val admin = mockk<Admin>()
+                val admin = adminForTopic()
                 val result = mockk<ListGroupsResult>()
                 every { admin.listGroups() } returns result
                 every { result.all() } returns KafkaFuture.completedFuture(groupListings("group-a", "group-b"))
@@ -214,21 +226,24 @@ class KafkaConsumerGroupCacheTest
                     KafkaFuture.completedFuture(mapOf(TopicPartition("events", 1) to OffsetAndMetadata(8))),
                 )
 
-                val exception = assertThrows(ExecutionException::class.java) {
-                    cache.getAivenGroupsByTopic(admin)
+                // Act
+                val exception = assertThrows<ExecutionException> {
+                    sut.getAivenGroupsByTopic()
                 }
-                val groups = cache.getAivenGroupsByTopic(admin)
+                val groups = sut.getAivenGroupsByTopic()
 
+                // Assert
                 assertSame(failure, exception)
                 assertEquals(mapOf("events" to listOf("group-a", "group-b")), groups)
                 verify(exactly = 2) { admin.listGroups() }
+                verify(exactly = 2) { admin.close() }
             }
         }
 
         @Test
         fun `Deler ett samtidig cacheoppslag mellom administrasjonsklienter`() {
-            val admin = mockk<Admin>()
-            val anotherAdmin = mockk<Admin>()
+            // Arrange
+            val admin = adminForTopic()
             val result = mockk<ListGroupsResult>()
             every { admin.listGroups() } returns result
             val lookupStarted = CountDownLatch(1)
@@ -241,16 +256,18 @@ class KafkaConsumerGroupCacheTest
             val secondRequestStarted = CountDownLatch(1)
 
             Executors.newFixedThreadPool(2).use { executor ->
-                val first = executor.submit<Map<String, List<String>>> { cache.getAivenGroupsByTopic(admin) }
+                // Act
+                val first = executor.submit<Map<String, List<String>>> { sut.getAivenGroupsByTopic() }
                 try {
                     check(lookupStarted.await(10, TimeUnit.SECONDS))
                     val second = executor.submit<Map<String, List<String>>> {
                         secondRequestStarted.countDown()
-                        cache.getAivenGroupsByTopic(anotherAdmin)
+                        sut.getAivenGroupsByTopic()
                     }
                     check(secondRequestStarted.await(10, TimeUnit.SECONDS))
                     releaseLookup.countDown()
 
+                    // Assert
                     assertEquals(emptyMap<String, List<String>>(), first.get(10, TimeUnit.SECONDS))
                     assertEquals(emptyMap<String, List<String>>(), second.get(10, TimeUnit.SECONDS))
                 } finally {
@@ -259,7 +276,14 @@ class KafkaConsumerGroupCacheTest
             }
 
             verify(exactly = 1) { admin.listGroups() }
-            verify(exactly = 0) { anotherAdmin.listGroups() }
+            verify(exactly = 1) { factory.createAivenAdminClient() }
+            verify(exactly = 1) { admin.close() }
+        }
+
+        private fun adminForTopic(): AdminClient {
+            val admin = mockk<AdminClient>(relaxed = true)
+            every { factory.createAivenAdminClient() } returns admin
+            return admin
         }
 
         private fun mockOffsets(
@@ -282,8 +306,11 @@ class KafkaConsumerGroupCacheTest
 
         @TestConfiguration(proxyBeanMethods = false)
         @EnableCaching
-        @Import(KafkaConsumerGroupCache::class)
+        @Import(KafkaConsumerGroupLookupService::class)
         class TestCachingConfiguration {
+            @Bean
+            fun kafkaClientFactory(): KafkaClientFactory = mockk()
+
             @Bean
             fun ticker(): AtomicLong = AtomicLong()
 
@@ -292,7 +319,7 @@ class KafkaConsumerGroupCacheTest
                 setCaffeine(
                     Caffeine
                         .newBuilder()
-                        .expireAfterWrite(Duration.ofMinutes(5))
+                        .expireAfterWrite(Duration.ofMinutes(15))
                         .ticker { ticker.get() },
                 )
             }
