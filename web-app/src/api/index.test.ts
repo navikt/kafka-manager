@@ -11,6 +11,7 @@ import {
 } from './index'
 
 const fetchMock = vi.fn<typeof fetch>()
+const reloadMock = vi.fn()
 
 function jsonResponse(body: unknown, status = 200): Response {
     return new Response(JSON.stringify(body), {
@@ -24,13 +25,16 @@ function expectPost(url: string, body: object) {
     expect(requestUrl).toBe(url)
     expect(options?.method).toBe('POST')
     expect(options?.body).toBe(JSON.stringify(body))
+    expect(new Headers(options?.headers).get('Accept')).toBe('application/json')
     expect(new Headers(options?.headers).get('X-XSRF-TOKEN')).toBe('test-csrf-token')
 }
 
 beforeEach(() => {
     fetchMock.mockReset()
+    reloadMock.mockReset()
     vi.stubGlobal('fetch', fetchMock)
     vi.stubGlobal('document', {cookie: 'XSRF-TOKEN=test-csrf-token'})
+    vi.stubGlobal('window', {location: {reload: reloadMock}})
 })
 
 afterEach(() => {
@@ -45,6 +49,7 @@ test('includes cookies and the Nav consumer header', async () => {
 
     const [, options] = fetchMock.mock.calls[0]
     expect(options?.credentials).toBe('include')
+    expect(new Headers(options?.headers).get('Accept')).toBe('application/json')
     expect(new Headers(options?.headers).get('Nav-Consumer-Id')).toBe('kafka-manager')
     expect(new Headers(options?.headers).get('X-XSRF-TOKEN')).toBeNull()
 })
@@ -61,6 +66,7 @@ test('posts JSON and returns the decoded response', async () => {
     expect(options?.method).toBe('POST')
     expect(options?.body).toBe(JSON.stringify(request))
     expect(new Headers(options?.headers).get('Content-Type')).toBe('application/json')
+    expect(new Headers(options?.headers).get('Accept')).toBe('application/json')
 })
 
 test('posts read-topic filters in the expected shape', async () => {
@@ -116,6 +122,37 @@ test('rejects responses with an HTTP error status', async () => {
     fetchMock.mockResolvedValueOnce(new Response(null, {status: 500}))
 
     await expect(getAvailableTopics()).rejects.toThrow('Request failed with status 500')
+    expect(reloadMock).not.toHaveBeenCalled()
+})
+
+test('reloads the page to restart login when the session has expired', async () => {
+    fetchMock.mockResolvedValueOnce(new Response(null, {status: 401}))
+
+    await expect(getConsumerGroups({topicName: 'test-topic'})).rejects.toThrow('Request failed with status 401')
+
+    expect(reloadMock).toHaveBeenCalledOnce()
+    expect(fetchMock).toHaveBeenCalledOnce()
+})
+
+test('does not reload or retry forbidden requests', async () => {
+    fetchMock.mockResolvedValueOnce(new Response(null, {status: 403}))
+
+    await expect(getConsumerGroups({topicName: 'test-topic'})).rejects.toThrow('Request failed with status 403')
+
+    expect(reloadMock).not.toHaveBeenCalled()
+    expect(fetchMock).toHaveBeenCalledOnce()
+})
+
+test.each(['set offset', 'delete records'])('does not replay %s after the session expires', async (command) => {
+    fetchMock.mockResolvedValueOnce(new Response(null, {status: 401}))
+
+    const result = command === 'set offset'
+        ? setConsumerOffset({topicName: 'test-topic', topicPartition: 0, offset: 10, groupId: 'test-group'})
+        : deleteConsumerRecords({topicName: 'test-topic', topicPartition: 0, beforeOffset: 10})
+
+    await expect(result).rejects.toThrow('Request failed with status 401')
+    expect(reloadMock).toHaveBeenCalledOnce()
+    expect(fetchMock).toHaveBeenCalledOnce()
 })
 
 test('rejects unsafe requests when the CSRF cookie is missing', async () => {

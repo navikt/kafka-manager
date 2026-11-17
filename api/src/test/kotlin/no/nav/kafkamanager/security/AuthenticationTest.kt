@@ -11,6 +11,8 @@ import no.nav.kafkamanager.service.KafkaRecordReaderService
 import no.nav.kafkamanager.service.KafkaTopicOperationsService
 import org.hamcrest.Matchers.startsWith
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertSame
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -52,7 +54,7 @@ class AuthenticationTest
         @Suppress("UNUSED_PARAMETER") @MockkBean private val kafkaTopicOperationsService: KafkaTopicOperationsService,
         @Suppress("UNUSED_PARAMETER") @MockkBean private val kafkaRecordReaderService: KafkaRecordReaderService,
     ) {
-        @ParameterizedTest(name = "{0} {1} krever OAuth2-login")
+        @ParameterizedTest(name = "{0} {1} svarer 401 uten sesjon")
         @CsvSource(
             "GET, /api/kafka/available-topics",
             "POST, /api/kafka/read-topic",
@@ -62,10 +64,8 @@ class AuthenticationTest
             "POST, /api/kafka/set-consumer-offset",
             "POST, /api/kafka/get-consumer-groups",
             "POST, /api/kafka/delete-records",
-            "GET, /",
-            "GET, /index.html",
         )
-        fun `Krever OAuth2-login på alle beskyttede endepunkter`(
+        fun `Svarer 401 for API-kall uten autentisert sesjon`(
             method: String,
             path: String,
         ) {
@@ -76,7 +76,7 @@ class AuthenticationTest
                 null
             }
 
-            val securedRequest = request(HttpMethod.valueOf(method), path).apply {
+            val securedRequest = request(HttpMethod.valueOf(method), path).accept(MediaType.APPLICATION_JSON).apply {
                 csrfCookie?.let {
                     cookie(it)
                     header("X-XSRF-TOKEN", it.value)
@@ -88,8 +88,48 @@ class AuthenticationTest
 
             // Assert
             result
+                .andExpect(status().isUnauthorized)
+                .andExpect(header().doesNotExist("Location"))
+            assertNull(result.andReturn().request.getSession(false)?.getAttribute("SPRING_SECURITY_SAVED_REQUEST"))
+        }
+
+        @ParameterizedTest(name = "{0} krever OAuth2-login")
+        @CsvSource("/", "/index.html")
+        fun `Starter OAuth2-login ved sidenavigasjon uten sesjon`(path: String) {
+            mockMvc
+                .perform(get(path).accept(MediaType.TEXT_HTML))
                 .andExpect(status().is3xxRedirection)
                 .andExpect(redirectedUrl("/oauth2/authorization/azure"))
+        }
+
+        @Test
+        fun `Svarer 401 ved utløpt sesjon selv om klienten godtar HTML`() {
+            mockMvc
+                .perform(
+                    get("/api/kafka/available-topics")
+                        .accept(MediaType.TEXT_HTML)
+                        .with {
+                            it.setRequestedSessionId("expired-session")
+                            it.setRequestedSessionIdValid(false)
+                            it
+                        },
+                ).andExpect(status().isUnauthorized)
+                .andExpect(header().doesNotExist("Location"))
+        }
+
+        @Test
+        fun `API-kall erstatter ikke lagret sidenavigasjon etter innlogging`() {
+            val session = MockHttpSession()
+            mockMvc
+                .perform(get("/").accept(MediaType.TEXT_HTML).session(session))
+                .andExpect(status().is3xxRedirection)
+            val savedRequest = requireNotNull(session.getAttribute("SPRING_SECURITY_SAVED_REQUEST"))
+
+            mockMvc
+                .perform(get("/api/kafka/available-topics").accept(MediaType.APPLICATION_JSON).session(session))
+                .andExpect(status().isUnauthorized)
+
+            assertSame(savedRequest, session.getAttribute("SPRING_SECURITY_SAVED_REQUEST"))
         }
 
         @ParameterizedTest(name = "Avviser {0} uten CSRF-token")

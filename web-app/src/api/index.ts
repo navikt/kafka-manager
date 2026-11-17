@@ -13,6 +13,9 @@ function getCookieValue(name: string): string | undefined {
 async function fetchApi(url: string, options: RequestInit = {}): Promise<Response> {
 	const headers = new Headers(options.headers)
 	headers.set('Nav-Consumer-Id', 'kafka-manager')
+	// Be om JSON som svar. Spring Security bruker også Accept-headeren til å utelate
+	// slike kall fra cachen over adresser brukeren skal tilbake til etter innlogging.
+	headers.set('Accept', 'application/json')
 	const method = (options.method ?? 'GET').toUpperCase()
 
 	if (!SAFE_METHODS.has(method)) {
@@ -31,6 +34,9 @@ async function fetchApi(url: string, options: RequestInit = {}): Promise<Respons
 
 	// Fetch godtar HTTP-feil, så vi må avvise promise-et selv.
 	if (!response.ok) {
+		if (response.status === 401) {
+			window.location.reload()
+		}
 		throw new Error(`Request failed with status ${response.status}`)
 	}
 

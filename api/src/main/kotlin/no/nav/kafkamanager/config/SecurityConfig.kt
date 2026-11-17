@@ -7,9 +7,12 @@ import org.springframework.boot.micrometer.metrics.autoconfigure.export.promethe
 import org.springframework.boot.security.autoconfigure.actuate.web.servlet.EndpointRequest
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.http.HttpStatus
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.invoke
 import org.springframework.security.web.SecurityFilterChain
+import org.springframework.security.web.authentication.HttpStatusEntryPoint
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher
 import org.springframework.security.web.util.matcher.DispatcherTypeRequestMatcher
 
 /**
@@ -29,8 +32,18 @@ class SecurityConfig(
      */
     @Bean
     fun filterChain(http: HttpSecurity): SecurityFilterChain {
+        val apiRequestMatcher = PathPatternRequestMatcher.withDefaults().matcher("/api/**")
+
         http.csrf { csrf -> csrf.spa() }
         http {
+            exceptionHandling {
+                // Ved utløpt sesjon må fetch få 401, ikke følge en redirect til identitetsleverandøren.
+                // Frontend laster da siden på nytt, slik at vanlig sidenavigasjon starter innlogging.
+                defaultAuthenticationEntryPointFor(
+                    HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
+                    apiRequestMatcher,
+                )
+            }
             // OAuth2-filtrene håndterer innlogging og callback før AuthorizationFilter.
             oauth2Login {
                 redirectionEndpoint { baseUri = oauth2CallbackPath }
