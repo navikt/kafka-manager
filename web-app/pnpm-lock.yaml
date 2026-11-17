@@ -170,8 +170,8 @@ importers:
   .:
     dependencies:
       '@microlink/react-json-view':
-        specifier: 1.31.48
-        version: 1.31.48(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+        specifier: 1.31.50
+        version: 1.31.50(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@navikt/aksel-icons':
         specifier: 8.22.1
         version: 8.22.1
@@ -415,8 +415,8 @@ packages:
   '@keyv/serialize@1.1.1':
     resolution: {integrity: sha512-dXn3FZhPv0US+7dtJsIi2R+c7qWYiReoEh5zUntWCf4oSpMNib8FDhSoed6m3QyZdx5hK7iLFkYk3rNxwt8vTA==}
 
-  '@microlink/react-json-view@1.31.48':
-    resolution: {integrity: sha512-DqWxyfeksOCeHaUZq0x6AK2x260jIrvrQFIpi+CI36AEWAJCHCjxMc37DvIuj/WXeesf2Sa/sZMwD7OW6n7ohg==}
+  '@microlink/react-json-view@1.31.50':
+    resolution: {integrity: sha512-jFomzr/NSnwu5KjXkZbw+h+cJ3xZp9i6DR0+p3sBMg0MXFEMNETPWoa++pgfrT3+cxnqqrWISHCqaGfg1fhjeg==}
     engines: {node: '>=17'}
     peerDependencies:
       react: '>= 15'
@@ -1741,7 +1741,7 @@ snapshots:
 
   '@keyv/serialize@1.1.1': {}
 
-  '@microlink/react-json-view@1.31.48(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)':
+  '@microlink/react-json-view@1.31.50(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)':
     dependencies:
       react: 19.3.1
       react-base16-styling: 0.10.0
