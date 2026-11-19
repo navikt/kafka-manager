@@ -31,7 +31,7 @@ dependencyManagement {
         dependency("at.yawk.lz4:lz4-java:1.14.0")
         dependency("com.google.guava:guava:33.8.0-jre")
         dependency("ch.qos.logback:logback-classic:1.6.6")
-        dependency("ch.qos.logback:logback-core:1.6.6")
+        dependency("ch.qos.logback:logback-core:1.6.7")
         dependency("org.json:json:20260814")
     }
 }
