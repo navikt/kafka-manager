@@ -15,16 +15,27 @@ updates:
         update-types: ["version-update:semver-major"]
     groups:
       major-updates:
+        patterns:
+          - "*"
         update-types:
           - "major"
       nav-dependencies:
         patterns:
           - "@navikt/*"
           - "@nais/*"
+        update-types:
+          - "minor"
+          - "patch"
       development-dependencies:
         dependency-type: "development"
+        update-types:
+          - "minor"
+          - "patch"
       production-dependencies:
         dependency-type: "production"
+        update-types:
+          - "minor"
+          - "patch"
 
   - package-ecosystem: "gradle"
     directory: "/"
@@ -37,14 +48,22 @@ updates:
       default-days: 4
     groups:
       major-updates:
+        patterns:
+          - "*"
         update-types:
           - "major"
       nav-dependencies:
         patterns:
           - "no.nav*"
+        update-types:
+          - "minor"
+          - "patch"
       other-dependencies:
         patterns:
           - "*"
+        update-types:
+          - "minor"
+          - "patch"
 
   - package-ecosystem: "github-actions"
     directory: "/"
