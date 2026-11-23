@@ -30,8 +30,8 @@ dependencyManagement {
         dependency("org.xerial.snappy:snappy-java:1.1.10.12")
         dependency("at.yawk.lz4:lz4-java:1.14.1")
         dependency("com.google.guava:guava:33.8.0-jre")
-        dependency("ch.qos.logback:logback-classic:1.6.7")
-        dependency("ch.qos.logback:logback-core:1.6.7")
+        dependency("ch.qos.logback:logback-classic:1.6.8")
+        dependency("ch.qos.logback:logback-core:1.6.8")
         dependency("org.json:json:20260814")
     }
 }
