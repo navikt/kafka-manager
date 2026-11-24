@@ -170,8 +170,8 @@ importers:
   .:
     dependencies:
       '@microlink/react-json-view':
-        specifier: 1.31.50
-        version: 1.31.50(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+        specifier: 1.31.51
+        version: 1.31.51(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@navikt/aksel-icons':
         specifier: 8.23.0
         version: 8.23.0
@@ -185,8 +185,8 @@ importers:
         specifier: 8.23.0
         version: 8.23.0
       '@tanstack/react-query':
-        specifier: 5.107.1
-        version: 5.107.1(@types/react@19.3.0)(react@19.3.1)
+        specifier: 5.108.0
+        version: 5.108.0(@types/react@19.3.0)(react@19.3.1)
       classnames:
         specifier: 2.5.1
         version: 2.5.1
@@ -418,8 +418,8 @@ packages:
   '@keyv/serialize@1.1.1':
     resolution: {integrity: sha512-dXn3FZhPv0US+7dtJsIi2R+c7qWYiReoEh5zUntWCf4oSpMNib8FDhSoed6m3QyZdx5hK7iLFkYk3rNxwt8vTA==}
 
-  '@microlink/react-json-view@1.31.50':
-    resolution: {integrity: sha512-jFomzr/NSnwu5KjXkZbw+h+cJ3xZp9i6DR0+p3sBMg0MXFEMNETPWoa++pgfrT3+cxnqqrWISHCqaGfg1fhjeg==}
+  '@microlink/react-json-view@1.31.51':
+    resolution: {integrity: sha512-rWmxKwSiVsvbHXo7iHA5ht1Z+PBw13NhJ5UNHMXx22baJgLkFuSFzmnnjlrUce2SAbRh7tfh79gzSL0JRz9y6g==}
     engines: {node: '>=17'}
     peerDependencies:
       react: '>= 15'
@@ -556,11 +556,11 @@ packages:
   '@rolldown/pluginutils@1.0.1':
     resolution: {integrity: sha512-2j9bGt5Jh8hj+vPtgzPtl72j0yRxHAyumoo6TNfAjsLB04UtpSvPbPcDcBMxz7n+9CYB0c1GxQFxYRg2jimqGw==}
 
-  '@tanstack/query-core@5.107.1':
-    resolution: {integrity: sha512-PSyAik11oQBEVOiVy5hjZWHmoUqOXqK1WYy4v55mcxozEfKaQgpUMsgnXhWjuESzSht8JfzqMS1m6M/9CpNgvg==}
+  '@tanstack/query-core@5.108.0':
+    resolution: {integrity: sha512-X9zJUtEV/0D2q9pmGS/Bza8S4bNovSBhZOtdhtu0fzsHwizC6C+Eh/q5CX3MQBchsRMrirWVQmv7Fp4OStzV9g==}
 
-  '@tanstack/react-query@5.107.1':
-    resolution: {integrity: sha512-udCOOLp3ZAheUrIHLCe+ZZge6nr2ZUrGMSWcCuXsjY1Bf2JeeE09oxst97PILiCY6N8xo/7bIo3Hvz13zh06FA==}
+  '@tanstack/react-query@5.108.0':
+    resolution: {integrity: sha512-DpMbB8pVorEZcsHRa0Z13KQGfmndqvJbuLy9h+xfP8XpuEZBOxzq+QfXGonQ0fAgRSWhc+QsfoRETSTWxAEAVw==}
     peerDependencies:
       '@types/react': ^18 || ^19
       react: ^18 || ^19
@@ -1750,7 +1750,7 @@ snapshots:
 
   '@keyv/serialize@1.1.1': {}
 
-  '@microlink/react-json-view@1.31.50(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)':
+  '@microlink/react-json-view@1.31.51(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)':
     dependencies:
       react: 19.3.1
       react-base16-styling: 0.10.0
@@ -1843,11 +1843,11 @@ snapshots:
 
   '@rolldown/pluginutils@1.0.1': {}
 
-  '@tanstack/query-core@5.107.1': {}
+  '@tanstack/query-core@5.108.0': {}
 
-  '@tanstack/react-query@5.107.1(@types/react@19.3.0)(react@19.3.1)':
+  '@tanstack/react-query@5.108.0(@types/react@19.3.0)(react@19.3.1)':
     dependencies:
-      '@tanstack/query-core': 5.107.1
+      '@tanstack/query-core': 5.108.0
       react: 19.3.1
     optionalDependencies:
       '@types/react': 19.3.0

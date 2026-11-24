@@ -19,12 +19,12 @@
 		"not op_mini all"
 	],
 	"dependencies": {
-		"@microlink/react-json-view": "1.31.50",
+		"@microlink/react-json-view": "1.31.51",
 		"@navikt/aksel-icons": "8.23.0",
 		"@navikt/ds-css": "8.23.0",
 		"@navikt/ds-react": "8.23.0",
 		"@navikt/ds-tokens": "8.23.0",
-		"@tanstack/react-query": "5.107.1",
+		"@tanstack/react-query": "5.108.0",
 		"classnames": "2.5.1",
 		"dayjs": "1.11.23",
 		"react": "19.3.1",
